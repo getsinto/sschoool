@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { userId, type, title, message, priority, actionUrl, icon, data: metadata } = body;
+    const { userId, type, title, message, priority, actionUrl, icon, metadata } = body;
 
     if (!userId || !type || !title || !message) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
