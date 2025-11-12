@@ -22,25 +22,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { userId, type, title, message, priority, actionUrl, icon, metadata } = await request.json();
+    const body = await request.json();
+    const { userId, type, title, message, priority, actionUrl, icon, data: metadata } = body;
 
     if (!userId || !type || !title || !message) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const notificationService = new NotificationService();
-    const notification = await notificationService.sendNotification({
-      userId,
+    const notificationId = await NotificationService.send({
+      user_id: userId,
       type,
       title,
       message,
       priority: priority || 'normal',
-      actionUrl,
+      action_url: actionUrl,
       icon,
-      metadata
+      data: metadata
     });
 
-    return NextResponse.json({ notification });
+    if (!notificationId) {
+      return NextResponse.json({ error: 'Failed to send notification' }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, notificationId });
   } catch (error) {
     console.error('Error in send notification API:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

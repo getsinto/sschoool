@@ -1,8 +1,8 @@
 import { createClient } from '@/lib/supabase/client';
-import { Notification } from '@/types/notification';
+import { Notification as NotificationType } from '@/types/notification';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
-type NotificationCallback = (notification: Notification) => void;
+type NotificationCallback = (notification: NotificationType) => void;
 type UnreadCountCallback = (count: number) => void;
 
 /**
@@ -35,7 +35,7 @@ export class NotificationRealtime {
           filter: `user_id=eq.${userId}`
         },
         (payload) => {
-          const notification = payload.new as Notification;
+          const notification = payload.new as NotificationType;
           this.handleNewNotification(notification);
         }
       )
@@ -48,7 +48,7 @@ export class NotificationRealtime {
           filter: `user_id=eq.${userId}`
         },
         (payload) => {
-          const notification = payload.new as Notification;
+          const notification = payload.new as NotificationType;
           this.handleNotificationUpdate(notification);
         }
       )
@@ -94,7 +94,7 @@ export class NotificationRealtime {
   /**
    * Handle new notification
    */
-  private static handleNewNotification(notification: Notification): void {
+  private static handleNewNotification(notification: NotificationType): void {
     // Notify all callbacks
     this.callbacks.forEach(callback => {
       try {
@@ -117,7 +117,7 @@ export class NotificationRealtime {
   /**
    * Handle notification update
    */
-  private static handleNotificationUpdate(notification: Notification): void {
+  private static handleNotificationUpdate(notification: NotificationType): void {
     // Update unread count if read status changed
     if (notification.read) {
       this.updateUnreadCount();
@@ -142,7 +142,7 @@ export class NotificationRealtime {
   /**
    * Show browser notification
    */
-  private static async showBrowserNotification(notification: Notification): Promise<void> {
+  private static async showBrowserNotification(notification: NotificationType): Promise<void> {
     if (!('Notification' in window)) {
       return;
     }
