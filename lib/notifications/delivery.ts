@@ -225,4 +225,6 @@ export class NotificationDelivery {
   }
 }
 
+// Export both named and default
+export const NotificationService = NotificationDelivery;
 export default NotificationDelivery;

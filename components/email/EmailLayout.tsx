@@ -14,7 +14,7 @@ interface EmailLayoutProps {
   children: React.ReactNode;
 }
 
-export default function EmailLayout({ preview, children }: EmailLayoutProps) {
+export function EmailLayout({ preview, children }: EmailLayoutProps) {
   return (
     <Html>
       <Head />
@@ -48,3 +48,5 @@ const container = {
 const content = {
   padding: '32px'
 };
+
+export default EmailLayout;

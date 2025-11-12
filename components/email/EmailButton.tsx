@@ -6,7 +6,7 @@ interface EmailButtonProps {
   variant?: 'primary' | 'secondary';
 }
 
-export default function EmailButton({
+export function EmailButton({
   href,
   children,
   variant = 'primary'
@@ -41,3 +41,5 @@ const secondaryButton = {
   display: 'inline-block',
   textAlign: 'center' as const
 };
+
+export default EmailButton;

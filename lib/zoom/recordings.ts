@@ -289,3 +289,40 @@ export async function getRecordingAnalytics(
     throw error;
   }
 }
+
+// Export convenience functions for API routes
+export async function getRecordings(meetingId: string) {
+  return getMeetingRecordings(meetingId);
+}
+
+export async function startRecording(meetingId: string) {
+  try {
+    await zoomClient.request(
+      `/meetings/${meetingId}/recordings`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ action: 'start' })
+      }
+    );
+    return { success: true };
+  } catch (error) {
+    console.error('Error starting recording:', error);
+    throw error;
+  }
+}
+
+export async function stopRecording(meetingId: string) {
+  try {
+    await zoomClient.request(
+      `/meetings/${meetingId}/recordings`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ action: 'stop' })
+      }
+    );
+    return { success: true };
+  } catch (error) {
+    console.error('Error stopping recording:', error);
+    throw error;
+  }
+}

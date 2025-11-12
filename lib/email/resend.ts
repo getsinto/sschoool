@@ -190,4 +190,7 @@ export class EmailService {
   }
 }
 
+// Export sendEmail as a standalone function for convenience
+export const sendEmail = EmailService.sendEmail.bind(EmailService);
+
 export default EmailService;
