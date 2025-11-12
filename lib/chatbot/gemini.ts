@@ -1,10 +1,30 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
-if (!process.env.GOOGLE_GEMINI_API_KEY) {
-  throw new Error('GOOGLE_GEMINI_API_KEY is not set')
-}
+// Initialize Gemini AI - will be lazy loaded to avoid build-time errors
+let genAI: GoogleGenerativeAI | null = null
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY)
+function getGenAI() {
+  if (!genAI) {
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GEMINI_API_KEY
+    if (!apiKey) {
+      // During build time, this might not be available - that's okay
+      if (process.env.NODE_ENV === 'production' && typeof window === 'undefined') {
+        console.warn('GEMINI_API_KEY not found - chatbot will not function')
+        // Return a mock for build time
+        return {
+          getGenerativeModel: () => ({
+            startChat: () => ({
+              sendMessage: async () => ({ response: { text: () => 'API key not configured' } })
+            })
+          })
+        } as any
+      }
+      throw new Error('GEMINI_API_KEY is not set in environment variables')
+    }
+    genAI = new GoogleGenerativeAI(apiKey)
+  }
+  return genAI
+}
 
 export interface UserContext {
   userId?: string
@@ -34,7 +54,9 @@ export interface ChatAction {
 }
 
 class GeminiChatbot {
-  private model = genAI.getGenerativeModel({ model: 'gemini-pro' })
+  private getModel() {
+    return getGenAI().getGenerativeModel({ model: 'gemini-pro' })
+  }
 
   private buildSystemPrompt(context: UserContext): string {
     return `You are a helpful assistant for St Haroon English Medium Online School.
@@ -95,7 +117,7 @@ Remember: You represent St Haroon School. Be warm, supportive, and educational.`
         { role: 'user', parts: [{ text: userMessage }] }
       ]
 
-      const chat = this.model.startChat({
+      const chat = this.getModel().startChat({
         history: messages.slice(0, -1) as any,
         generationConfig: {
           maxOutputTokens: 500,
@@ -225,3 +247,36 @@ Remember: You represent St Haroon School. Be warm, supportive, and educational.`
 
 export const geminiChatbot = new GeminiChatbot()
 export default geminiChatbot
+
+// Helper function for API routes
+export async function generateChatResponse(
+  message: string,
+  history: Array<{ role: string; content: string }>,
+  context?: any,
+  userId?: string | null
+) {
+  const userContext: UserContext = {
+    userId: userId || undefined,
+    userRole: context?.userRole || 'guest',
+    userName: context?.userName,
+    currentPage: context?.currentPage,
+    enrolledCourses: context?.enrolledCourses,
+    conversationHistory: history.map(msg => ({
+      role: msg.role as 'user' | 'assistant',
+      content: msg.content,
+      timestamp: new Date()
+    }))
+  }
+
+  const response = await geminiChatbot.sendMessage(message, userContext)
+  const intent = await geminiChatbot.detectIntent(message)
+  const requiresEscalation = geminiChatbot.shouldEscalate(message, response.confidence)
+
+  return {
+    message: response.message,
+    intent,
+    confidence: response.confidence,
+    suggestedActions: response.suggestions || [],
+    requiresEscalation
+  }
+}

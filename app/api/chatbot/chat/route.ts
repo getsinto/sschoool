@@ -5,6 +5,14 @@ import { v4 as uuidv4 } from 'uuid';
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if API key is configured
+    if (!process.env.GEMINI_API_KEY && !process.env.GOOGLE_GEMINI_API_KEY) {
+      return NextResponse.json(
+        { error: 'Chatbot service is not configured. Please contact support.' },
+        { status: 503 }
+      );
+    }
+
     const supabase = createClient();
     const body = await request.json();
     const { message, session_id, context } = body;
