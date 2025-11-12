@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { render } from '@react-email/render';
+import { createElement } from 'react';
 import WelcomeEmail from '@/emails/WelcomeEmail';
 import EmailVerification from '@/emails/EmailVerification';
 import PasswordReset from '@/emails/PasswordReset';
@@ -71,31 +72,31 @@ function getEmailComponent(template: string, data: any) {
 
   switch (template) {
     case 'welcome':
-      return <WelcomeEmail {...sampleData} />;
+      return createElement(WelcomeEmail, sampleData);
     case 'email-verification':
-      return <EmailVerification {...sampleData} />;
+      return createElement(EmailVerification, sampleData);
     case 'password-reset':
-      return <PasswordReset {...sampleData} />;
+      return createElement(PasswordReset, sampleData);
     case 'enrollment-confirmation':
-      return <EnrollmentConfirmation {...sampleData} />;
+      return createElement(EnrollmentConfirmation, sampleData);
     case 'payment-receipt':
-      return <PaymentReceipt {...sampleData} />;
+      return createElement(PaymentReceipt, sampleData);
     case 'live-class-reminder':
-      return <LiveClassReminder {...sampleData} />;
+      return createElement(LiveClassReminder, sampleData);
     case 'assignment-due-reminder':
-      return <AssignmentDueReminder {...sampleData} />;
+      return createElement(AssignmentDueReminder, sampleData);
     case 'quiz-available':
-      return <QuizAvailable {...sampleData} />;
+      return createElement(QuizAvailable, sampleData);
     case 'grade-posted':
-      return <GradePosted {...sampleData} />;
+      return createElement(GradePosted, sampleData);
     case 'certificate-earned':
-      return <CertificateEarned {...sampleData} />;
+      return createElement(CertificateEarned, sampleData);
     case 'announcement':
-      return <Announcement {...sampleData} />;
+      return createElement(Announcement, sampleData);
     case 'teacher-message':
-      return <TeacherMessage {...sampleData} />;
+      return createElement(TeacherMessage, sampleData);
     case 'parent-weekly-report':
-      return <ParentWeeklyReport {...sampleData} />;
+      return createElement(ParentWeeklyReport, sampleData);
     default:
       return null;
   }
