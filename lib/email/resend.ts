@@ -1,11 +1,19 @@
 import { Resend } from 'resend';
 import { SendEmailOptions, EmailAttachment } from '@/types/email';
 
-// Initialize Resend client
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 const FROM_EMAIL = process.env.EMAIL_FROM || 'noreply@yourdomain.com';
 const FROM_NAME = process.env.EMAIL_FROM_NAME || 'Online Education Platform';
+
+// Lazy initialize Resend client
+let resendClient: Resend | null = null;
+
+function getResendClient(): Resend {
+  if (!resendClient) {
+    const apiKey = process.env.RESEND_API_KEY || 'dummy_key_for_build';
+    resendClient = new Resend(apiKey);
+  }
+  return resendClient;
+}
 
 export class EmailService {
   /**
@@ -18,6 +26,7 @@ export class EmailService {
       // Import the email template dynamically
       const emailTemplate = await this.getEmailTemplate(template, data);
 
+      const resend = getResendClient();
       const response = await resend.emails.send({
         from: `${FROM_NAME} <${FROM_EMAIL}>`,
         to,
