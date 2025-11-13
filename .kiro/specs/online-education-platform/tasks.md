@@ -256,7 +256,8 @@
 
 
 
-- [x] 10.2 Build email template engine with React Email
+- [ ] 10.2 Build email template engine with React Email
+
 
 
 
