@@ -139,10 +139,27 @@ export class EmailService {
    */
   private static async getEmailTemplate(template: string, data: Record<string, any>): Promise<any> {
     try {
+      // Validate template data
+      const { validateTemplateVariables } = await import('./template-registry');
+      const validation = validateTemplateVariables(template, data);
+      
+      if (!validation.valid) {
+        console.warn(`Missing required variables for template ${template}:`, validation.missing);
+      }
+
+      // Personalize content with user info
+      const { personalizeContent } = await import('./template-renderer');
+      const personalizedData = personalizeContent(data, {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        role: data.role,
+      });
+
       // Dynamically import the email template
       const templateModule = await import(`@/emails/${this.getTemplateFileName(template)}`);
       const TemplateComponent = templateModule.default;
-      return TemplateComponent(data);
+      return TemplateComponent(personalizedData);
     } catch (error) {
       console.error(`Failed to load email template: ${template}`, error);
       throw new Error(`Email template not found: ${template}`);
