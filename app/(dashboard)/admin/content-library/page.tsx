@@ -1,14 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import FileUploader from '@/components/admin/content/FileUploader'
-import FileGrid from '@/components/admin/content/FileGrid'
-import FilePreview from '@/components/admin/content/FilePreview'
-import FolderTree from '@/components/admin/content/FolderTree'
+import dynamic from 'next/dynamic'
+
+// Dynamically import components to avoid SSR issues
+const FileUploader = dynamic(() => import('@/components/admin/content/FileUploader'), { ssr: false })
+const FileGrid = dynamic(() => import('@/components/admin/content/FileGrid'), { ssr: false })
+const FilePreview = dynamic(() => import('@/components/admin/content/FilePreview'), { ssr: false })
+const FolderTree = dynamic(() => import('@/components/admin/content/FolderTree'), { ssr: false })
 import { 
   Upload,
   Search,
@@ -183,6 +186,7 @@ const mockFiles: ContentFile[] = [
 ]
 
 export default function ContentLibraryPage() {
+  const [mounted, setMounted] = useState(false)
   const [files, setFiles] = useState<ContentFile[]>(mockFiles)
   const [folders] = useState<Folder[]>(mockFolders)
   const [selectedFiles, setSelectedFiles] = useState<string[]>([])
@@ -196,6 +200,10 @@ export default function ContentLibraryPage() {
   const [showUploader, setShowUploader] = useState(false)
   const [previewFile, setPreviewFile] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Filter and sort files
   const filteredFiles = files.filter(file => {
@@ -289,6 +297,17 @@ export default function ContentLibraryPage() {
 
   const { totalSize, typeStats } = getStorageStats()
   const currentFolderData = folders.find(f => f.id === currentFolder)
+
+  if (!mounted) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
