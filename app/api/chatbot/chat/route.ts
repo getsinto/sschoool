@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { generateChatResponse } from '@/lib/chatbot/gemini';
 import { v4 as uuidv4 } from 'uuid';
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   try {
     // Check if API key is configured

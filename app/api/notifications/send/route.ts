@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic'
+
 // Force this route to use Node.js runtime
 export const runtime = 'nodejs';
 

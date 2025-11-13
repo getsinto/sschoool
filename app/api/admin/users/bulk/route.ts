@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+
 // POST /api/admin/users/bulk - Perform bulk operations on users
 export async function POST(request: NextRequest) {
   try {

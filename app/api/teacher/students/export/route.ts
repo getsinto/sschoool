@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/teacher/students/export - Export student data
 export async function GET(request: NextRequest) {
   try {

@@ -4,6 +4,8 @@ import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 import { RegistrationData } from '@/types/registration'
 
+export const dynamic = 'force-dynamic'
+
 const registerSchema = z.object({
   userType: z.enum(['student', 'teacher', 'parent', 'spoken_english']),
   personalInfo: z.object({

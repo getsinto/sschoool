@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { createMeeting, listUpcomingMeetings } from '@/lib/google-meet/meetings';
 import { hasGoogleIntegration } from '@/lib/google-meet/auth';
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     const supabase = createClient();

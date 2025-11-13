@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/admin/users/export - Export users to CSV/Excel
 export async function GET(request: NextRequest) {
   try {

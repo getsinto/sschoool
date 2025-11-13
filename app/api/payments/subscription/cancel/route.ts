@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { stripeService } from '@/lib/payments/stripe'
 import { razorpayService } from '@/lib/payments/razorpay'
 
+export const dynamic = 'force-dynamic'
+
 // Force this route to use Node.js runtime
 export const runtime = 'nodejs'
 

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/teacher/grading/quizzes - Get pending quiz submissions
 export async function GET(request: NextRequest) {
   try {

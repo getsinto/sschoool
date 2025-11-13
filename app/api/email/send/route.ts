@@ -4,6 +4,8 @@ import { EmailPreferences } from '@/lib/email/preferences';
 import { emailQueue } from '@/lib/email/queue';
 import { createClient } from '@/lib/supabase/server';
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

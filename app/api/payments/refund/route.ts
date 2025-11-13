@@ -3,6 +3,8 @@ import { stripeService } from '@/lib/payments/stripe'
 import { paypalService } from '@/lib/payments/paypal'
 import { razorpayService } from '@/lib/payments/razorpay'
 
+export const dynamic = 'force-dynamic'
+
 // Force this route to use Node.js runtime
 export const runtime = 'nodejs'
 

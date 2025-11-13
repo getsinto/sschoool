@@ -3,6 +3,8 @@ import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { existsSync } from 'fs'
 
+export const dynamic = 'force-dynamic'
+
 // File type validation
 const ALLOWED_TYPES = {
   video: ['video/mp4', 'video/mov', 'video/avi'],

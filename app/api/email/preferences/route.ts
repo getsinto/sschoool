@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { EmailPreferences } from '@/lib/email/preferences';
 import { createClient } from '@/lib/supabase/server';
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     const supabase = createClient();

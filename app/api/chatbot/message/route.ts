@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { geminiChatbot, UserContext } from '@/lib/chatbot/gemini'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   try {
     const { message, conversationHistory, userContext } = await request.json()

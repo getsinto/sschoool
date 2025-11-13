@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+
 // POST /api/teacher/grading/bulk-grade - Bulk grade submissions
 export async function POST(request: NextRequest) {
   try {

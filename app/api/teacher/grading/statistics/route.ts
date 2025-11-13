@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/teacher/grading/statistics - Get grading statistics
 export async function GET(request: NextRequest) {
   try {

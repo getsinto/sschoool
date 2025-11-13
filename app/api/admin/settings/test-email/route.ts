@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+
 // POST /api/admin/settings/test-email - Test email configuration
 export async function POST(request: NextRequest) {
   try {

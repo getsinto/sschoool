@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+
 // POST /api/teacher/messages/send-bulk - Send bulk message
 export async function POST(request: NextRequest) {
   try {

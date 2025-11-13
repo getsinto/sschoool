@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+
 // Mock data - In real app, this would come from Supabase
 const mockFiles = [
   {
