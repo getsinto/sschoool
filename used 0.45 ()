@@ -1,0 +1,5 @@
+[33mca9d91a[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m trigger: rebuild Vercel with FileGrid default export fix
+[33m2153037[m trigger: rebuild Vercel with FileGrid default export fix
+[33m4ed1399[m fix: remove dynamic export from client components
+[33maecb608[m fix: resolve all Vercel build errors
+[33md5b6e4b[m fix: Add Suspense boundaries to all auth pages using useSearchParams - Wrap LoginContent, ResetPasswordContent, VerifyEmailContent, and RegisterSuccessWrapper in Suspense - Fix missing Suspense boundaries in app/(auth) directory pages - Resolve Next.js build errors for useSearchParams usage
