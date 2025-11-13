@@ -13,7 +13,6 @@ import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/hooks/useAuth'
-import { useUser } from '@/hooks/useUser'
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -28,8 +27,7 @@ export function LoginContent() {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { signIn, signInWithProvider, user } = useAuth()
-  const { getDashboardUrl } = useUser()
+  const { signIn, user } = useAuth()
 
   const {
     register,
@@ -40,12 +38,8 @@ export function LoginContent() {
     resolver: zodResolver(loginSchema),
   })
 
-  useEffect(() => {
-    if (user) {
-      const redirectTo = searchParams.get('redirectTo') || getDashboardUrl()
-      router.push(redirectTo)
-    }
-  }, [user, router, searchParams, getDashboardUrl])
+  // Removed automatic redirect on user change to prevent infinite loop
+  // Redirect now happens only after successful login in onSubmit
 
   useEffect(() => {
     const rememberedEmail = localStorage.getItem('rememberedEmail')
@@ -68,7 +62,8 @@ export function LoginContent() {
           localStorage.removeItem('rememberedEmail')
         }
 
-        const redirectTo = searchParams.get('redirectTo') || getDashboardUrl()
+        // Redirect immediately to dashboard - the dashboard will handle role-based routing
+        const redirectTo = searchParams.get('redirectTo') || '/dashboard'
         router.push(redirectTo)
       }
     } finally {

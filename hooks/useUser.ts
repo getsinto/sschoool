@@ -48,51 +48,31 @@ export function useUser() {
       try {
         setUserData(prev => ({ ...prev, loading: true, error: null }))
 
-        // Fetch user profile
-        const { data: profile, error: profileError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', user.id)
-          .single()
+        // Fetch user profile via API route
+        const response = await fetch('/api/user/profile')
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch user profile')
+        }
 
-        if (profileError) throw profileError
-
+        const data = await response.json()
+        
         let teacherProfile = null
         let studentProfile = null
         let parentProfile = null
 
-        // Fetch role-specific profile based on user role
-        if (profile?.role === 'teacher') {
-          const { data, error } = await supabase
-            .from('teachers')
-            .select('*')
-            .eq('user_id', user.id)
-            .single()
-          
-          if (error && error.code !== 'PGRST116') throw error
-          teacherProfile = data
-        } else if (profile?.role === 'student') {
-          const { data, error } = await supabase
-            .from('students')
-            .select('*')
-            .eq('user_id', user.id)
-            .single()
-          
-          if (error && error.code !== 'PGRST116') throw error
-          studentProfile = data
-        } else if (profile?.role === 'parent') {
-          const { data, error } = await supabase
-            .from('parents')
-            .select('*')
-            .eq('user_id', user.id)
-            .single()
-          
-          if (error && error.code !== 'PGRST116') throw error
-          parentProfile = data
+        // Assign role-specific profile
+        const userType = data.userType || data.profile?.user_type || data.profile?.role
+        if (userType === 'teacher') {
+          teacherProfile = data.roleProfile
+        } else if (userType === 'student') {
+          studentProfile = data.roleProfile
+        } else if (userType === 'parent') {
+          parentProfile = data.roleProfile
         }
 
         setUserData({
-          profile,
+          profile: data.profile,
           teacherProfile,
           studentProfile,
           parentProfile,
@@ -100,6 +80,7 @@ export function useUser() {
           error: null,
         })
       } catch (error: any) {
+        console.error('User data fetch error:', error)
         setUserData(prev => ({
           ...prev,
           loading: false,
