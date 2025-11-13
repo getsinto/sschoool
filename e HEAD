@@ -1,0 +1,5 @@
+[33meac9e29[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m fix: repair corrupted export statement in content-library page
+[33mc01b56e[m fix: correctly place dynamic export in content-library page to resolve build error
+[33mc448ded[m fix: resolve Vercel build errors - add dynamic export to content-library page and configure Zoom credentials
+[33mf9636e1[m fix: ensure explicit default exports for content-library components
+[33m43b8760[m fix: ensure FileGrid has proper default export for content-library page
