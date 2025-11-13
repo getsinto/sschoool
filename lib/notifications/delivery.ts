@@ -75,10 +75,10 @@ export class NotificationDelivery {
   static async sendFromTemplate(
     templateKey: string,
     userId: string,
-    data: any
+    templateData: any
   ): Promise<string | null> {
     try {
-      const notification = generateNotification(templateKey, data);
+      const notification = generateNotification(templateKey, templateData);
 
       return await this.send({
         user_id: userId,
@@ -123,14 +123,14 @@ export class NotificationDelivery {
   private static async getUserPreferences(userId: string, type: string) {
     const supabase = createClient();
 
-    const { data } = await supabase
+    const { data: preferences } = await supabase
       .from('user_notification_preferences')
       .select('*')
       .eq('user_id', userId)
       .eq('notification_type', type)
       .single();
 
-    return data || {
+    return preferences || {
       in_app_enabled: true,
       email_enabled: true,
       push_enabled: true,
@@ -151,7 +151,7 @@ export class NotificationDelivery {
           to: notification.user_id,
           subject: notification.title,
           template: 'notification',
-          data: {
+          templateData: {
             title: notification.title,
             message: notification.message,
             actionUrl: notification.action_url
@@ -178,7 +178,7 @@ export class NotificationDelivery {
           userId: notification.user_id,
           title: notification.title,
           body: notification.message,
-          data: notification.data,
+          notificationData: notification.data,
           url: notification.action_url
         })
       });
