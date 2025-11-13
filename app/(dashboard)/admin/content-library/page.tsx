@@ -495,6 +495,7 @@ export default function ContentLibraryPage() {
                 onSelectionChange={setSelectedFiles}
                 onFilePreview={setPreviewFile}
                 isLoading={isLoading}
+                currentFolder={currentFolder}
               />
             </CardContent>
           </Card>
