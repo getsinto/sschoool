@@ -5,13 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import dynamic from 'next/dynamic'
+import nextDynamic from 'next/dynamic'
 
 // Dynamically import components to avoid SSR issues
-const FileUploader = dynamic(() => import('@/components/admin/content/FileUploader'), { ssr: false })
-const FileGrid = dynamic(() => import('@/components/admin/content/FileGrid'), { ssr: false })
-const FilePreview = dynamic(() => import('@/components/admin/content/FilePreview'), { ssr: false })
-const FolderTree = dynamic(() => import('@/components/admin/content/FolderTree'), { ssr: false })
+const FileUploader = nextDynamic(() => import('@/components/admin/content/FileUploader'), { ssr: false })
+const FileGrid = nextDynamic(() => import('@/components/admin/content/FileGrid'), { ssr: false })
+const FilePreview = nextDynamic(() => import('@/components/admin/content/FilePreview'), { ssr: false })
+const FolderTree = nextDynamic(() => import('@/components/admin/content/FolderTree'), { ssr: false })
 import { 
   Upload,
   Search,
