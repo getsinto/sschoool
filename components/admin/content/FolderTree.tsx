@@ -34,7 +34,7 @@ interface FolderTreeProps {
   onFolderSelect: (folderId: string) => void
 }
 
-export default function FolderTree({ folders, currentFolder, onFolderSelect }: FolderTreeProps) {
+function FolderTree({ folders, currentFolder, onFolderSelect }: FolderTreeProps) {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set(['root']))
 
   const toggleFolder = (folderId: string) => {
@@ -153,3 +153,5 @@ export default function FolderTree({ folders, currentFolder, onFolderSelect }: F
     </Card>
   )
 }
+
+export default FolderTree

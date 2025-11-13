@@ -58,7 +58,7 @@ interface FilePreviewProps {
   onDelete: (fileId: string) => void
 }
 
-export default function FilePreview({ file, isOpen, onClose, onUpdate, onDelete }: FilePreviewProps) {
+function FilePreview({ file, isOpen, onClose, onUpdate, onDelete }: FilePreviewProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editedFile, setEditedFile] = useState(file)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -494,3 +494,5 @@ export default function FilePreview({ file, isOpen, onClose, onUpdate, onDelete 
     </div>
   )
 }
+
+export default FilePreview
