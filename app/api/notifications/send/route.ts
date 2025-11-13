@@ -5,39 +5,48 @@ import { NotificationService } from '@/lib/notifications/delivery';
 export async function POST(request: NextRequest) {
   try {
     const supabase = createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
+    const authResult = await supabase.auth.getUser();
+    
+    if (authResult.error || !authResult.data.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const currentUser = authResult.data.user;
+
     // Check if user has admin or teacher role
-    const { data: profile } = await supabase
+    const profileResult = await supabase
       .from('users')
       .select('role')
-      .eq('id', user.id)
+      .eq('id', currentUser.id)
       .single();
 
-    if (!profile || !['admin', 'teacher'].includes(profile.role)) {
+    if (!profileResult.data || !['admin', 'teacher'].includes(profileResult.data.role)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const body = await request.json();
-    const { userId, type, title, message, priority, actionUrl, icon, metadata } = body;
+    const requestBody = await request.json();
+    const userId = requestBody.userId;
+    const notificationType = requestBody.type;
+    const notificationTitle = requestBody.title;
+    const notificationMessage = requestBody.message;
+    const notificationPriority = requestBody.priority || 'normal';
+    const notificationActionUrl = requestBody.actionUrl;
+    const notificationIcon = requestBody.icon;
+    const notificationMetadata = requestBody.metadata;
 
-    if (!userId || !type || !title || !message) {
+    if (!userId || !notificationType || !notificationTitle || !notificationMessage) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     const notificationId = await NotificationService.send({
       user_id: userId,
-      type,
-      title,
-      message,
-      priority: priority || 'normal',
-      action_url: actionUrl,
-      icon,
-      data: metadata
+      type: notificationType,
+      title: notificationTitle,
+      message: notificationMessage,
+      priority: notificationPriority,
+      action_url: notificationActionUrl,
+      icon: notificationIcon,
+      data: notificationMetadata
     });
 
     if (!notificationId) {
