@@ -62,9 +62,12 @@ export function LoginContent() {
           localStorage.removeItem('rememberedEmail')
         }
 
-        // Redirect immediately to dashboard - the dashboard will handle role-based routing
-        const redirectTo = searchParams.get('redirectTo') || '/dashboard'
-        router.push(redirectTo)
+        // Get redirect path from URL params or default to dashboard
+        const redirect = searchParams.get('redirect') || searchParams.get('redirectTo') || '/dashboard'
+        
+        // Use router.replace to prevent back button issues
+        router.replace(redirect)
+        router.refresh() // Force a refresh to update server components
       }
     } finally {
       setIsLoading(false)

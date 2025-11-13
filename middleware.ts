@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
 
 export async function middleware(request: NextRequest) {
-  const response = NextResponse.next()
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
   
   // Add security headers
   response.headers.set('X-Content-Type-Options', 'nosniff')
@@ -23,6 +27,53 @@ export async function middleware(request: NextRequest) {
     }
   }
   
+  // Create Supabase client for middleware
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          request.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+        },
+        remove(name: string, options: CookieOptions) {
+          request.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          response.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+        },
+      },
+    }
+  )
+  
   // Protected routes
   const protectedPaths = ['/dashboard', '/admin', '/teacher', '/student', '/parent']
   const isProtectedPath = protectedPaths.some(path => 
@@ -30,13 +81,25 @@ export async function middleware(request: NextRequest) {
   )
   
   if (isProtectedPath) {
-    // Check for auth token
-    const token = request.cookies.get('sb-access-token')?.value
+    // Check for authenticated user
+    const { data: { user } } = await supabase.auth.getUser()
     
-    if (!token) {
+    if (!user) {
       const loginUrl = new URL('/login', request.url)
       loginUrl.searchParams.set('redirect', request.nextUrl.pathname)
       return NextResponse.redirect(loginUrl)
+    }
+  }
+  
+  // Redirect logged-in users away from auth pages
+  const authPaths = ['/login', '/auth/login', '/auth/register']
+  const isAuthPath = authPaths.some(path => request.nextUrl.pathname === path)
+  
+  if (isAuthPath) {
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (user) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
     }
   }
   
