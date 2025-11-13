@@ -15,22 +15,25 @@ export class NotificationDelivery {
       const supabase = createClient();
 
       // Create notification in database
-      const notificationData = payload.data || {};
-      const { data: notification, error } = await supabase
+      const payloadData = payload.data || {};
+      const insertResult = await supabase
         .from('notifications')
         .insert({
           user_id: payload.user_id,
           type: payload.type,
           title: payload.title,
           message: payload.message,
-          data: notificationData,
+          data: payloadData,
           priority: payload.priority || 'normal',
           action_url: payload.action_url,
           icon: payload.icon,
           expires_at: payload.expires_at
-        })
+        } as any)
         .select()
         .single();
+      
+      const notification = insertResult.data;
+      const error = insertResult.error;
 
       if (error || !notification) {
         console.error('Error creating notification:', error);
@@ -42,10 +45,11 @@ export class NotificationDelivery {
 
       // Deliver via enabled channels
       const deliveryPromises: Promise<void>[] = [];
+      const notificationId = (notification as any).id;
 
       if (preferences.in_app_enabled) {
         // In-app notification already created above
-        await this.logDelivery(notification.id, 'in_app', 'delivered');
+        await this.logDelivery(notificationId, 'in_app', 'delivered');
       }
 
       if (preferences.email_enabled) {
@@ -63,7 +67,7 @@ export class NotificationDelivery {
       // Execute all deliveries in parallel
       await Promise.allSettled(deliveryPromises);
 
-      return notification.id;
+      return notificationId;
     } catch (error) {
       console.error('Error sending notification:', error);
       return null;
@@ -164,7 +168,8 @@ export class NotificationDelivery {
       await this.logDelivery(notification.id, 'email', 'sent');
     } catch (error) {
       console.error('Error sending email notification:', error);
-      await this.logDelivery(notification.id, 'email', 'failed', error.message);
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      await this.logDelivery(notification.id, 'email', 'failed', errorMsg);
     }
   }
 
@@ -189,7 +194,8 @@ export class NotificationDelivery {
       await this.logDelivery(notification.id, 'push', 'sent');
     } catch (error) {
       console.error('Error sending push notification:', error);
-      await this.logDelivery(notification.id, 'push', 'failed', error.message);
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      await this.logDelivery(notification.id, 'push', 'failed', errorMsg);
     }
   }
 
@@ -204,7 +210,8 @@ export class NotificationDelivery {
       await this.logDelivery(notification.id, 'sms', 'sent');
     } catch (error) {
       console.error('Error sending SMS notification:', error);
-      await this.logDelivery(notification.id, 'sms', 'failed', error.message);
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      await this.logDelivery(notification.id, 'sms', 'failed', errorMsg);
     }
   }
 
@@ -224,7 +231,7 @@ export class NotificationDelivery {
       delivery_method: method,
       status,
       error_message: errorMessage
-    });
+    } as any);
   }
 }
 
