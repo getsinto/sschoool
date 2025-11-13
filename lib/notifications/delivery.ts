@@ -15,6 +15,7 @@ export class NotificationDelivery {
       const supabase = createClient();
 
       // Create notification in database
+      const notificationData = payload.data || {};
       const { data: notification, error } = await supabase
         .from('notifications')
         .insert({
@@ -22,7 +23,7 @@ export class NotificationDelivery {
           type: payload.type,
           title: payload.title,
           message: payload.message,
-          data: payload.data || {},
+          data: notificationData,
           priority: payload.priority || 'normal',
           action_url: payload.action_url,
           icon: payload.icon,
