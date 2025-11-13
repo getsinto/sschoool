@@ -8,7 +8,14 @@
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
-    "db:generate": "supabase gen types typescript --project-id YOUR_PROJECT_ID > lib/database.types.ts"
+    "db:generate": "supabase gen types typescript --project-id YOUR_PROJECT_ID > lib/database.types.ts",
+    "migrate": "ts-node scripts/migrate.ts",
+    "migrate:production": "NODE_ENV=production ts-node scripts/migrate.ts",
+    "backup": "ts-node scripts/backup-database.ts",
+    "backup:production": "NODE_ENV=production ts-node scripts/backup-database.ts",
+    "deploy:preview": "vercel",
+    "deploy:production": "vercel --prod",
+    "health-check": "curl https://yourdomain.com/api/health"
   },
   "dependencies": {
     "@google/generative-ai": "^0.15.0",
