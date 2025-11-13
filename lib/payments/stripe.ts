@@ -1,12 +1,16 @@
 import Stripe from 'stripe'
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY is not set')
-}
+// Initialize Stripe only if the secret key is available
+// During build time, this might not be set, so we handle it gracefully
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2024-11-20.acacia',
-})
+let stripe: Stripe | null = null
+
+if (stripeSecretKey) {
+  stripe = new Stripe(stripeSecretKey, {
+    apiVersion: '2024-06-20',
+  })
+}
 
 export interface CreatePaymentIntentParams {
   amount: number
@@ -33,10 +37,20 @@ export interface RefundParams {
 
 class StripeService {
   getStripe() {
+    if (!stripe) {
+      throw new Error('Stripe is not initialized. Please set STRIPE_SECRET_KEY environment variable.')
+    }
     return stripe
   }
 
   async createPaymentIntent(params: CreatePaymentIntentParams) {
+    if (!stripe) {
+      return {
+        success: false,
+        error: 'Stripe is not configured. Please set STRIPE_SECRET_KEY environment variable.',
+      }
+    }
+
     try {
       const paymentIntent = await stripe.paymentIntents.create({
         amount: params.amount,
@@ -67,6 +81,13 @@ class StripeService {
   }
 
   async confirmPayment(paymentIntentId: string) {
+    if (!stripe) {
+      return {
+        success: false,
+        error: 'Stripe is not configured. Please set STRIPE_SECRET_KEY environment variable.',
+      }
+    }
+
     try {
       const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
       
@@ -85,6 +106,13 @@ class StripeService {
   }
 
   async createCustomer(email: string, name: string, metadata?: Record<string, string>) {
+    if (!stripe) {
+      return {
+        success: false,
+        error: 'Stripe is not configured. Please set STRIPE_SECRET_KEY environment variable.',
+      }
+    }
+
     try {
       const customer = await stripe.customers.create({
         email,
@@ -106,6 +134,13 @@ class StripeService {
   }
 
   async createSubscription(params: CreateSubscriptionParams) {
+    if (!stripe) {
+      return {
+        success: false,
+        error: 'Stripe is not configured. Please set STRIPE_SECRET_KEY environment variable.',
+      }
+    }
+
     try {
       const subscriptionData: Stripe.SubscriptionCreateParams = {
         customer: params.customerId,
@@ -140,6 +175,13 @@ class StripeService {
   }
 
   async cancelSubscription(subscriptionId: string) {
+    if (!stripe) {
+      return {
+        success: false,
+        error: 'Stripe is not configured. Please set STRIPE_SECRET_KEY environment variable.',
+      }
+    }
+
     try {
       const subscription = await stripe.subscriptions.cancel(subscriptionId)
       
@@ -157,6 +199,13 @@ class StripeService {
   }
 
   async processRefund(params: RefundParams) {
+    if (!stripe) {
+      return {
+        success: false,
+        error: 'Stripe is not configured. Please set STRIPE_SECRET_KEY environment variable.',
+      }
+    }
+
     try {
       const refundData: Stripe.RefundCreateParams = {
         payment_intent: params.paymentIntentId,
@@ -186,6 +235,13 @@ class StripeService {
   }
 
   async getPaymentIntent(paymentIntentId: string) {
+    if (!stripe) {
+      return {
+        success: false,
+        error: 'Stripe is not configured. Please set STRIPE_SECRET_KEY environment variable.',
+      }
+    }
+
     try {
       const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
       
@@ -203,6 +259,13 @@ class StripeService {
   }
 
   verifyWebhookSignature(payload: string, signature: string, secret: string) {
+    if (!stripe) {
+      return {
+        success: false,
+        error: 'Stripe is not configured. Please set STRIPE_SECRET_KEY environment variable.',
+      }
+    }
+
     try {
       const event = stripe.webhooks.constructEvent(payload, signature, secret)
       return { success: true, event }

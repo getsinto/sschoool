@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { stripeService } from '@/lib/payments/stripe'
 import { razorpayService } from '@/lib/payments/razorpay'
 
+// Force this route to use Node.js runtime
+export const runtime = 'nodejs'
+
 export async function POST(request: NextRequest) {
   try {
     const { paymentMethod, priceId, planId, userId, courseId, couponCode } = await request.json()

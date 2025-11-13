@@ -3,6 +3,9 @@ import { stripeService } from '@/lib/payments/stripe'
 import { paypalService } from '@/lib/payments/paypal'
 import { razorpayService } from '@/lib/payments/razorpay'
 
+// Force this route to use Node.js runtime
+export const runtime = 'nodejs'
+
 export async function POST(request: NextRequest) {
   try {
     const { courseId, paymentMethod, couponCode, amount, userId } = await request.json()

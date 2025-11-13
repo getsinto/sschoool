@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripeService } from '@/lib/payments/stripe'
 
+// Force this route to use Node.js runtime
+export const runtime = 'nodejs'
+
 export async function POST(request: NextRequest) {
   try {
     const { paymentIntentId } = await request.json()
