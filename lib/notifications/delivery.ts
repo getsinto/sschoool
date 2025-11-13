@@ -80,13 +80,14 @@ export class NotificationDelivery {
   ): Promise<string | null> {
     try {
       const notification = generateNotification(templateKey, templateData);
+      const notificationPayloadData = notification.data;
 
       return await this.send({
         user_id: userId,
         type: notification.type,
         title: notification.title,
         message: notification.message,
-        data: notification.data,
+        data: notificationPayloadData,
         priority: notification.priority,
         action_url: notification.action_url,
         icon: notification.icon
@@ -172,6 +173,7 @@ export class NotificationDelivery {
    */
   private static async sendPush(notification: any): Promise<void> {
     try {
+      const pushData = notification.data;
       await fetch('/api/notifications/send-push', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -179,7 +181,7 @@ export class NotificationDelivery {
           userId: notification.user_id,
           title: notification.title,
           body: notification.message,
-          notificationData: notification.data,
+          notificationData: pushData,
           url: notification.action_url
         })
       });
