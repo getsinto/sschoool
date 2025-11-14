@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -86,6 +87,7 @@ const mockUsers: User[] = [
 ]
 
 export default function UsersPage() {
+  const router = useRouter()
   const [users, setUsers] = useState<User[]>(mockUsers)
   const [filteredUsers, setFilteredUsers] = useState<User[]>(mockUsers)
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
@@ -182,7 +184,7 @@ export default function UsersPage() {
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
-          <Button>
+          <Button onClick={() => router.push('/dashboard/admin/users/create')}>
             <UserPlus className="w-4 h-4 mr-2" />
             Add Admin
           </Button>
