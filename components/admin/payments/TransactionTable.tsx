@@ -68,9 +68,9 @@ export default function TransactionTable({
 
   const filteredTransactions = transactions
     .filter(t => 
-      t.transactionId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.courseName.toLowerCase().includes(searchQuery.toLowerCase())
+      (t.transactionId?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+      (t.studentName?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+      (t.courseName?.toLowerCase() || '').includes(searchQuery.toLowerCase())
     )
     .sort((a, b) => {
       if (sortBy === 'date') {

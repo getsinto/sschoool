@@ -67,8 +67,8 @@ export default function RefundsPage() {
 
   const filteredRefunds = refunds.filter(r =>
     (statusFilter === 'all' || r.status === statusFilter) &&
-    (r.transactionId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-     r.studentName.toLowerCase().includes(searchQuery.toLowerCase()))
+    ((r.transactionId?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+     (r.studentName?.toLowerCase() || '').includes(searchQuery.toLowerCase()))
   )
 
   const stats = {
