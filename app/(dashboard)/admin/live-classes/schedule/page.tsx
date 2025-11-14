@@ -1,13 +1,48 @@
 'use client'
 
-import { Card, CardContent } from '@/components/ui/card'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Calendar } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import ClassScheduler from '@/components/admin/live-classes/ClassScheduler'
 
 export default function ScheduleClassPage() {
+  const router = useRouter()
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleSubmit = async (formData: any) => {
+    setIsSubmitting(true)
+    
+    try {
+      const response = await fetch('/api/admin/live-classes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to schedule class')
+      }
+
+      const data = await response.json()
+      
+      // Show success message
+      alert('Class scheduled successfully!')
+      
+      // Redirect to class details or list
+      router.push(`/admin/live-classes/${data.class.id}`)
+    } catch (error) {
+      console.error('Error scheduling class:', error)
+      alert('Failed to schedule class. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center gap-4">
         <Link href="/admin/live-classes">
           <Button variant="outline" size="sm">
@@ -21,13 +56,8 @@ export default function ScheduleClassPage() {
         </div>
       </div>
 
-      <Card>
-        <CardContent className="p-8 text-center">
-          <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Schedule Class</h3>
-          <p className="text-gray-600">Class scheduling interface coming soon</p>
-        </CardContent>
-      </Card>
+      {/* Scheduler Form */}
+      <ClassScheduler onSubmit={handleSubmit} />
     </div>
   )
 }
