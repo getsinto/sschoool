@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// Mock folders data (same as in folders/route.ts)
-const mockFolders = [
-  {
+export const dynamic = 'force-dynamic'
+
+// Mock folders data
+const mockFolders = new Map([
+  ['folder_1', {
     id: 'folder_1',
     name: 'Mathematics',
     path: 'mathematics',
@@ -10,17 +12,8 @@ const mockFolders = [
     createdAt: '2024-01-10T10:00:00Z',
     fileCount: 15,
     totalSize: 2147483648
-  },
-  {
-    id: 'folder_2',
-    name: 'Science',
-    path: 'science',
-    parentId: null,
-    createdAt: '2024-01-10T10:00:00Z',
-    fileCount: 8,
-    totalSize: 1073741824
-  }
-]
+  }]
+])
 
 // GET /api/admin/content/folders/[id] - Get folder details
 export async function GET(
@@ -28,7 +21,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const folder = mockFolders.find(f => f.id === params.id)
+    const folder = mockFolders.get(params.id)
     
     if (!folder) {
       return NextResponse.json(
@@ -36,7 +29,7 @@ export async function GET(
         { status: 404 }
       )
     }
-    
+
     return NextResponse.json({ folder })
   } catch (error) {
     console.error('Error fetching folder:', error)
@@ -54,25 +47,51 @@ export async function PATCH(
 ) {
   try {
     const body = await request.json()
-    const folderIndex = mockFolders.findIndex(f => f.id === params.id)
+    const folder = mockFolders.get(params.id)
     
-    if (folderIndex === -1) {
+    if (!folder) {
       return NextResponse.json(
         { error: 'Folder not found' },
         { status: 404 }
       )
     }
-    
-    // Update folder
-    mockFolders[folderIndex] = {
-      ...mockFolders[folderIndex],
-      ...body,
+
+    const { name, parentId } = body
+
+    // Validate name if provided
+    if (name && name.trim() === '') {
+      return NextResponse.json(
+        { error: 'Folder name cannot be empty' },
+        { status: 400 }
+      )
+    }
+
+    // Update folder properties
+    const updatedFolder = {
+      ...folder,
+      ...(name && { name: name.trim() }),
+      ...(parentId !== undefined && { parentId }),
       updatedAt: new Date().toISOString()
     }
-    
+
+    // Update path if name changed
+    if (name) {
+      const newPath = name.toLowerCase().replace(/[^a-z0-9]/g, '-')
+      if (updatedFolder.parentId) {
+        const parentFolder = mockFolders.get(updatedFolder.parentId)
+        if (parentFolder) {
+          updatedFolder.path = `${parentFolder.path}/${newPath}`
+        }
+      } else {
+        updatedFolder.path = newPath
+      }
+    }
+
+    mockFolders.set(params.id, updatedFolder)
+
     return NextResponse.json({
       message: 'Folder updated successfully',
-      folder: mockFolders[folderIndex]
+      folder: updatedFolder
     })
   } catch (error) {
     console.error('Error updating folder:', error)
@@ -89,29 +108,38 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const folderIndex = mockFolders.findIndex(f => f.id === params.id)
+    const folder = mockFolders.get(params.id)
     
-    if (folderIndex === -1) {
+    if (!folder) {
       return NextResponse.json(
         { error: 'Folder not found' },
         { status: 404 }
       )
     }
-    
-    // Check if folder has subfolders or files
-    const hasSubfolders = mockFolders.some(f => f.parentId === params.id)
-    const folder = mockFolders[folderIndex]
-    
-    if (hasSubfolders || folder.fileCount > 0) {
+
+    // Check if folder has files
+    if (folder.fileCount > 0) {
       return NextResponse.json(
-        { error: 'Cannot delete folder with contents. Please move or delete all files and subfolders first.' },
+        { error: 'Cannot delete folder with files. Please move or delete files first.' },
         { status: 400 }
       )
     }
-    
+
+    // Check if folder has subfolders
+    const hasSubfolders = Array.from(mockFolders.values()).some(
+      f => f.parentId === params.id
+    )
+
+    if (hasSubfolders) {
+      return NextResponse.json(
+        { error: 'Cannot delete folder with subfolders. Please delete subfolders first.' },
+        { status: 400 }
+      )
+    }
+
     // Delete folder
-    mockFolders.splice(folderIndex, 1)
-    
+    mockFolders.delete(params.id)
+
     return NextResponse.json({
       message: 'Folder deleted successfully'
     })

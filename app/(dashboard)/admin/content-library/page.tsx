@@ -12,6 +12,9 @@ const FileUploader = nextDynamic(() => import('@/components/admin/content/FileUp
 const FileGrid = nextDynamic(() => import('@/components/admin/content/FileGrid'), { ssr: false })
 const FilePreview = nextDynamic(() => import('@/components/admin/content/FilePreview'), { ssr: false })
 const FolderTree = nextDynamic(() => import('@/components/admin/content/FolderTree'), { ssr: false })
+const CreateFolderModal = nextDynamic(() => import('@/components/admin/content/CreateFolderModal'), { ssr: false })
+const ShareLinkModal = nextDynamic(() => import('@/components/admin/content/ShareLinkModal'), { ssr: false })
+const BulkActionsModal = nextDynamic(() => import('@/components/admin/content/BulkActionsModal'), { ssr: false })
 import { 
   Upload,
   Search,
@@ -24,7 +27,8 @@ import {
   Video,
   Music,
   FileText,
-  HardDrive
+  HardDrive,
+  FolderPlus
 } from 'lucide-react'
 
 interface ContentFile {
@@ -200,6 +204,11 @@ export default function ContentLibraryPage() {
   const [showUploader, setShowUploader] = useState(false)
   const [previewFile, setPreviewFile] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [showCreateFolder, setShowCreateFolder] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [shareFile, setShareFile] = useState<any>(null)
+  const [showBulkModal, setShowBulkModal] = useState(false)
+  const [bulkAction, setBulkAction] = useState<'move' | 'delete' | 'download' | 'copy'>('delete')
 
   useEffect(() => {
     setMounted(true)
@@ -263,9 +272,49 @@ export default function ContentLibraryPage() {
     }
   })
 
-  const handleBulkAction = (action: string) => {
+  const handleBulkAction = (action: 'move' | 'delete' | 'download' | 'copy') => {
     if (selectedFiles.length === 0) return
-    console.log(`Bulk ${action}:`, selectedFiles)
+    setBulkAction(action)
+    setShowBulkModal(true)
+  }
+
+  const handleCreateFolder = async (name: string, parentId: string | null) => {
+    const response = await fetch('/api/admin/content/folders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, parentId })
+    })
+    if (!response.ok) throw new Error('Failed to create folder')
+    const data = await response.json()
+    // In real app, update folders state
+    console.log('Folder created:', data.folder)
+  }
+
+  const handleCreateShare = async (options: any) => {
+    if (!shareFile) return
+    const response = await fetch(`/api/admin/content/files/${shareFile.id}/share`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(options)
+    })
+    if (!response.ok) throw new Error('Failed to create share')
+    const data = await response.json()
+    return data.share
+  }
+
+  const handleBulkConfirm = async (action: string, fileIds: string[], targetFolderId?: string) => {
+    const response = await fetch('/api/admin/content/bulk', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, fileIds, targetFolderId })
+    })
+    if (!response.ok) throw new Error('Bulk operation failed')
+    
+    // Update files state based on action
+    if (action === 'delete') {
+      setFiles(files.filter(f => !fileIds.includes(f.id)))
+    }
+    setSelectedFiles([])
   }
 
   const handleRefresh = () => {
@@ -326,6 +375,9 @@ export default function ContentLibraryPage() {
           </Button>
           {selectedFiles.length > 0 && (
             <>
+              <Button variant="outline" onClick={() => handleBulkAction('move')}>
+                Move ({selectedFiles.length})
+              </Button>
               <Button variant="outline" onClick={() => handleBulkAction('download')}>
                 <Download className="w-4 h-4 mr-2" />
                 Download ({selectedFiles.length})
@@ -338,6 +390,10 @@ export default function ContentLibraryPage() {
           <Button onClick={() => setShowUploader(true)}>
             <Upload className="w-4 h-4 mr-2" />
             Upload Files
+          </Button>
+          <Button variant="outline" onClick={() => setShowCreateFolder(true)}>
+            <FolderPlus className="w-4 h-4 mr-2" />
+            Create Folder
           </Button>
         </div>
       </div>
@@ -513,6 +569,10 @@ export default function ContentLibraryPage() {
                 selectedFiles={selectedFiles}
                 onSelectionChange={setSelectedFiles}
                 onFilePreview={setPreviewFile}
+                onFileShare={(file) => {
+                  setShareFile(file)
+                  setShowShareModal(true)
+                }}
                 isLoading={isLoading}
                 currentFolder={currentFolder}
               />
@@ -562,6 +622,42 @@ export default function ContentLibraryPage() {
             setFiles(files.filter(f => f.id !== fileId))
             setPreviewFile(null)
           }}
+        />
+      )}
+
+      {/* Create Folder Modal */}
+      {showCreateFolder && (
+        <CreateFolderModal
+          isOpen={showCreateFolder}
+          onClose={() => setShowCreateFolder(false)}
+          folders={folders}
+          onCreateFolder={handleCreateFolder}
+        />
+      )}
+
+      {/* Share Link Modal */}
+      {showShareModal && shareFile && (
+        <ShareLinkModal
+          isOpen={showShareModal}
+          onClose={() => {
+            setShowShareModal(false)
+            setShareFile(null)
+          }}
+          file={shareFile}
+          onCreateShare={handleCreateShare}
+        />
+      )}
+
+      {/* Bulk Actions Modal */}
+      {showBulkModal && (
+        <BulkActionsModal
+          isOpen={showBulkModal}
+          onClose={() => setShowBulkModal(false)}
+          action={bulkAction}
+          selectedFiles={selectedFiles}
+          files={files}
+          folders={folders}
+          onConfirm={handleBulkConfirm}
         />
       )}
     </div>

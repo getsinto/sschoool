@@ -3,8 +3,8 @@
 import { useState, useCallback, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
+import { Badge } from '@/components/ui/badge'
 import { 
   Upload, 
   X, 
@@ -63,7 +63,7 @@ const SUPPORTED_FORMATS = {
   }
 }
 
-export default function FileUploader({ currentFolder, onUploadComplete, onClose }: FileUploaderProps) {
+function FileUploader({ currentFolder, onUploadComplete, onClose }: FileUploaderProps) {
   const [uploads, setUploads] = useState<FileUpload[]>([])
   const [isDragOver, setIsDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -405,3 +405,5 @@ export default function FileUploader({ currentFolder, onUploadComplete, onClose 
     </div>
   )
 }
+
+export default FileUploader
