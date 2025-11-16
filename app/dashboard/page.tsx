@@ -8,7 +8,7 @@ export default async function DashboardRoot() {
   const { data: { user } } = await supabase.auth.getUser()
   
   if (!user) {
-    redirect('/login')
+    redirect('/auth/login')
   }
   
   // Get user profile to determine role

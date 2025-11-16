@@ -85,14 +85,19 @@ export async function middleware(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     
     if (!user) {
-      const loginUrl = new URL('/login', request.url)
+      const loginUrl = new URL('/auth/login', request.url)
       loginUrl.searchParams.set('redirect', request.nextUrl.pathname)
       return NextResponse.redirect(loginUrl)
     }
   }
   
+  // Redirect /login to /auth/login
+  if (request.nextUrl.pathname === '/login') {
+    return NextResponse.redirect(new URL('/auth/login', request.url))
+  }
+  
   // Redirect logged-in users away from auth pages
-  const authPaths = ['/login', '/auth/login', '/auth/register']
+  const authPaths = ['/auth/login', '/auth/register']
   const isAuthPath = authPaths.some(path => request.nextUrl.pathname === path)
   
   if (isAuthPath) {
