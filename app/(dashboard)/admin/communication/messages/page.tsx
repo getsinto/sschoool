@@ -99,7 +99,7 @@ export default function MessagesPage() {
           <h1 className="text-2xl font-bold text-gray-900">Messages</h1>
           <p className="text-gray-600">Manage user messages and support tickets</p>
         </div>
-        <Button>
+        <Button onClick={() => window.location.href = '/admin/communication/messages/compose'}>
           <Plus className="w-4 h-4 mr-2" />
           Compose Message
         </Button>

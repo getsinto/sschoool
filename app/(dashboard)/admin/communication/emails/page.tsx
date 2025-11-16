@@ -90,7 +90,7 @@ export default function EmailsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Email Campaigns</h1>
           <p className="text-gray-600">Manage email communications and campaigns</p>
         </div>
-        <Button>
+        <Button onClick={() => window.location.href = '/admin/communication/emails/create'}>
           <Plus className="w-4 h-4 mr-2" />
           Create Email
         </Button>

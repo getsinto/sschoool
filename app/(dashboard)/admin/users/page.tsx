@@ -184,7 +184,7 @@ export default function UsersPage() {
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
-          <Button onClick={() => router.push('/dashboard/admin/users/create')}>
+          <Button onClick={() => router.push('/admin/users/create')}>
             <UserPlus className="w-4 h-4 mr-2" />
             Add Admin
           </Button>

@@ -281,7 +281,7 @@ export default function CoursesPage() {
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
-          <Button>
+          <Button onClick={() => window.location.href = '/admin/courses/create'}>
             <Plus className="w-4 h-4 mr-2" />
             Create New Course
           </Button>
