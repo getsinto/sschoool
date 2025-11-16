@@ -120,12 +120,23 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     
-    // Validate required fields
-    const { fullName, email, role, permissions } = body
+    // Validate required fields - handle both fullName and firstName/lastName
+    const { fullName, firstName, lastName, email, role, permissions } = body
     
-    if (!fullName || !email || !role) {
+    const userName = fullName || (firstName && lastName ? `${firstName} ${lastName}` : '')
+    
+    if (!userName || !email || !role) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing required fields: name, email, and role are required' },
+        { status: 400 }
+      )
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      return NextResponse.json(
+        { error: 'Invalid email format' },
         { status: 400 }
       )
     }
@@ -142,7 +153,7 @@ export async function POST(request: NextRequest) {
     // Create new user
     const newUser = {
       id: (mockUsers.length + 1).toString(),
-      fullName,
+      fullName: userName,
       email,
       role,
       registrationDate: new Date().toISOString().split('T')[0],
@@ -157,7 +168,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       message: 'User created successfully',
-      user: newUser
+      user: newUser,
+      id: newUser.id
     }, { status: 201 })
   } catch (error) {
     console.error('Error creating user:', error)
