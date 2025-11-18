@@ -4,8 +4,12 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { StepProgress } from '@/components/teacher/course-builder/StepProgress'
 import { BasicInfoForm } from '@/components/teacher/course-builder/BasicInfoForm'
+import { CurriculumForm } from '@/components/teacher/course-builder/CurriculumForm'
+import { OrganizationForm } from '@/components/teacher/course-builder/OrganizationForm'
+import { PricingForm } from '@/components/teacher/course-builder/PricingForm'
+import { ReviewForm } from '@/components/teacher/course-builder/ReviewForm'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, ArrowRight, Save } from 'lucide-react'
+import { Save } from 'lucide-react'
 
 const STEPS = [
   { id: 1, name: 'Basic Information', description: 'Course details and overview' },
@@ -89,66 +93,37 @@ export default function CreateCoursePage() {
         )
       case 2:
         return (
-          <div className="text-center py-12">
-            <p className="text-gray-600">Curriculum builder will be implemented here</p>
-            <div className="flex gap-4 justify-center mt-6">
-              <Button variant="outline" onClick={handlePrevious}>
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Previous
-              </Button>
-              <Button onClick={handleNext}>
-                Next
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </div>
-          </div>
+          <CurriculumForm
+            data={courseData}
+            onUpdate={updateCourseData}
+            onNext={handleNext}
+            onPrevious={handlePrevious}
+          />
         )
       case 3:
         return (
-          <div className="text-center py-12">
-            <p className="text-gray-600">Drag-drop organization will be implemented here</p>
-            <div className="flex gap-4 justify-center mt-6">
-              <Button variant="outline" onClick={handlePrevious}>
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Previous
-              </Button>
-              <Button onClick={handleNext}>
-                Next
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </div>
-          </div>
+          <OrganizationForm
+            data={courseData}
+            onUpdate={updateCourseData}
+            onNext={handleNext}
+            onPrevious={handlePrevious}
+          />
         )
       case 4:
         return (
-          <div className="text-center py-12">
-            <p className="text-gray-600">Pricing form will be implemented here</p>
-            <div className="flex gap-4 justify-center mt-6">
-              <Button variant="outline" onClick={handlePrevious}>
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Previous
-              </Button>
-              <Button onClick={handleNext}>
-                Next
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </div>
-          </div>
+          <PricingForm
+            data={courseData}
+            onUpdate={updateCourseData}
+            onNext={handleNext}
+            onPrevious={handlePrevious}
+          />
         )
       case 5:
         return (
-          <div className="text-center py-12">
-            <p className="text-gray-600">Course preview will be implemented here</p>
-            <div className="flex gap-4 justify-center mt-6">
-              <Button variant="outline" onClick={handlePrevious}>
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Previous
-              </Button>
-              <Button>
-                Publish Course
-              </Button>
-            </div>
-          </div>
+          <ReviewForm
+            data={courseData}
+            onPrevious={handlePrevious}
+          />
         )
       default:
         return null

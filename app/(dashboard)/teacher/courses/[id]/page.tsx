@@ -2,19 +2,9 @@
 
 import { useState } from 'react'
 import { useParams } from 'next/navigation'
-import { motion } from 'framer-motion'
 import {
-  BookOpen,
-  Users,
-  TrendingUp,
-  Star,
-  DollarSign,
-  Edit,
-  Settings,
-  BarChart3,
-  MessageSquare,
-  List,
-  Eye
+  BookOpen, Users, TrendingUp, Star, DollarSign, Edit,
+  Save, Flag, Reply
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -22,9 +12,16 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Progress } from '@/components/ui/progress'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import Link from 'next/link'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { CurriculumTree } from '@/components/teacher/courses/CurriculumTree'
+import { StudentProgressTable } from '@/components/teacher/courses/StudentProgressTable'
+import { CourseAnalytics } from '@/components/teacher/courses/CourseAnalytics'
 
-// Mock course data
+// Mock data
 const mockCourse = {
   id: '1',
   title: 'Advanced Mathematics',
@@ -34,6 +31,7 @@ const mockCourse = {
   grade: 'Grade 10',
   subject: 'Algebra',
   status: 'published',
+  price: 49.99,
   totalEnrollments: 245,
   activeStudents: 198,
   completionRate: 78,
@@ -44,41 +42,89 @@ const mockCourse = {
   duration: '24 hours'
 }
 
-const mockRecentEnrollments = [
+const mockSections = [
   {
-    id: 1,
-    student: { name: 'Sarah Johnson', avatar: '/avatars/sarah.jpg' },
-    enrolledAt: '2024-01-15',
-    progress: 15
+    id: '1',
+    title: 'Introduction to Algebra',
+    order: 1,
+    isExpanded: true,
+    lessons: [
+      { id: '1-1', title: 'What is Algebra?', type: 'video' as const, duration: '12 min', status: 'published' as const, order: 1 },
+      { id: '1-2', title: 'Basic Concepts', type: 'text' as const, duration: '8 min', status: 'published' as const, order: 2 },
+      { id: '1-3', title: 'Quiz: Introduction', type: 'quiz' as const, duration: '10 min', status: 'published' as const, order: 3 }
+    ]
   },
   {
-    id: 2,
-    student: { name: 'Michael Chen', avatar: '/avatars/michael.jpg' },
-    enrolledAt: '2024-01-14',
-    progress: 8
-  },
-  {
-    id: 3,
-    student: { name: 'Emma Davis', avatar: '/avatars/emma.jpg' },
-    enrolledAt: '2024-01-14',
-    progress: 22
+    id: '2',
+    title: 'Linear Equations',
+    order: 2,
+    isExpanded: false,
+    lessons: [
+      { id: '2-1', title: 'Solving Linear Equations', type: 'video' as const, duration: '18 min', status: 'published' as const, order: 1 },
+      { id: '2-2', title: 'Practice Problems', type: 'assignment' as const, duration: '30 min', status: 'draft' as const, order: 2 }
+    ]
   }
 ]
 
-const mockRecentReviews = [
+const mockStudents = [
   {
-    id: 1,
-    student: { name: 'Alex Thompson', avatar: '/avatars/alex.jpg' },
-    rating: 5,
-    comment: 'Excellent course! Very well structured and easy to follow.',
-    date: '2024-01-12'
+    id: '1', name: 'Sarah Johnson', email: 'sarah@email.com', avatar: '/avatars/sarah.jpg',
+    enrolledAt: '2024-01-15', progress: 85, lastActivity: '2024-01-20', quizAverage: 92,
+    completedLessons: 36, totalLessons: 42, status: 'active' as const
   },
   {
-    id: 2,
-    student: { name: 'Jessica Lee', avatar: '/avatars/jessica.jpg' },
-    rating: 4,
-    comment: 'Great content, but could use more practice problems.',
-    date: '2024-01-10'
+    id: '2', name: 'Michael Chen', email: 'michael@email.com', avatar: '/avatars/michael.jpg',
+    enrolledAt: '2024-01-14', progress: 65, lastActivity: '2024-01-19', quizAverage: 88,
+    completedLessons: 27, totalLessons: 42, status: 'active' as const
+  }
+]
+
+const mockAnalytics = {
+  enrollmentOverTime: [
+    { month: 'Aug', enrollments: 45 }, { month: 'Sep', enrollments: 62 },
+    { month: 'Oct', enrollments: 78 }, { month: 'Nov', enrollments: 95 },
+    { month: 'Dec', enrollments: 128 }, { month: 'Jan', enrollments: 245 }
+  ],
+  completionFunnel: [
+    { section: 'Section 1', completed: 245, percentage: 100 },
+    { section: 'Section 2', completed: 238, percentage: 97 },
+    { section: 'Section 3', completed: 225, percentage: 92 }
+  ],
+  lessonEngagement: [
+    { lesson: 'Introduction to Algebra', watchTime: 245, completionRate: 98, avgDuration: '12 min' },
+    { lesson: 'Linear Equations', watchTime: 238, completionRate: 95, avgDuration: '18 min' }
+  ],
+  quizPerformance: {
+    totalQuizzes: 12, averageScore: 85, passRate: 92, topPerformers: 45, needsHelp: 18,
+    scoreDistribution: [
+      { range: '90-100', count: 98 }, { range: '80-89', count: 75 },
+      { range: '70-79', count: 45 }, { range: '60-69', count: 20 }, { range: '0-59', count: 7 }
+    ]
+  },
+  dropOffPoints: [
+    { lesson: 'Advanced Factoring', dropRate: 15, students: 37 },
+    { lesson: 'Complex Numbers', dropRate: 12, students: 29 }
+  ],
+  studentFeedback: {
+    totalReviews: 156, averageRating: 4.8,
+    ratingDistribution: { 5: 78, 4: 52, 3: 18, 2: 6, 1: 2 },
+    commonThemes: [
+      { theme: 'Clear explanations', mentions: 89 },
+      { theme: 'Good examples', mentions: 76 }
+    ]
+  }
+}
+
+const mockReviews = [
+  {
+    id: '1', student: { name: 'Alex Thompson', avatar: '/avatars/alex.jpg' },
+    rating: 5, comment: 'Excellent course! Very well structured.', date: '2024-01-12',
+    replies: []
+  },
+  {
+    id: '2', student: { name: 'Jessica Lee', avatar: '/avatars/jessica.jpg' },
+    rating: 4, comment: 'Great content, but could use more practice problems.', date: '2024-01-10',
+    replies: []
   }
 ]
 
@@ -92,12 +138,9 @@ export default function CourseDetailPage() {
       <Card>
         <CardContent className="pt-6">
           <div className="flex flex-col lg:flex-row gap-6">
-            {/* Thumbnail */}
             <div className="w-full lg:w-64 h-48 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white text-6xl font-bold">
               {mockCourse.title.charAt(0)}
             </div>
-
-            {/* Course Info */}
             <div className="flex-1">
               <div className="flex items-start justify-between mb-4">
                 <div>
@@ -115,8 +158,6 @@ export default function CourseDetailPage() {
                   Edit
                 </Button>
               </div>
-
-              {/* Quick Stats */}
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6">
                 <div className="text-center p-3 bg-gray-50 rounded-lg">
                   <Users className="w-5 h-5 text-blue-600 mx-auto mb-1" />
@@ -163,104 +204,31 @@ export default function CourseDetailPage() {
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Key Metrics */}
             <Card>
               <CardHeader>
                 <CardTitle>Key Metrics</CardTitle>
-                <CardDescription>Course performance overview</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Active Students</span>
                   <span className="text-lg font-semibold">{mockCourse.activeStudents}</span>
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Completion Rate</span>
                   <span className="text-lg font-semibold">{mockCourse.completionRate}%</span>
                 </div>
                 <Progress value={mockCourse.completionRate} className="h-2" />
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Course Duration</span>
-                  <span className="text-lg font-semibold">{mockCourse.duration}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Total Sections</span>
-                  <span className="text-lg font-semibold">{mockCourse.sections}</span>
-                </div>
               </CardContent>
             </Card>
-
-            {/* Recent Enrollments */}
             <Card>
               <CardHeader>
                 <CardTitle>Recent Enrollments</CardTitle>
-                <CardDescription>Latest students who joined</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {mockRecentEnrollments.map((enrollment) => (
-                  <div key={enrollment.id} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarImage src={enrollment.student.avatar} />
-                        <AvatarFallback>{enrollment.student.name.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium text-gray-900">{enrollment.student.name}</p>
-                        <p className="text-sm text-gray-500">{enrollment.enrolledAt}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-gray-900">{enrollment.progress}%</p>
-                      <p className="text-xs text-gray-500">Progress</p>
-                    </div>
-                  </div>
-                ))}
-                <Button variant="outline" className="w-full mt-4">
-                  View All Students
-                </Button>
+              <CardContent>
+                <p className="text-sm text-gray-600">Latest students who joined this course</p>
               </CardContent>
             </Card>
           </div>
-
-          {/* Recent Reviews */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Reviews</CardTitle>
-              <CardDescription>Latest feedback from students</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {mockRecentReviews.map((review) => (
-                <div key={review.id} className="border-b pb-4 last:border-0">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarImage src={review.student.avatar} />
-                        <AvatarFallback>{review.student.name.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium text-gray-900">{review.student.name}</p>
-                        <div className="flex items-center gap-1">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`w-4 h-4 ${
-                                i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    <span className="text-sm text-gray-500">{review.date}</span>
-                  </div>
-                  <p className="text-gray-600 ml-12">{review.comment}</p>
-                </div>
-              ))}
-              <Button variant="outline" className="w-full mt-4">
-                View All Reviews
-              </Button>
-            </CardContent>
-          </Card>
         </TabsContent>
 
         {/* Curriculum Tab */}
@@ -268,12 +236,18 @@ export default function CourseDetailPage() {
           <Card>
             <CardHeader>
               <CardTitle>Course Curriculum</CardTitle>
-              <CardDescription>Manage your course structure</CardDescription>
+              <CardDescription>Manage your course structure and lessons</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600 text-center py-8">
-                Curriculum management interface will be implemented here
-              </p>
+              <CurriculumTree
+                sections={mockSections}
+                onAddSection={() => console.log('Add section')}
+                onAddLesson={(sectionId) => console.log('Add lesson', sectionId)}
+                onEditSection={(sectionId) => console.log('Edit section', sectionId)}
+                onEditLesson={(sectionId, lessonId) => console.log('Edit lesson', sectionId, lessonId)}
+                onDeleteSection={(sectionId) => console.log('Delete section', sectionId)}
+                onDeleteLesson={(sectionId, lessonId) => console.log('Delete lesson', sectionId, lessonId)}
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -286,26 +260,23 @@ export default function CourseDetailPage() {
               <CardDescription>Manage and track student progress</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600 text-center py-8">
-                Student management interface will be implemented here
-              </p>
+              <StudentProgressTable
+                students={mockStudents}
+                onViewProfile={(id) => console.log('View profile', id)}
+                onMessage={(id) => console.log('Message', id)}
+                onBulkMessage={(ids) => console.log('Bulk message', ids)}
+                onExport={() => console.log('Export')}
+              />
             </CardContent>
           </Card>
         </TabsContent>
 
         {/* Analytics Tab */}
         <TabsContent value="analytics">
-          <Card>
-            <CardHeader>
-              <CardTitle>Course Analytics</CardTitle>
-              <CardDescription>Detailed performance metrics</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600 text-center py-8">
-                Analytics dashboard will be implemented here
-              </p>
-            </CardContent>
-          </Card>
+          <CourseAnalytics
+            data={mockAnalytics}
+            onExport={(format) => console.log('Export', format)}
+          />
         </TabsContent>
 
         {/* Reviews Tab */}
@@ -315,27 +286,141 @@ export default function CourseDetailPage() {
               <CardTitle>Course Reviews</CardTitle>
               <CardDescription>Student feedback and ratings</CardDescription>
             </CardHeader>
-            <CardContent>
-              <p className="text-gray-600 text-center py-8">
-                Reviews management interface will be implemented here
-              </p>
+            <CardContent className="space-y-6">
+              {/* Rating Filter */}
+              <div className="flex gap-4">
+                <Select defaultValue="all">
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Filter by rating" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Ratings</SelectItem>
+                    <SelectItem value="5">5 Stars</SelectItem>
+                    <SelectItem value="4">4 Stars</SelectItem>
+                    <SelectItem value="3">3 Stars</SelectItem>
+                    <SelectItem value="2">2 Stars</SelectItem>
+                    <SelectItem value="1">1 Star</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Reviews List */}
+              <div className="space-y-4">
+                {mockReviews.map((review) => (
+                  <div key={review.id} className="border-b pb-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        <Avatar>
+                          <AvatarImage src={review.student.avatar} />
+                          <AvatarFallback>{review.student.name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium text-gray-900">{review.student.name}</p>
+                          <div className="flex items-center gap-1">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-4 h-4 ${
+                                  i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <span className="text-sm text-gray-500">{review.date}</span>
+                    </div>
+                    <p className="text-gray-600 ml-12 mb-2">{review.comment}</p>
+                    <div className="ml-12 flex gap-2">
+                      <Button variant="ghost" size="sm">
+                        <Reply className="w-4 h-4 mr-1" />
+                        Reply
+                      </Button>
+                      <Button variant="ghost" size="sm" className="text-red-600">
+                        <Flag className="w-4 h-4 mr-1" />
+                        Flag
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
 
         {/* Settings Tab */}
         <TabsContent value="settings">
-          <Card>
-            <CardHeader>
-              <CardTitle>Course Settings</CardTitle>
-              <CardDescription>Configure course options</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600 text-center py-8">
-                Settings interface will be implemented here
-              </p>
-            </CardContent>
-          </Card>
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Basic Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label>Course Title</Label>
+                  <Input defaultValue={mockCourse.title} />
+                </div>
+                <div>
+                  <Label>Description</Label>
+                  <Textarea defaultValue={mockCourse.description} rows={4} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Category</Label>
+                    <Input defaultValue={mockCourse.category} />
+                  </div>
+                  <div>
+                    <Label>Grade Level</Label>
+                    <Input defaultValue={mockCourse.grade} />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Pricing</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label>Course Price ($)</Label>
+                  <Input type="number" defaultValue={mockCourse.price} />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Enrollment Settings</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label>Enable Enrollments</Label>
+                  <Switch defaultChecked />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label>Enable Certificates</Label>
+                  <Switch defaultChecked />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Course Status</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-4">
+                  <Button>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save Changes
+                  </Button>
+                  <Button variant="outline">Publish Course</Button>
+                  <Button variant="outline" className="text-red-600">Archive Course</Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

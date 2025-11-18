@@ -1,122 +1,128 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
+// Mock data - in production, fetch from Supabase
+const mockCourses = [
+  {
+    id: '1',
+    title: 'Advanced Mathematics',
+    description: 'Comprehensive mathematics course covering advanced topics',
+    thumbnail: '/course-thumbnails/math.jpg',
+    category: 'Mathematics',
+    grade: 'Grade 10',
+    subject: 'Algebra',
+    enrollments: 245,
+    rating: 4.8,
+    revenue: 12450,
+    status: 'published',
+    lastUpdated: '2024-01-10',
+    sections: 8,
+    lessons: 42,
+    duration: '24 hours',
+    completionRate: 78,
+    activeStudents: 198
+  },
+  {
+    id: '2',
+    title: 'Physics Fundamentals',
+    description: 'Introduction to physics concepts',
+    thumbnail: '/course-thumbnails/physics.jpg',
+    category: 'Science',
+    grade: 'Grade 9',
+    subject: 'Physics',
+    enrollments: 189,
+    rating: 4.6,
+    revenue: 9450,
+    status: 'published',
+    lastUpdated: '2024-01-08',
+    sections: 6,
+    lessons: 32,
+    duration: '18 hours',
+    completionRate: 82,
+    activeStudents: 156
+  },
+  {
+    id: '3',
+    title: 'English Literature',
+    description: 'Explore classic and modern literature',
+    thumbnail: '/course-thumbnails/english.jpg',
+    category: 'Language',
+    grade: 'Grade 8',
+    subject: 'English',
+    enrollments: 312,
+    rating: 4.9,
+    revenue: 15600,
+    status: 'published',
+    lastUpdated: '2024-01-12',
+    sections: 10,
+    lessons: 48,
+    duration: '30 hours',
+    completionRate: 65,
+    activeStudents: 203
+  },
+  {
+    id: '4',
+    title: 'Chemistry Basics',
+    description: 'Fundamental chemistry concepts',
+    thumbnail: '/course-thumbnails/chemistry.jpg',
+    category: 'Science',
+    grade: 'Grade 9',
+    subject: 'Chemistry',
+    enrollments: 156,
+    rating: 4.5,
+    revenue: 7800,
+    status: 'draft',
+    lastUpdated: '2024-01-05',
+    sections: 5,
+    lessons: 28,
+    duration: '16 hours',
+    completionRate: 70,
+    activeStudents: 109
+  }
+]
+
+// GET /api/teacher/courses - Get teacher's courses
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const { searchParams } = new URL(request.url)
     
-    // Get the current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    
-    if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    // Extract query parameters
+    const status = searchParams.get('status') || 'all'
+    const sortBy = searchParams.get('sortBy') || 'newest'
+    const search = searchParams.get('search') || ''
 
-    // Check if user is a teacher
-    const userRole = user.user_metadata?.role || user.app_metadata?.role
-    
-    if (userRole !== 'teacher') {
-      return NextResponse.json({ error: 'Access denied' }, { status: 403 })
-    }
+    let filteredCourses = [...mockCourses]
 
-    // Get query parameters
-    const searchParams = request.nextUrl.searchParams
-    const status = searchParams.get('status')
-    const sortBy = searchParams.get('sortBy')
-    const search = searchParams.get('search')
-
-    // TODO: Replace with actual database query
-    // For now, return mock data
-    const mockCourses = [
-      {
-        id: '1',
-        title: 'Advanced Mathematics',
-        thumbnail: '/course-thumbnails/math.jpg',
-        category: 'Mathematics',
-        grade: 'Grade 10',
-        subject: 'Algebra',
-        enrollments: 245,
-        rating: 4.8,
-        revenue: 12450,
-        status: 'published',
-        lastUpdated: '2024-01-10',
-        createdAt: '2023-09-01'
-      },
-      {
-        id: '2',
-        title: 'Physics Fundamentals',
-        thumbnail: '/course-thumbnails/physics.jpg',
-        category: 'Science',
-        grade: 'Grade 9',
-        subject: 'Physics',
-        enrollments: 189,
-        rating: 4.6,
-        revenue: 9450,
-        status: 'published',
-        lastUpdated: '2024-01-08',
-        createdAt: '2023-08-15'
-      },
-      {
-        id: '3',
-        title: 'English Literature',
-        thumbnail: '/course-thumbnails/english.jpg',
-        category: 'Language',
-        grade: 'Grade 8',
-        subject: 'English',
-        enrollments: 312,
-        rating: 4.9,
-        revenue: 15600,
-        status: 'published',
-        lastUpdated: '2024-01-12',
-        createdAt: '2023-10-01'
-      },
-      {
-        id: '4',
-        title: 'Chemistry Basics',
-        thumbnail: '/course-thumbnails/chemistry.jpg',
-        category: 'Science',
-        grade: 'Grade 9',
-        subject: 'Chemistry',
-        enrollments: 156,
-        rating: 4.5,
-        revenue: 7800,
-        status: 'draft',
-        lastUpdated: '2024-01-05',
-        createdAt: '2024-01-01'
-      }
-    ]
-
-    // Filter by status if provided
-    let filteredCourses = mockCourses
-    if (status && status !== 'all') {
+    // Filter by status
+    if (status !== 'all') {
       filteredCourses = filteredCourses.filter(course => course.status === status)
     }
 
-    // Filter by search query if provided
+    // Search
     if (search) {
+      const searchLower = search.toLowerCase()
       filteredCourses = filteredCourses.filter(course =>
-        course.title.toLowerCase().includes(search.toLowerCase())
+        course.title.toLowerCase().includes(searchLower) ||
+        course.description.toLowerCase().includes(searchLower) ||
+        course.category.toLowerCase().includes(searchLower)
       )
     }
 
-    // Sort courses
-    if (sortBy) {
-      switch (sortBy) {
-        case 'newest':
-          filteredCourses.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-          break
-        case 'popular':
-          filteredCourses.sort((a, b) => b.rating - a.rating)
-          break
-        case 'enrolled':
-          filteredCourses.sort((a, b) => b.enrollments - a.enrollments)
-          break
-        case 'updated':
-          filteredCourses.sort((a, b) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime())
-          break
-      }
+    // Sort
+    switch (sortBy) {
+      case 'popular':
+        filteredCourses.sort((a, b) => b.rating - a.rating)
+        break
+      case 'enrolled':
+        filteredCourses.sort((a, b) => b.enrollments - a.enrollments)
+        break
+      case 'updated':
+        filteredCourses.sort((a, b) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime())
+        break
+      case 'newest':
+      default:
+        filteredCourses.sort((a, b) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime())
     }
 
     return NextResponse.json({
@@ -124,45 +130,60 @@ export async function GET(request: NextRequest) {
       total: filteredCourses.length
     })
   } catch (error) {
-    console.error('Teacher courses error:', error)
+    console.error('Error fetching courses:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to fetch courses' },
       { status: 500 }
     )
   }
 }
 
+// POST /api/teacher/courses - Create new course
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient()
-    
-    // Get the current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    
-    if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Check if user is a teacher
-    const userRole = user.user_metadata?.role || user.app_metadata?.role
-    
-    if (userRole !== 'teacher') {
-      return NextResponse.json({ error: 'Access denied' }, { status: 403 })
-    }
-
     const body = await request.json()
+    
+    // Validate required fields
+    const { title, description, category, grade, subject } = body
+    
+    if (!title || !description || !category) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      )
+    }
 
-    // TODO: Implement course creation logic
-    // For now, return success
+    // Create new course
+    const newCourse = {
+      id: (mockCourses.length + 1).toString(),
+      title,
+      description,
+      thumbnail: '/course-thumbnails/default.jpg',
+      category,
+      grade: grade || 'Not specified',
+      subject: subject || 'General',
+      enrollments: 0,
+      rating: 0,
+      revenue: 0,
+      status: 'draft',
+      lastUpdated: new Date().toISOString().split('T')[0],
+      sections: 0,
+      lessons: 0,
+      duration: '0 hours',
+      completionRate: 0,
+      activeStudents: 0
+    }
+
+    mockCourses.push(newCourse)
+
     return NextResponse.json({
-      success: true,
       message: 'Course created successfully',
-      courseId: 'new-course-id'
+      course: newCourse
     }, { status: 201 })
   } catch (error) {
-    console.error('Create course error:', error)
+    console.error('Error creating course:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to create course' },
       { status: 500 }
     )
   }

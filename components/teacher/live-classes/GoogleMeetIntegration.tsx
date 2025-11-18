@@ -1,0 +1,256 @@
+'use client'
+
+// Google Meet API Integration Wrapper
+// This component provides functions to interact with Google Calendar API to create Meet links
+
+interface GoogleMeetSettings {
+  summary: string
+  description?: string
+  start: {
+    dateTime: string
+    timeZone: string
+  }
+  end: {
+    dateTime: string
+    timeZone: string
+  }
+  attendees?: Array<{ email: string }>
+  conferenceData?: {
+    createRequest: {
+      requestId: string
+      conferenceSolutionKey: {
+        type: string
+      }
+    }
+  }
+}
+
+interface GoogleMeetEvent {
+  id: string
+  summary: string
+  description?: string
+  start: any
+  end: any
+  hangoutLink?: string
+  conferenceData?: any
+  htmlLink: string
+}
+
+export class GoogleMeetIntegration {
+  private accessToken: string
+  private baseUrl: string = 'https://www.googleapis.com/calendar/v3'
+
+  constructor(accessToken: string) {
+    this.accessToken = accessToken
+  }
+
+  // Create a new Google Meet meeting via Calendar API
+  async createMeeting(calendarId: string, settings: GoogleMeetSettings): Promise<GoogleMeetEvent> {
+    try {
+      // Add conference data to create Meet link
+      const eventData = {
+        ...settings,
+        conferenceData: {
+          createRequest: {
+            requestId: this.generateRequestId(),
+            conferenceSolutionKey: {
+              type: 'hangoutsMeet'
+            }
+          }
+        }
+      }
+
+      const response = await fetch(
+        `${this.baseUrl}/calendars/${calendarId}/events?conferenceDataVersion=1`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.accessToken}`
+          },
+          body: JSON.stringify(eventData)
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error('Failed to create Google Meet meeting')
+      }
+
+      const event = await response.json()
+      return event
+    } catch (error) {
+      console.error('Google Meet create meeting error:', error)
+      throw error
+    }
+  }
+
+  // Get meeting details
+  async getMeeting(calendarId: string, eventId: string): Promise<GoogleMeetEvent> {
+    try {
+      const response = await fetch(
+        `${this.baseUrl}/calendars/${calendarId}/events/${eventId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${this.accessToken}`
+          }
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error('Failed to get Google Meet meeting')
+      }
+
+      const event = await response.json()
+      return event
+    } catch (error) {
+      console.error('Google Meet get meeting error:', error)
+      throw error
+    }
+  }
+
+  // Update meeting
+  async updateMeeting(
+    calendarId: string,
+    eventId: string,
+    settings: Partial<GoogleMeetSettings>
+  ): Promise<GoogleMeetEvent> {
+    try {
+      const response = await fetch(
+        `${this.baseUrl}/calendars/${calendarId}/events/${eventId}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.accessToken}`
+          },
+          body: JSON.stringify(settings)
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error('Failed to update Google Meet meeting')
+      }
+
+      const event = await response.json()
+      return event
+    } catch (error) {
+      console.error('Google Meet update meeting error:', error)
+      throw error
+    }
+  }
+
+  // Delete meeting
+  async deleteMeeting(calendarId: string, eventId: string): Promise<void> {
+    try {
+      const response = await fetch(
+        `${this.baseUrl}/calendars/${calendarId}/events/${eventId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${this.accessToken}`
+          }
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error('Failed to delete Google Meet meeting')
+      }
+    } catch (error) {
+      console.error('Google Meet delete meeting error:', error)
+      throw error
+    }
+  }
+
+  // Get meeting link
+  getMeetingLink(event: GoogleMeetEvent): string | null {
+    return event.hangoutLink || event.conferenceData?.entryPoints?.[0]?.uri || null
+  }
+
+  // Get meeting ID
+  getMeetingId(event: GoogleMeetEvent): string | null {
+    return event.conferenceData?.conferenceId || null
+  }
+
+  // List upcoming meetings
+  async listMeetings(calendarId: string, timeMin?: string, timeMax?: string): Promise<GoogleMeetEvent[]> {
+    try {
+      const params = new URLSearchParams({
+        timeMin: timeMin || new Date().toISOString(),
+        ...(timeMax && { timeMax }),
+        singleEvents: 'true',
+        orderBy: 'startTime'
+      })
+
+      const response = await fetch(
+        `${this.baseUrl}/calendars/${calendarId}/events?${params}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${this.accessToken}`
+          }
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error('Failed to list Google Meet meetings')
+      }
+
+      const data = await response.json()
+      return data.items || []
+    } catch (error) {
+      console.error('Google Meet list meetings error:', error)
+      throw error
+    }
+  }
+
+  // Generate unique request ID for conference creation
+  private generateRequestId(): string {
+    return `meet-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+  }
+
+  // Get recordings from Google Drive (if recorded)
+  async getRecordings(driveFileId: string): Promise<any> {
+    try {
+      // Note: Google Meet recordings are saved to Google Drive
+      // This requires Drive API access
+      const response = await fetch(
+        `https://www.googleapis.com/drive/v3/files/${driveFileId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${this.accessToken}`
+          }
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error('Failed to get recording from Google Drive')
+      }
+
+      const file = await response.json()
+      return file
+    } catch (error) {
+      console.error('Google Meet get recording error:', error)
+      throw error
+    }
+  }
+}
+
+// Hook for using Google Meet integration
+export function useGoogleMeetIntegration() {
+  // TODO: Get access token from OAuth flow or session
+  const accessToken = '' // This should come from authentication
+
+  const googleMeet = new GoogleMeetIntegration(accessToken)
+
+  return {
+    createMeeting: googleMeet.createMeeting.bind(googleMeet),
+    getMeeting: googleMeet.getMeeting.bind(googleMeet),
+    updateMeeting: googleMeet.updateMeeting.bind(googleMeet),
+    deleteMeeting: googleMeet.deleteMeeting.bind(googleMeet),
+    getMeetingLink: googleMeet.getMeetingLink.bind(googleMeet),
+    getMeetingId: googleMeet.getMeetingId.bind(googleMeet),
+    listMeetings: googleMeet.listMeetings.bind(googleMeet),
+    getRecordings: googleMeet.getRecordings.bind(googleMeet)
+  }
+}
+
+export default GoogleMeetIntegration

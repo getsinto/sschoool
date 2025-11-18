@@ -1,16 +1,6 @@
 'use client'
 
-import { 
-  MoreVertical,
-  Eye,
-  Edit,
-  BarChart3,
-  Copy,
-  Archive,
-  Star,
-  Users,
-  DollarSign
-} from 'lucide-react'
+import { Star, Users, DollarSign, MoreVertical, Eye, Edit, BarChart3, Copy, Archive } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -32,8 +22,8 @@ interface CourseCardProps {
     subject: string
     enrollments: number
     rating: number
-    revenue?: number
-    status: 'published' | 'draft' | 'archived'
+    revenue: number
+    status: string
     lastUpdated: string
   }
   onEdit?: (id: string) => void
@@ -60,17 +50,9 @@ export function CourseCard({ course, onEdit, onDuplicate, onArchive }: CourseCar
             {course.status}
           </Badge>
         </div>
-        {course.thumbnail ? (
-          <img 
-            src={course.thumbnail} 
-            alt={course.title}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-white text-6xl font-bold opacity-20">
-            {course.title.charAt(0)}
-          </div>
-        )}
+        <div className="absolute inset-0 flex items-center justify-center text-white text-6xl font-bold opacity-20">
+          {course.title.charAt(0)}
+        </div>
       </div>
 
       <CardContent className="p-4">
@@ -102,12 +84,10 @@ export function CourseCard({ course, onEdit, onDuplicate, onArchive }: CourseCar
             <Star className="w-4 h-4 text-yellow-400 fill-current" />
             <span className="text-gray-600">{course.rating}</span>
           </div>
-          {course.revenue !== undefined && (
-            <div className="flex items-center gap-1 text-sm">
-              <DollarSign className="w-4 h-4 text-green-600" />
-              <span className="text-gray-600">{course.revenue}</span>
-            </div>
-          )}
+          <div className="flex items-center gap-1 text-sm">
+            <DollarSign className="w-4 h-4 text-green-600" />
+            <span className="text-gray-600">{course.revenue}</span>
+          </div>
         </div>
 
         {/* Actions */}
@@ -137,10 +117,7 @@ export function CourseCard({ course, onEdit, onDuplicate, onArchive }: CourseCar
                 <Copy className="w-4 h-4 mr-2" />
                 Duplicate
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                className="text-red-600"
-                onClick={() => onArchive?.(course.id)}
-              >
+              <DropdownMenuItem className="text-red-600" onClick={() => onArchive?.(course.id)}>
                 <Archive className="w-4 h-4 mr-2" />
                 Archive
               </DropdownMenuItem>

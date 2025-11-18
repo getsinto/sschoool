@@ -1,83 +1,61 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
 
+export const dynamic = 'force-dynamic'
+
+// POST /api/teacher/courses/[id]/archive - Archive/Unarchive course
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createClient()
-    
-    // Get the current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    
-    if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Check if user is a teacher
-    const userRole = user.user_metadata?.role || user.app_metadata?.role
-    
-    if (userRole !== 'teacher') {
-      return NextResponse.json({ error: 'Access denied' }, { status: 403 })
-    }
-
     const courseId = params.id
+    const body = await request.json()
+    const { action } = body // 'archive' or 'unarchive'
 
-    // TODO: Implement course archiving logic
-    // This should:
-    // 1. Set course status to 'archived'
-    // 2. Prevent new enrollments
-    // 3. Keep existing student access
-    // 4. Hide from public course listings
+    if (!action || !['archive', 'unarchive'].includes(action)) {
+      return NextResponse.json(
+        { error: 'Invalid action. Must be "archive" or "unarchive"' },
+        { status: 400 }
+      )
+    }
+
+    // In production, update course status in database
+    const newStatus = action === 'archive' ? 'archived' : 'published'
 
     return NextResponse.json({
-      success: true,
-      message: 'Course archived successfully'
+      message: `Course ${action}d successfully`,
+      courseId,
+      newStatus,
+      archivedAt: action === 'archive' ? new Date().toISOString() : null
     })
   } catch (error) {
-    console.error('Archive course error:', error)
+    console.error('Error archiving course:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to archive course' },
       { status: 500 }
     )
   }
 }
 
-export async function DELETE(
+// GET /api/teacher/courses/[id]/archive - Get archive status
+export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createClient()
-    
-    // Get the current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    
-    if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Check if user is a teacher
-    const userRole = user.user_metadata?.role || user.app_metadata?.role
-    
-    if (userRole !== 'teacher') {
-      return NextResponse.json({ error: 'Access denied' }, { status: 403 })
-    }
-
     const courseId = params.id
 
-    // TODO: Implement course unarchiving logic
-    // This should restore the course to its previous status
-
+    // In production, fetch from database
     return NextResponse.json({
-      success: true,
-      message: 'Course unarchived successfully'
+      courseId,
+      isArchived: false,
+      archivedAt: null,
+      canUnarchive: true
     })
   } catch (error) {
-    console.error('Unarchive course error:', error)
+    console.error('Error fetching archive status:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to fetch archive status' },
       { status: 500 }
     )
   }
