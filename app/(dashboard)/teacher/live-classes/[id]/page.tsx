@@ -6,9 +6,8 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AttendanceTracker } from '@/components/zoom/AttendanceTracker';
-import { RecordingsList } from '@/components/zoom/RecordingsList';
-import { useZoomMeeting } from '@/hooks/useZoomMeeting';
+import { AttendanceReport } from '@/components/teacher/live-classes/AttendanceReport';
+import { RecordingPlayer } from '@/components/teacher/live-classes/RecordingPlayer';
 import {
   ArrowLeft,
   Video,
