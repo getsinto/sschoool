@@ -2,7 +2,6 @@
 
 import { Card } from '@/components/ui/card'
 import { Award, CheckCircle } from 'lucide-react'
-import QRCode from 'react-qr-code'
 
 interface CertificateViewerProps {
   certificate: {
@@ -16,6 +15,20 @@ interface CertificateViewerProps {
     institution: string
     seal?: string
   }
+}
+
+// Simple QR Code placeholder component
+// Replace with actual QR code library in production (e.g., react-qr-code, qrcode.react)
+function SimpleQRCode({ value, size = 64 }: { value: string; size?: number }) {
+  return (
+    <div 
+      className="bg-gray-900 flex items-center justify-center text-white text-xs font-mono p-2 border-2 border-gray-700"
+      style={{ width: size, height: size }}
+      title={value}
+    >
+      <span className="text-center">QR</span>
+    </div>
+  )
 }
 
 export default function CertificateViewer({ certificate }: CertificateViewerProps) {
@@ -102,10 +115,9 @@ export default function CertificateViewer({ certificate }: CertificateViewerProp
           {/* QR Code */}
           <div className="text-center space-y-2">
             <div className="h-16 flex items-center justify-center">
-              <QRCode
+              <SimpleQRCode
                 value={verificationUrl}
                 size={64}
-                level="M"
               />
             </div>
             <div className="border-t-2 border-foreground/20 pt-2">
