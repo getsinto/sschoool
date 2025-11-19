@@ -1,65 +1,60 @@
 'use client'
 
-import { HelpCircle, Clock, Award, TrendingUp, RotateCcw, Eye } from 'lucide-react'
+import { Clock, FileQuestion, Award, RotateCcw, Eye } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Progress } from '@/components/ui/progress'
 import Link from 'next/link'
 
-interface Quiz {
-  id: string
-  title: string
-  courseId: string
-  courseName: string
-  questionsCount: number
-  duration: number
-  maxPoints: number
-  attempts: number
-  maxAttempts: number
-  bestScore: number | null
-  lastScore: number | null
-  passed: boolean | null
-  status: 'available' | 'completed' | 'failed'
-}
-
 interface QuizCardProps {
-  quiz: Quiz
+  quiz: {
+    id: string
+    title: string
+    courseName: string
+    questionsCount: number
+    duration?: number
+    maxPoints: number
+    attempts: number
+    maxAttempts: number
+    bestScore?: number
+    lastScore?: number
+    status: 'available' | 'completed' | 'failed'
+    passed?: boolean
+  }
 }
 
 export default function QuizCard({ quiz }: QuizCardProps) {
   const getStatusBadge = () => {
     if (quiz.status === 'available') {
-      return <Badge variant="outline">Available</Badge>
-    }
-    if (quiz.status === 'failed') {
-      return <Badge variant="destructive">Failed - Retake Available</Badge>
+      return <Badge className="bg-blue-100 text-blue-800">Available</Badge>
     }
     if (quiz.passed) {
-      return <Badge variant="default">Passed</Badge>
+      return <Badge className="bg-green-100 text-green-800">Passed</Badge>
     }
-    return <Badge variant="secondary">Completed</Badge>
+    return <Badge className="bg-red-100 text-red-800">Need Retake</Badge>
   }
 
   const getActionButton = () => {
-    if (quiz.status === 'available') {
+    if (quiz.attempts === 0) {
       return (
-        <Link href={`/dashboard/student/quiz/${quiz.courseId}/${quiz.id}`}>
-          <Button>Start Quiz</Button>
+        <Link href={`/dashboard/student/learn/${quiz.id}`}>
+          <Button className="w-full">Start Quiz</Button>
         </Link>
       )
     }
-    
-    if (quiz.status === 'failed' && quiz.attempts < quiz.maxAttempts) {
+
+    if (quiz.attempts < quiz.maxAttempts && !quiz.passed) {
       return (
         <div className="flex gap-2">
-          <Link href={`/dashboard/student/quizzes/${quiz.id}/results`}>
-            <Button variant="outline" size="sm">
+          <Link href={`/dashboard/student/quizzes/${quiz.id}/results`} className="flex-1">
+            <Button variant="outline" className="w-full">
               <Eye className="w-4 h-4 mr-2" />
               View Results
             </Button>
           </Link>
-          <Link href={`/dashboard/student/quiz/${quiz.courseId}/${quiz.id}`}>
-            <Button size="sm">
+          <Link href={`/dashboard/student/learn/${quiz.id}`} className="flex-1">
+            <Button className="w-full">
               <RotateCcw className="w-4 h-4 mr-2" />
               Retake
             </Button>
@@ -67,10 +62,10 @@ export default function QuizCard({ quiz }: QuizCardProps) {
         </div>
       )
     }
-    
+
     return (
       <Link href={`/dashboard/student/quizzes/${quiz.id}/results`}>
-        <Button variant="outline">
+        <Button variant="outline" className="w-full">
           <Eye className="w-4 h-4 mr-2" />
           View Results
         </Button>
@@ -78,118 +73,77 @@ export default function QuizCard({ quiz }: QuizCardProps) {
     )
   }
 
-  const getScorePercentage = (score: number) => {
-    return ((score / quiz.maxPoints) * 100).toFixed(1)
-  }
+  const scorePercentage = quiz.bestScore ? (quiz.bestScore / quiz.maxPoints) * 100 : 0
 
   return (
     <Card className="hover:shadow-lg transition-shadow">
-      <CardContent className="pt-6">
-        <div className="flex items-start justify-between">
+      <CardContent className="p-6">
+        <div className="flex justify-between items-start mb-4">
           <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
-              <h3 className="text-lg font-semibold">{quiz.title}</h3>
-              {getStatusBadge()}
+            <h3 className="font-semibold text-lg mb-1">{quiz.title}</h3>
+            <p className="text-sm text-gray-600">{quiz.courseName}</p>
+          </div>
+          {getStatusBadge()}
+        </div>
+
+        <div className="space-y-3 mb-4">
+          <div className="flex items-center gap-4 text-sm text-gray-600">
+            <div className="flex items-center gap-1">
+              <FileQuestion className="w-4 h-4" />
+              <span>{quiz.questionsCount} questions</span>
             </div>
-
-            <p className="text-sm text-gray-600 mb-3">{quiz.courseName}</p>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-              {/* Questions */}
-              <div className="flex items-center gap-2 text-sm">
-                <HelpCircle className="w-4 h-4 text-gray-600" />
-                <div>
-                  <p className="text-gray-600">Questions</p>
-                  <p className="font-semibold">{quiz.questionsCount}</p>
-                </div>
+            {quiz.duration && (
+              <div className="flex items-center gap-1">
+                <Clock className="w-4 h-4" />
+                <span>{quiz.duration} min</span>
               </div>
+            )}
+            <div className="flex items-center gap-1">
+              <Award className="w-4 h-4" />
+              <span>{quiz.maxPoints} pts</span>
+            </div>
+          </div>
 
-              {/* Duration */}
-              <div className="flex items-center gap-2 text-sm">
-                <Clock className="w-4 h-4 text-gray-600" />
+          <div className="text-sm">
+            <div className="flex justify-between mb-1">
+              <span className="text-gray-600">Attempts</span>
+              <span className="font-medium">
+                {quiz.attempts} of {quiz.maxAttempts}
+              </span>
+            </div>
+            <Progress 
+              value={(quiz.attempts / quiz.maxAttempts) * 100} 
+              className="h-2"
+            />
+          </div>
+
+          {quiz.bestScore !== undefined && (
+            <div className="p-3 bg-gray-50 rounded-lg">
+              <div className="flex justify-between items-center">
                 <div>
-                  <p className="text-gray-600">Duration</p>
-                  <p className="font-semibold">{quiz.duration} min</p>
+                  <p className="text-sm text-gray-600">Best Score</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {quiz.bestScore}/{quiz.maxPoints}
+                  </p>
                 </div>
-              </div>
-
-              {/* Max Points */}
-              <div className="flex items-center gap-2 text-sm">
-                <Award className="w-4 h-4 text-gray-600" />
-                <div>
-                  <p className="text-gray-600">Max Points</p>
-                  <p className="font-semibold">{quiz.maxPoints}</p>
-                </div>
-              </div>
-
-              {/* Attempts */}
-              <div className="flex items-center gap-2 text-sm">
-                <RotateCcw className="w-4 h-4 text-gray-600" />
-                <div>
-                  <p className="text-gray-600">Attempts</p>
-                  <p className="font-semibold">
-                    {quiz.attempts} of {quiz.maxAttempts}
+                <div className="text-right">
+                  <p className="text-sm text-gray-600">Percentage</p>
+                  <p className="text-2xl font-bold">
+                    {Math.round(scorePercentage)}%
                   </p>
                 </div>
               </div>
             </div>
+          )}
 
-            {/* Scores */}
-            {quiz.bestScore !== null && (
-              <div className="grid grid-cols-2 gap-4 mb-3">
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                  <p className="text-sm text-gray-600 mb-1">Best Score</p>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-bold text-green-600">
-                      {quiz.bestScore}
-                    </span>
-                    <span className="text-sm text-gray-600">
-                      / {quiz.maxPoints} ({getScorePercentage(quiz.bestScore)}%)
-                    </span>
-                  </div>
-                </div>
-
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <p className="text-sm text-gray-600 mb-1">Last Score</p>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-bold text-blue-600">
-                      {quiz.lastScore}
-                    </span>
-                    <span className="text-sm text-gray-600">
-                      / {quiz.maxPoints} ({getScorePercentage(quiz.lastScore!)}%)
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Pass/Fail Status */}
-            {quiz.passed !== null && (
-              <div className={`flex items-center gap-2 text-sm mb-3 ${
-                quiz.passed ? 'text-green-600' : 'text-red-600'
-              }`}>
-                {quiz.passed ? (
-                  <>
-                    <TrendingUp className="w-4 h-4" />
-                    <span className="font-semibold">Passed</span>
-                  </>
-                ) : (
-                  <>
-                    <RotateCcw className="w-4 h-4" />
-                    <span className="font-semibold">
-                      Failed - {quiz.maxAttempts - quiz.attempts} attempt(s) remaining
-                    </span>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Action Button */}
-          <div className="ml-4">
-            {getActionButton()}
-          </div>
+          {quiz.lastScore !== undefined && quiz.lastScore !== quiz.bestScore && (
+            <div className="text-sm text-gray-600">
+              Last attempt: {quiz.lastScore}/{quiz.maxPoints} ({Math.round((quiz.lastScore / quiz.maxPoints) * 100)}%)
+            </div>
+          )}
         </div>
+
+        {getActionButton()}
       </CardContent>
     </Card>
   )

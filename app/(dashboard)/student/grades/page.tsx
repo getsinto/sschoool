@@ -1,14 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { motion } from 'framer-motion'
 import {
   TrendingUp,
   Award,
-  BookOpen,
   Download,
-  Share2,
-  BarChart3
+  Share2
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -187,15 +184,25 @@ export default function GradesPage() {
       <div>
         <h2 className="text-2xl font-bold mb-4">Grades by Course</h2>
         <div className="space-y-4">
-          {data.courses.map((course, index) => (
-            <motion.div
-              key={course.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <GradeCard course={course} />
-            </motion.div>
+          {data.courses.map((course) => (
+            <div key={course.id}>
+              <GradeCard 
+                course={{
+                  id: course.id,
+                  name: course.name,
+                  instructor: 'Instructor',
+                  thumbnail: course.thumbnail
+                }}
+                grade={course.overallGrade}
+                letterGrade={course.overallGrade >= 90 ? 'A' : course.overallGrade >= 80 ? 'B' : 'C'}
+                breakdown={{
+                  quizzes: course.quizzesAverage,
+                  assignments: course.assignmentsAverage,
+                  participation: course.participation
+                }}
+                trend="up"
+              />
+            </div>
           ))}
         </div>
       </div>

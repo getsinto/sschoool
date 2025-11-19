@@ -1,29 +1,31 @@
 'use client'
 
 import { useState } from 'react'
-import { motion } from 'framer-motion'
-import {
-  HelpCircle,
-  TrendingUp,
-  CheckCircle,
-  XCircle,
-  Search,
-  Filter
-} from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { HelpCircle, TrendingUp, CheckCircle, XCircle, Search } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import QuizCard from '@/components/student/quizzes/QuizCard'
 
 // Mock data
-const mockQuizzes = [
+const mockQuizzes: Array<{
+  id: string
+  title: string
+  courseName: string
+  questionsCount: number
+  duration?: number
+  maxPoints: number
+  attempts: number
+  maxAttempts: number
+  bestScore?: number
+  lastScore?: number
+  status: 'available' | 'completed' | 'failed'
+  passed?: boolean
+}> = [
   {
     id: 'q1',
     title: 'Quadratic Equations - Mid-term Quiz',
-    courseId: 'c1',
     courseName: 'Advanced Mathematics',
     questionsCount: 15,
     duration: 30,
@@ -38,7 +40,6 @@ const mockQuizzes = [
   {
     id: 'q2',
     title: 'Newton\'s Laws Quiz',
-    courseId: 'c2',
     courseName: 'Physics Fundamentals',
     questionsCount: 10,
     duration: 20,
@@ -53,7 +54,6 @@ const mockQuizzes = [
   {
     id: 'q3',
     title: 'Shakespeare Knowledge Check',
-    courseId: 'c3',
     courseName: 'English Literature',
     questionsCount: 20,
     duration: 25,
@@ -68,31 +68,23 @@ const mockQuizzes = [
   {
     id: 'q4',
     title: 'World War II Quiz',
-    courseId: 'c4',
     courseName: 'World History',
     questionsCount: 12,
     duration: 15,
     maxPoints: 60,
     attempts: 0,
     maxAttempts: 2,
-    bestScore: null,
-    lastScore: null,
-    passed: null,
     status: 'available'
   },
   {
     id: 'q5',
     title: 'Chemical Reactions Test',
-    courseId: 'c5',
     courseName: 'Chemistry Basics',
     questionsCount: 18,
     duration: 35,
     maxPoints: 90,
     attempts: 0,
     maxAttempts: 3,
-    bestScore: null,
-    lastScore: null,
-    passed: null,
     status: 'available'
   }
 ]
@@ -266,15 +258,10 @@ export default function QuizzesPage() {
 
         <TabsContent value={activeTab} className="space-y-4 mt-6">
           {filteredQuizzes.length > 0 ? (
-            filteredQuizzes.map((quiz, index) => (
-              <motion.div
-                key={quiz.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
+            filteredQuizzes.map((quiz) => (
+              <div key={quiz.id}>
                 <QuizCard quiz={quiz} />
-              </motion.div>
+              </div>
             ))
           ) : (
             <Card>

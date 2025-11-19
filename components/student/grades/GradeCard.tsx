@@ -1,35 +1,25 @@
 'use client'
 
-import { BookOpen, TrendingUp, Award, Eye } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
-import Link from 'next/link'
-
-interface Course {
-  id: string
-  name: string
-  thumbnail: string
-  overallGrade: number
-  quizzesAverage: number
-  assignmentsAverage: number
-  participation: number
-  grades: Array<{
-    id: string
-    title: string
-    type: 'quiz' | 'assignment'
-    grade: number
-    maxPoints: number
-    date: string
-  }>
-}
+import { TrendingUp, TrendingDown } from 'lucide-react'
 
 interface GradeCardProps {
-  course: Course
+  course: {
+    id: string
+    name: string
+    instructor: string
+    thumbnail?: string
+  }
+  grade: number
+  letterGrade: string
+  breakdown: {
+    [key: string]: number
+  }
+  trend?: 'up' | 'down' | 'stable'
 }
 
-export default function GradeCard({ course }: GradeCardProps) {
+export default function GradeCard({ course, grade, letterGrade, breakdown, trend }: GradeCardProps) {
   const getGradeColor = (grade: number) => {
     if (grade >= 90) return 'text-green-600'
     if (grade >= 80) return 'text-blue-600'
@@ -38,89 +28,58 @@ export default function GradeCard({ course }: GradeCardProps) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
+    <Card className="hover:shadow-lg transition-shadow">
+      <CardContent className="p-6">
+        <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg" />
+            {course.thumbnail && (
+              <img
+                src={course.thumbnail}
+                alt={course.name}
+                className="w-12 h-12 rounded object-cover"
+              />
+            )}
             <div>
-              <CardTitle>{course.name}</CardTitle>
-              <p className="text-sm text-gray-600 mt-1">Overall Grade</p>
+              <h3 className="font-semibold">{course.name}</h3>
+              <p className="text-sm text-gray-600">{course.instructor}</p>
             </div>
           </div>
           <div className="text-right">
-            <div className={`text-4xl font-bold ${getGradeColor(course.overallGrade)}`}>
-              {course.overallGrade}%
+            <div className={`text-3xl font-bold ${getGradeColor(grade)}`}>
+              {letterGrade}
             </div>
-            <Badge variant="outline" className="mt-1">
-              {course.overallGrade >= 90 ? 'A' : course.overallGrade >= 80 ? 'B' : course.overallGrade >= 70 ? 'C' : 'D'}
-            </Badge>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Grade Breakdown */}
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <p className="text-sm text-gray-600 mb-1">Quizzes</p>
-            <p className="text-2xl font-bold">{course.quizzesAverage}%</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-600 mb-1">Assignments</p>
-            <p className="text-2xl font-bold">{course.assignmentsAverage}%</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-600 mb-1">Participation</p>
-            <p className="text-2xl font-bold">{course.participation}%</p>
+            <div className="text-sm text-gray-600">{grade}%</div>
           </div>
         </div>
 
-        {/* Recent Grades */}
-        <div>
-          <h4 className="font-semibold mb-2">Recent Grades</h4>
-          <div className="space-y-2">
-            {course.grades.map((grade) => (
-              <div key={grade.id} className="flex items-center justify-between p-2 border rounded">
-                <div className="flex items-center gap-2">
-                  {grade.type === 'quiz' ? (
-                    <Award className="w-4 h-4 text-blue-600" />
-                  ) : (
-                    <BookOpen className="w-4 h-4 text-purple-600" />
-                  )}
-                  <div>
-                    <p className="text-sm font-medium">{grade.title}</p>
-                    <p className="text-xs text-gray-600">
-                      {new Date(grade.date).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className={`font-bold ${getGradeColor((grade.grade / grade.maxPoints) * 100)}`}>
-                    {grade.grade}/{grade.maxPoints}
-                  </p>
-                  <p className="text-xs text-gray-600">
-                    {((grade.grade / grade.maxPoints) * 100).toFixed(1)}%
-                  </p>
-                </div>
+        {trend && (
+          <div className="flex items-center gap-2 mb-4 text-sm">
+            {trend === 'up' && (
+              <>
+                <TrendingUp className="w-4 h-4 text-green-600" />
+                <span className="text-green-600">Improving</span>
+              </>
+            )}
+            {trend === 'down' && (
+              <>
+                <TrendingDown className="w-4 h-4 text-red-600" />
+                <span className="text-red-600">Declining</span>
+              </>
+            )}
+          </div>
+        )}
+
+        <div className="space-y-3">
+          <h4 className="text-sm font-medium text-gray-700">Grade Breakdown</h4>
+          {Object.entries(breakdown).map(([category, value]) => (
+            <div key={category}>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="capitalize">{category}</span>
+                <span className="font-medium">{value}%</span>
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="flex gap-2">
-          <Link href={`/dashboard/student/courses/${course.id}`} className="flex-1">
-            <Button variant="outline" className="w-full" size="sm">
-              <BookOpen className="w-4 h-4 mr-2" />
-              View Course
-            </Button>
-          </Link>
-          <Link href={`/dashboard/student/grades/${course.id}`} className="flex-1">
-            <Button variant="outline" className="w-full" size="sm">
-              <Eye className="w-4 h-4 mr-2" />
-              All Grades
-            </Button>
-          </Link>
+              <Progress value={value} className="h-2" />
+            </div>
+          ))}
         </div>
       </CardContent>
     </Card>

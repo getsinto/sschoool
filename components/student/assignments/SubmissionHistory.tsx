@@ -1,93 +1,104 @@
 'use client'
 
-import { File, Clock, CheckCircle, Download } from 'lucide-react'
+import { Clock, FileText, CheckCircle, Download } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 
 interface Submission {
   id: string
+  version: number
   submittedAt: string
-  files: Array<{ name: string; size: string }>
-  grade: number | null
-  feedback: string | null
-  status: 'submitted' | 'graded'
+  status: 'draft' | 'submitted' | 'graded'
+  grade?: number
+  feedback?: string
+  files: { name: string; url: string }[]
 }
 
 interface SubmissionHistoryProps {
   submissions: Submission[]
+  maxPoints: number
 }
 
-export default function SubmissionHistory({ submissions }: SubmissionHistoryProps) {
+export default function SubmissionHistory({ submissions, maxPoints }: SubmissionHistoryProps) {
   return (
-    <div className="space-y-4">
-      {submissions.map((submission, index) => (
-        <Card key={submission.id}>
-          <CardHeader>
-            <div className="flex justify-between items-start">
-              <div>
-                <CardTitle className="text-lg">
-                  Submission {submissions.length - index}
-                </CardTitle>
-                <p className="text-sm text-gray-600 mt-1">
-                  {new Date(submission.submittedAt).toLocaleString()}
-                </p>
-              </div>
-              <Badge variant={submission.status === 'graded' ? 'default' : 'secondary'}>
-                {submission.status === 'graded' ? 'Graded' : 'Awaiting Grade'}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Files */}
-            <div>
-              <h4 className="font-semibold mb-2">Submitted Files</h4>
-              <div className="space-y-2">
-                {submission.files.map((file, fileIndex) => (
-                  <div
-                    key={fileIndex}
-                    className="flex items-center justify-between p-3 border rounded-lg"
-                  >
-                    <div className="flex items-center gap-3">
-                      <File className="w-5 h-5 text-blue-600" />
-                      <div>
-                        <p className="font-medium text-sm">{file.name}</p>
-                        <p className="text-xs text-gray-600">{file.size}</p>
+    <Card>
+      <CardHeader>
+        <CardTitle>Submission History</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {submissions.length === 0 ? (
+            <p className="text-center text-gray-500 py-4">No submissions yet</p>
+          ) : (
+            submissions.map((submission) => (
+              <div
+                key={submission.id}
+                className="border rounded-lg p-4 space-y-3"
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-semibold">Version {submission.version}</h4>
+                      <Badge variant={
+                        submission.status === 'graded' ? 'default' :
+                        submission.status === 'submitted' ? 'secondary' : 'outline'
+                      }>
+                        {submission.status}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
+                      <Clock className="w-4 h-4" />
+                      <span>{new Date(submission.submittedAt).toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  {submission.grade !== undefined && (
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-green-600">
+                        {submission.grade}/{maxPoints}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {Math.round((submission.grade / maxPoints) * 100)}%
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm">
-                      <Download className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Grade */}
-            {submission.grade !== null && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                    <span className="font-semibold">Grade</span>
-                  </div>
-                  <span className="text-2xl font-bold text-green-600">
-                    {submission.grade}
-                  </span>
+                  )}
                 </div>
-              </div>
-            )}
 
-            {/* Feedback */}
-            {submission.feedback && (
-              <div>
-                <h4 className="font-semibold mb-2">Feedback</h4>
-                <p className="text-sm text-gray-700">{submission.feedback}</p>
+                {submission.feedback && (
+                  <div className="bg-blue-50 p-3 rounded">
+                    <p className="text-sm font-medium text-blue-900 mb-1">Teacher Feedback:</p>
+                    <p className="text-sm text-blue-800">{submission.feedback}</p>
+                  </div>
+                )}
+
+                {submission.files.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium mb-2">Submitted Files:</p>
+                    <div className="space-y-1">
+                      {submission.files.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                          <div className="flex items-center gap-2">
+                            <FileText className="w-4 h-4 text-gray-600" />
+                            <span className="text-sm">{file.name}</span>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => window.open(file.url, '_blank')}
+                          >
+                            <Download className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+            ))
+          )}
+        </div>
+      </CardContent>
+    </Card>
   )
 }
