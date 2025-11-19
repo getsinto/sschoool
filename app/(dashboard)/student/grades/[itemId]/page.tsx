@@ -27,7 +27,7 @@ export default function GradeDetailPage() {
   const loadGradeDetail = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/student/grades/${itemId}`)
+      const response = await fetch(`/api/student/grades/item/${itemId}`)
       const data = await response.json()
       
       if (data.success) {
