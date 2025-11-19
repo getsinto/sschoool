@@ -1,122 +1,177 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { PreMeetingCheck } from '@/components/zoom/PreMeetingCheck';
-import { ZoomMeetingEmbed } from '@/components/zoom/ZoomMeetingEmbed';
-import { useAuth } from '@/hooks/useAuth';
-import { 
-  Video, 
-  Clock, 
-  Users, 
-  Calendar,
-  Loader2,
-  AlertCircle 
-} from 'lucide-react';
+import { useState, useEffect, useRef } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import PreFlightCheck from '@/components/student/live-classes/PreFlightCheck'
+import { Video, Mic, Wifi, CheckCircle, XCircle, Loader2 } from 'lucide-react'
 
 export default function JoinLiveClassPage() {
-  const params = useParams();
-  const router = useRouter();
-  const { user } = useAuth();
-  const [classData, setClassData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [showPreCheck, setShowPreCheck] = useState(true);
-  const [meetingStarted, setMeetingStarted] = useState(false);
+  const params = useParams()
+  const router = useRouter()
+  const [step, setStep] = useState<'preflight' | 'ready' | 'joining'>('preflight')
+  const [displayName, setDisplayName] = useState('')
+  const [checks, setChecks] = useState({
+    camera: false,
+    microphone: false,
+    internet: false,
+    system: false
+  })
+  const [joinUrl, setJoinUrl] = useState('')
 
-  const classId = params.id as string;
-
-  useEffect(() => {
-    fetchClassData();
-  }, [classId]);
-
-  const fetchClassData = async () => {
-    try {
-      const response = await fetch(`/api/live-classes/${classId}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch class data');
-      }
-      const data = await response.json();
-      setClassData(data.class);
-    } catch (err) {
-      setError('Unable to load class information');
-    } finally {
-      setLoading(false);
+  const handlePreFlightComplete = (results: any) => {
+    setChecks(results)
+    const allPassed = Object.values(results).every(v => v === true)
+    if (allPassed) {
+      setStep('ready')
     }
-  };
-
-  const handlePreCheckComplete = (settings: any) => {
-    setShowPreCheck(false);
-    setMeetingStarted(true);
-  };
-
-  const handleMeetingEnd = () => {
-    router.push('/student/live-classes');
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
-      </div>
-    );
   }
 
-  if (error || !classData) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <Card className="p-8 text-center">
-          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold mb-2">Unable to Join Class</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <Button onClick={() => router.push('/student/live-classes')}>
-            Back to Live Classes
-          </Button>
-        </Card>
-      </div>
-    );
+  const handleJoinClass = async () => {
+    if (!displayName.trim()) {
+      alert('Please enter your display name')
+      return
+    }
+
+    setStep('joining')
+
+    try {
+      const response = await fetch(`/api/student/live-classes/${params.id}/join`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ displayName })
+      })
+
+      const data = await response.json()
+      
+      if (data.success && data.data.joinUrl) {
+        // Redirect to external meeting platform
+        window.location.href = data.data.joinUrl
+      } else {
+        alert('Failed to generate join link')
+        setStep('ready')
+      }
+    } catch (error) {
+      console.error('Error joining class:', error)
+      alert('Failed to join class')
+      setStep('ready')
+    }
   }
 
-  if (showPreCheck) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">{classData.title}</h1>
-          <div className="flex items-center gap-4 text-gray-600">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              {new Date(classData.scheduled_at).toLocaleDateString()}
-            </div>
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              {new Date(classData.scheduled_at).toLocaleTimeString()}
-            </div>
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              {classData.duration} minutes
-            </div>
-          </div>
+  return (
+    <div className="container mx-auto p-6 max-w-4xl">
+      <div className="space-y-6">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold mb-2">Join Live Class</h1>
+          <p className="text-muted-foreground">
+            Complete the pre-flight check before joining
+          </p>
         </div>
 
-        <PreMeetingCheck onComplete={handlePreCheckComplete} />
+        {step === 'preflight' && (
+          <PreFlightCheck 
+            onComplete={handlePreFlightComplete}
+            classId={params.id as string}
+          />
+        )}
+
+        {step === 'ready' && (
+          <Card className="p-8">
+            <div className="space-y-6">
+              {/* System Check Results */}
+              <div className="space-y-3">
+                <h3 className="font-semibold">System Check Results</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-center gap-2">
+                    {checks.camera ? (
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <XCircle className="h-5 w-5 text-red-500" />
+                    )}
+                    <span>Camera</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {checks.microphone ? (
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <XCircle className="h-5 w-5 text-red-500" />
+                    )}
+                    <span>Microphone</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {checks.internet ? (
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <XCircle className="h-5 w-5 text-red-500" />
+                    )}
+                    <span>Internet Connection</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {checks.system ? (
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <XCircle className="h-5 w-5 text-red-500" />
+                    )}
+                    <span>System Requirements</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t pt-6">
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="displayName">Display Name</Label>
+                    <Input
+                      id="displayName"
+                      placeholder="Enter your name as it will appear in class"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      className="mt-2"
+                    />
+                    <p className="text-sm text-muted-foreground mt-1">
+                      This is how other participants will see you
+                    </p>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => setStep('preflight')}
+                      className="flex-1"
+                    >
+                      Run Check Again
+                    </Button>
+                    <Button
+                      onClick={handleJoinClass}
+                      disabled={!displayName.trim()}
+                      className="flex-1"
+                      size="lg"
+                    >
+                      <Video className="mr-2 h-5 w-5" />
+                      Join Now
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {step === 'joining' && (
+          <Card className="p-12">
+            <div className="text-center space-y-4">
+              <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary" />
+              <h3 className="text-xl font-semibold">Joining Class...</h3>
+              <p className="text-muted-foreground">
+                Please wait while we connect you to the live class
+              </p>
+            </div>
+          </Card>
+        )}
       </div>
-    );
-  }
-
-  if (meetingStarted && classData.meeting_id) {
-    return (
-      <ZoomMeetingEmbed
-        meetingNumber={classData.meeting_id}
-        password={classData.meeting_password}
-        userName={user?.full_name || 'Student'}
-        userEmail={user?.email}
-        role={0}
-        onMeetingEnd={handleMeetingEnd}
-      />
-    );
-  }
-
-  return null;
+    </div>
+  )
 }
