@@ -1,106 +1,119 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { v4 as uuidv4 } from 'uuid';
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
+import { sendTicketNotification } from '@/lib/support/notifications'
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+interface RouteParams {
+  params: {
+    id: string
+  }
+}
+
+export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    const supabase = createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
+    const cookieStore = cookies()
+    const supabase = createClient()
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
     }
 
-    // Verify admin role
     const { data: profile } = await supabase
-      .from('users')
+      .from('profiles')
       .select('role')
       .eq('id', user.id)
-      .single();
+      .single()
 
-    if (!profile || profile.role !== 'admin') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (!profile || (profile.role !== 'admin' && profile.role !== 'teacher')) {
+      return NextResponse.json(
+        { error: 'Admin or teacher access required' },
+        { status: 403 }
+      )
     }
 
-    const ticketId = params.id;
-    const formData = await request.formData();
-    const message = formData.get('message') as string;
-    const updateStatus = formData.get('update_status') as string;
+    const { message, is_staff = true } = await request.json()
 
     if (!message || !message.trim()) {
-      return NextResponse.json({ error: 'Message is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Message is required' },
+        { status: 400 }
+      )
     }
 
-    const replyId = uuidv4();
+    // Verify ticket exists
+    const { data: ticket, error: ticketError } = await supabase
+      .from('support_tickets')
+      .select('*, profiles!support_tickets_user_id_fkey(email)')
+      .eq('id', params.id)
+      .single()
 
-    // Create reply
-    const { data: reply, error: replyError } = await supabase
-      .from('ticket_replies')
+    if (ticketError || !ticket) {
+      return NextResponse.json(
+        { error: 'Ticket not found' },
+        { status: 404 }
+      )
+    }
+
+    // Create the message
+    const { data: newMessage, error: messageError } = await supabase
+      .from('ticket_messages')
       .insert({
-        id: replyId,
-        ticket_id: ticketId,
+        ticket_id: params.id,
         user_id: user.id,
         message: message.trim(),
-        is_staff: true
+        is_staff: is_staff
       })
-      .select()
-      .single();
+      .select('*')
+      .single()
 
-    if (replyError) {
-      console.error('Error creating reply:', replyError);
-      return NextResponse.json({ error: 'Failed to create reply' }, { status: 500 });
+    if (messageError) {
+      console.error('Message creation error:', messageError)
+      throw messageError
     }
 
-    // Handle file attachments
-    const attachmentKeys = Array.from(formData.keys()).filter(key => key.startsWith('attachment_'));
-    
-    if (attachmentKeys.length > 0) {
-      for (const key of attachmentKeys) {
-        const file = formData.get(key) as File;
-        if (file && file.size > 0) {
-          const fileExt = file.name.split('.').pop();
-          const fileName = `${ticketId}/${replyId}/${uuidv4()}.${fileExt}`;
-          
-          const { error: uploadError } = await supabase.storage
-            .from('support-attachments')
-            .upload(fileName, file);
-
-          if (!uploadError) {
-            await supabase.from('ticket_attachments').insert({
-              ticket_id: ticketId,
-              reply_id: replyId,
-              filename: file.name,
-              file_path: fileName,
-              file_size: file.size,
-              mime_type: file.type
-            });
-          }
-        }
-      }
+    // Update ticket with first response time if this is the first staff reply
+    if (is_staff && !ticket.first_response_at) {
+      await supabase
+        .from('support_tickets')
+        .update({
+          first_response_at: new Date().toISOString(),
+          status: 'in_progress',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', params.id)
+    } else {
+      await supabase
+        .from('support_tickets')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', params.id)
     }
 
-    // Update ticket metadata
-    const updateData: any = {
-      updated_at: new Date().toISOString(),
-      last_reply_at: new Date().toISOString(),
-      reply_count: supabase.rpc('increment', { row_id: ticketId })
-    };
-
-    if (updateStatus) {
-      updateData.status = updateStatus;
+    // Send notification to customer
+    if (is_staff) {
+      await sendTicketNotification({
+        ticketId: ticket.id,
+        ticketNumber: ticket.ticket_number,
+        userId: ticket.user_id,
+        userEmail: ticket.profiles?.email || '',
+        subject: ticket.subject,
+        type: 'replied',
+        message: message.trim().substring(0, 100)
+      })
     }
 
-    await supabase
-      .from('support_tickets')
-      .update(updateData)
-      .eq('id', ticketId);
-
-    return NextResponse.json({ reply }, { status: 201 });
+    return NextResponse.json({
+      message: newMessage,
+      success: true
+    })
   } catch (error) {
-    console.error('Error in admin reply API:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Reply creation error:', error)
+    return NextResponse.json(
+      { error: 'Failed to send reply' },
+      { status: 500 }
+    )
   }
 }

@@ -1,23 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-
-export const dynamic = 'force-dynamic'
+import { cookies } from 'next/headers'
+import { notifyStaffNewTicket } from '@/lib/support/notifications'
 
 export async function POST(request: NextRequest) {
   try {
+    const cookieStore = cookies()
     const supabase = createClient()
     
-    // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
-    }
 
-    const { subject, description, category, priority, conversationHistory } = await request.json()
+    const {
+      conversation_id,
+      category,
+      priority,
+      subject,
+      description
+    } = await request.json()
 
     if (!subject || !description) {
       return NextResponse.json(
@@ -26,47 +25,104 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Generate ticket number
+    const ticketNumber = `TKT-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
+
     // Create support ticket
     const { data: ticket, error: ticketError } = await supabase
       .from('support_tickets')
       .insert({
-        user_id: user.id,
-        subject,
-        description,
+        user_id: user?.id || null,
+        ticket_number: ticketNumber,
+        subject: subject.trim(),
+        description: description.trim(),
         category: category || 'general',
         priority: priority || 'medium',
         status: 'open',
-        metadata: {
-          source: 'chatbot',
-          conversationHistory: conversationHistory || []
-        }
+        created_at: new Date().toISOString()
       })
-      .select()
+      .select('*')
       .single()
 
     if (ticketError) {
       console.error('Ticket creation error:', ticketError)
-      return NextResponse.json(
-        { error: 'Failed to create ticket' },
-        { status: 500 }
-      )
+      throw ticketError
     }
 
-    // TODO: Send email notification to user and support team
+    // Link conversation to ticket if provided
+    if (conversation_id) {
+      await supabase
+        .from('chat_conversations')
+        .update({
+          escalated_to_ticket: ticket.id,
+          escalated_at: new Date().toISOString()
+        })
+        .eq('id', conversation_id)
+
+      // Record escalation in analytics
+      await supabase
+        .from('chatbot_analytics')
+        .insert({
+          conversation_id,
+          query: subject,
+          intent: 'escalate',
+          escalated: true,
+          resolved: false
+        })
+    }
+
+    // Create initial message with conversation context
+    if (conversation_id) {
+      // Get recent conversation messages
+      const { data: messages } = await supabase
+        .from('chat_messages')
+        .select('role, content')
+        .eq('conversation_id', conversation_id)
+        .order('timestamp', { ascending: false })
+        .limit(5)
+
+      if (messages && messages.length > 0) {
+        const conversationContext = messages
+          .reverse()
+          .map((m: any) => `${m.role === 'user' ? 'User' : 'Bot'}: ${m.content}`)
+          .join('\n')
+
+        await supabase
+          .from('ticket_messages')
+          .insert({
+            ticket_id: ticket.id,
+            user_id: user?.id || null,
+            message: `Escalated from chatbot conversation:\n\n${conversationContext}`,
+            is_staff: false,
+            is_system: true
+          })
+      }
+    }
+
+    // Notify staff about new ticket
+    await notifyStaffNewTicket({
+      ticketId: ticket.id,
+      ticketNumber: ticket.ticket_number,
+      subject: ticket.subject,
+      category: ticket.category,
+      priority: ticket.priority,
+      userEmail: user?.email || 'Guest User'
+    })
 
     return NextResponse.json({
-      success: true,
       ticket: {
         id: ticket.id,
-        ticketNumber: ticket.ticket_number,
+        ticket_number: ticket.ticket_number,
+        subject: ticket.subject,
         status: ticket.status
       },
-      message: 'Support ticket created successfully. Our team will respond shortly.'
+      message: 'Ticket created successfully',
+      success: true
     })
   } catch (error) {
-    console.error('Escalation API error:', error)
+    console.error('Escalation error:', error)
     return NextResponse.json(
-      { error: 'Failed to escalate to support' },
+      { error: 'Failed to create support ticket' },
       { status: 500 }
     )
   }

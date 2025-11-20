@@ -1,44 +1,104 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { geminiChatbot, UserContext } from '@/lib/chatbot/gemini'
-
-export const dynamic = 'force-dynamic'
+import { createClient } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
+import { geminiChatbot } from '@/lib/chatbot/gemini'
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, conversationHistory, userContext } = await request.json()
+    const cookieStore = cookies()
+    const supabase = createClient()
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    const { message, conversationId, context } = await request.json()
 
-    if (!message) {
+    if (!message || !message.trim()) {
       return NextResponse.json(
         { error: 'Message is required' },
         { status: 400 }
       )
     }
 
-    // Build user context (in production, get from session/database)
-    const context: UserContext = {
-      userId: userContext?.userId,
-      userName: userContext?.userName || 'User',
-      userRole: userContext?.userRole || 'guest',
-      currentPage: userContext?.currentPage,
-      enrolledCourses: userContext?.enrolledCourses || [],
-      conversationHistory: conversationHistory || []
+    // Get or create conversation
+    let conversation
+    if (conversationId) {
+      const { data } = await supabase
+        .from('chat_conversations')
+        .select('*')
+        .eq('id', conversationId)
+        .single()
+      conversation = data
     }
 
-    // Send message to Gemini
-    const response = await geminiChatbot.sendMessage(message, context)
+    if (!conversation && user) {
+      const { data: newConv } = await supabase
+        .from('chat_conversations')
+        .insert({
+          user_id: user.id,
+          started_at: new Date().toISOString()
+        })
+        .select('*')
+        .single()
+      conversation = newConv
+    }
 
-    // Check if should escalate
-    const shouldEscalate = geminiChatbot.shouldEscalate(message, response.confidence)
+    // Save user message
+    if (conversation) {
+      await supabase
+        .from('chat_messages')
+        .insert({
+          conversation_id: conversation.id,
+          role: 'user',
+          content: message,
+          timestamp: new Date().toISOString()
+        })
+    }
+
+    // Get AI response
+    const userContext = {
+      userId: user?.id,
+      userRole: context?.userRole || 'guest',
+      userName: context?.userName,
+      userEmail: user?.email
+    }
+
+    const response = await geminiChatbot.sendMessage(message, userContext)
+
+    // Save bot message
+    if (conversation) {
+      await supabase
+        .from('chat_messages')
+        .insert({
+          conversation_id: conversation.id,
+          role: 'assistant',
+          content: response.content,
+          timestamp: new Date().toISOString(),
+          intent: response.intent,
+          confidence: response.confidence,
+          actions: response.actions
+        })
+    }
+
+    // Record analytics
+    await supabase
+      .from('chatbot_analytics')
+      .insert({
+        conversation_id: conversation?.id,
+        query: message,
+        intent: response.intent,
+        confidence_score: response.confidence,
+        resolved: response.confidence && response.confidence > 0.7,
+        escalated: response.actions?.some((a: any) => a.type === 'escalate'),
+        response_time_ms: 0
+      })
 
     return NextResponse.json({
-      message: response.message,
-      suggestions: response.suggestions,
-      actions: response.actions,
-      shouldEscalate,
-      confidence: response.confidence
+      response,
+      conversationId: conversation?.id,
+      success: true
     })
   } catch (error) {
-    console.error('Chatbot API error:', error)
+    console.error('Chatbot message error:', error)
     return NextResponse.json(
       { error: 'Failed to process message' },
       { status: 500 }

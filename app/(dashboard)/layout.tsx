@@ -55,8 +55,8 @@ const teacherSidebarItems = [
   { icon: GraduationCap, label: 'Students', href: '/teacher/students' },
   { icon: ClipboardCheck, label: 'Grading', href: '/teacher/grading' },
   { icon: MessageSquare, label: 'Messages', href: '/teacher/messages' },
+  { icon: HelpCircle, label: 'Support', href: '/support' },
   { icon: User, label: 'Profile', href: '/teacher/profile' },
-  { icon: HelpCircle, label: 'Help', href: '/teacher/help' },
 ]
 
 const studentSidebarItems = [
@@ -70,8 +70,8 @@ const studentSidebarItems = [
   { icon: GraduationCap, label: 'Certificates', href: '/student/certificates' },
   { icon: Trophy, label: 'Achievements', href: '/student/achievements' },
   { icon: MessageSquare, label: 'Messages', href: '/student/messages' },
+  { icon: HelpCircle, label: 'Support', href: '/support' },
   { icon: User, label: 'Profile', href: '/student/profile' },
-  { icon: HelpCircle, label: 'Help', href: '/student/help' },
 ]
 
 const parentSidebarItems = [
@@ -82,6 +82,7 @@ const parentSidebarItems = [
   { icon: CreditCard, label: 'Payments', href: '/parent/payments' },
   { icon: MessageSquare, label: 'Messages', href: '/parent/messages' },
   { icon: FileText, label: 'Reports', href: '/parent/reports' },
+  { icon: HelpCircle, label: 'Support', href: '/support' },
   { icon: User, label: 'Profile', href: '/parent/profile' },
   { icon: Settings, label: 'Settings', href: '/parent/settings' },
 ]

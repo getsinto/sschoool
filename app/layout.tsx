@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter, Poppins } from 'next/font/google'
 import { Toaster } from 'react-hot-toast'
+import ChatWidget from '@/components/chatbot/ChatWidget'
 import './globals.css'
 
 const inter = Inter({ 
@@ -28,6 +29,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.variable} ${poppins.variable} font-sans`}>
         {children}
+        <ChatWidget />
         <Toaster 
           position="top-right"
           toastOptions={{

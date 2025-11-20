@@ -1,59 +1,82 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-
-export const dynamic = 'force-dynamic'
+import { cookies } from 'next/headers'
 
 export async function GET(request: NextRequest) {
   try {
+    const cookieStore = cookies()
     const supabase = createClient()
     
-    // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !user) {
-      // Return guest context
+
+    if (!user) {
       return NextResponse.json({
-        userId: null,
-        userName: 'Guest',
-        userRole: 'guest',
-        currentPage: request.headers.get('referer') || '/',
-        enrolledCourses: [],
+        context: {
+          userRole: 'guest',
+          authenticated: false
+        }
       })
     }
 
-    // Fetch user details
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('first_name, last_name, role')
+    // Get user profile
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
       .eq('id', user.id)
       .single()
 
-    if (userError) {
-      console.error('Error fetching user data:', userError)
-    }
+    // Get recent activity
+    const { data: recentTickets } = await supabase
+      .from('support_tickets')
+      .select('id, subject, status, created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(5)
 
-    // Fetch enrolled courses (if student)
-    let enrolledCourses: string[] = []
-    if (userData?.role === 'student') {
+    // Get enrolled courses (if student)
+    let enrolledCourses = []
+    if (profile?.role === 'student') {
       const { data: enrollments } = await supabase
         .from('enrollments')
-        .select('course:courses(title)')
+        .select('course_id, courses(id, title, status)')
         .eq('student_id', user.id)
         .eq('status', 'active')
+        .limit(10)
+      
+      enrolledCourses = enrollments?.map((e: any) => e.courses) || []
+    }
 
-      enrolledCourses = enrollments?.map((e: any) => e.course?.title).filter(Boolean) || []
+    // Get teaching courses (if teacher)
+    let teachingCourses = []
+    if (profile?.role === 'teacher') {
+      const { data: courses } = await supabase
+        .from('courses')
+        .select('id, title, status')
+        .eq('teacher_id', user.id)
+        .eq('status', 'published')
+        .limit(10)
+      
+      teachingCourses = courses || []
     }
 
     return NextResponse.json({
-      userId: user.id,
-      userName: `${userData?.first_name || ''} ${userData?.last_name || ''}`.trim() || 'User',
-      userRole: userData?.role || 'guest',
-      userEmail: user.email,
-      currentPage: request.headers.get('referer') || '/',
-      enrolledCourses,
+      context: {
+        userId: user.id,
+        userRole: profile?.role || 'student',
+        userName: profile?.full_name,
+        userEmail: user.email,
+        authenticated: true,
+        recentTickets: recentTickets || [],
+        enrolledCourses,
+        teachingCourses,
+        preferences: {
+          language: profile?.preferred_language || 'en',
+          timezone: profile?.timezone || 'UTC'
+        }
+      }
     })
   } catch (error) {
-    console.error('Context API error:', error)
+    console.error('Context fetch error:', error)
     return NextResponse.json(
       { error: 'Failed to fetch context' },
       { status: 500 }
