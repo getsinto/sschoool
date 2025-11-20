@@ -1,40 +1,67 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 
-export const dynamic = 'force-dynamic'
-
-// Force this route to use Node.js runtime
-export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-    // Parse request body
-    const requestBody = await request.json();
-    
-    // Extract fields with explicit variable names
-    const targetUserId = requestBody.userId;
-    const notificationType = requestBody.type;
-    const notificationTitle = requestBody.title;
-    const notificationMessage = requestBody.message;
-    const notificationPriority = requestBody.priority || 'normal';
-    const notificationActionUrl = requestBody.actionUrl;
-    const notificationIcon = requestBody.icon;
-    const notificationMetadata = requestBody.metadata || {};
+    const supabase = createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { 
+      userId, 
+      type, 
+      title, 
+      message, 
+      priority = 'normal',
+      actionUrl,
+      icon,
+      data: notificationData = {}
+    } = body;
+
+    // Use current user if userId not provided
+    const targetUserId = userId || user.id;
 
     // Validate required fields
-    if (!targetUserId || !notificationType || !notificationTitle || !notificationMessage) {
+    if (!type || !title || !message) {
       return NextResponse.json({ 
-        error: 'Missing required fields: userId, type, title, message' 
+        error: 'Missing required fields: type, title, message' 
       }, { status: 400 });
     }
 
-    // For now, return success without actual notification sending
-    // This avoids the build error while maintaining the API structure
-    const mockNotificationId = `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // Create notification in database
+    const { data: notification, error: insertError } = await supabase
+      .from('notifications')
+      .insert({
+        user_id: targetUserId,
+        type,
+        title,
+        message,
+        data: notificationData,
+        priority,
+        action_url: actionUrl,
+        icon,
+        read: false
+      })
+      .select()
+      .single();
+
+    if (insertError || !notification) {
+      console.error('Error creating notification:', insertError);
+      return NextResponse.json({ 
+        error: 'Failed to create notification' 
+      }, { status: 500 });
+    }
 
     return NextResponse.json({ 
       success: true, 
-      notificationId: mockNotificationId,
-      message: 'Notification queued successfully'
+      notificationId: notification.id,
+      message: 'Notification created successfully'
     });
 
   } catch (error) {
