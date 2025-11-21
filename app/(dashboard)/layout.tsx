@@ -55,7 +55,7 @@ const teacherSidebarItems = [
   { icon: GraduationCap, label: 'Students', href: '/teacher/students' },
   { icon: ClipboardCheck, label: 'Grading', href: '/teacher/grading' },
   { icon: MessageSquare, label: 'Messages', href: '/teacher/messages' },
-  { icon: HelpCircle, label: 'Support', href: '/support' },
+  { icon: HelpCircle, label: 'Support', href: '/teacher/support' },
   { icon: User, label: 'Profile', href: '/teacher/profile' },
 ]
 
@@ -70,7 +70,7 @@ const studentSidebarItems = [
   { icon: GraduationCap, label: 'Certificates', href: '/student/certificates' },
   { icon: Trophy, label: 'Achievements', href: '/student/achievements' },
   { icon: MessageSquare, label: 'Messages', href: '/student/messages' },
-  { icon: HelpCircle, label: 'Support', href: '/support' },
+  { icon: HelpCircle, label: 'Support', href: '/student/support' },
   { icon: User, label: 'Profile', href: '/student/profile' },
 ]
 
@@ -82,7 +82,7 @@ const parentSidebarItems = [
   { icon: CreditCard, label: 'Payments', href: '/parent/payments' },
   { icon: MessageSquare, label: 'Messages', href: '/parent/messages' },
   { icon: FileText, label: 'Reports', href: '/parent/reports' },
-  { icon: HelpCircle, label: 'Support', href: '/support' },
+  { icon: HelpCircle, label: 'Support', href: '/parent/support' },
   { icon: User, label: 'Profile', href: '/parent/profile' },
   { icon: Settings, label: 'Settings', href: '/parent/settings' },
 ]
@@ -94,15 +94,35 @@ export default function DashboardLayout({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
+  const [actualUserRole, setActualUserRole] = useState<string | null>(null)
   const pathname = usePathname()
   const router = useRouter()
-  const { signOut } = useAuth()
+  const { signOut, user } = useAuth()
 
-  // Determine user role from pathname
-  const isTeacher = pathname.startsWith('/teacher')
-  const isAdmin = pathname.startsWith('/admin')
-  const isStudent = pathname.startsWith('/student')
-  const isParent = pathname.startsWith('/parent')
+  // Fetch actual user role from database
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      if (!user) return
+      
+      try {
+        const response = await fetch('/api/user/role')
+        const data = await response.json()
+        if (data.role) {
+          setActualUserRole(data.role)
+        }
+      } catch (error) {
+        console.error('Error fetching user role:', error)
+      }
+    }
+    
+    fetchUserRole()
+  }, [user])
+
+  // Determine user role from pathname or actual role for shared routes
+  const isTeacher = pathname.startsWith('/teacher') || (pathname.startsWith('/support') && actualUserRole === 'teacher')
+  const isAdmin = pathname.startsWith('/admin') || (pathname.startsWith('/support') && actualUserRole === 'admin')
+  const isStudent = pathname.startsWith('/student') || (pathname.startsWith('/support') && actualUserRole === 'student')
+  const isParent = pathname.startsWith('/parent') || (pathname.startsWith('/support') && actualUserRole === 'parent')
   
   const sidebarItems = isTeacher ? teacherSidebarItems : isStudent ? studentSidebarItems : isParent ? parentSidebarItems : adminSidebarItems
   const userRole = isTeacher ? 'Teacher' : isStudent ? 'Student' : isParent ? 'Parent' : 'Admin'
