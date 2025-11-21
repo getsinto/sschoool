@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
  * {
  *   "crons": [{
  *     "path": "/api/cron/process-scheduled-emails",
- *     "schedule": "*/10 * * * *"
+ *     "schedule": "0 9 * * *"
  *   }]
  * }
  */

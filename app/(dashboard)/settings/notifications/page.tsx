@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Bell, Mail, Smartphone, MessageSquare, Save, Loader2, Check, Volume2, Moon } from 'lucide-react';
-import { useToast } from '@/hooks/useToast';
+import { useToast } from '@/components/ui/use-toast';
 import { 
   subscribeToPushNotifications, 
   unsubscribeFromPushNotifications,
