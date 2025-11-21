@@ -228,7 +228,7 @@ export function ClassScheduler({ onSchedule, courses = [], defaultValues }: Clas
                         size="sm"
                         onClick={() => {
                           const days = formData.recurringDays.includes(day)
-                            ? formData.recurringDays.filter(d => d !== day)
+                            ? formData.recurringDays.filter((d: string) => d !== day)
                             : [...formData.recurringDays, day]
                           setFormData({ ...formData, recurringDays: days })
                         }}
