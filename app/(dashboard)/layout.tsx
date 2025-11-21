@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/hooks/useAuth'
+import NotificationBell from '@/components/notifications/NotificationBell'
 import { 
   LayoutDashboard,
   Users,
@@ -255,14 +256,7 @@ export default function DashboardLayout({
               </div>
 
               {/* Notifications */}
-              <div className="relative">
-                <Button variant="ghost" size="sm" className="relative">
-                  <Bell className="w-5 h-5" />
-                  <Badge className="absolute -top-1 -right-1 w-5 h-5 p-0 flex items-center justify-center bg-red-500 hover:bg-red-500 text-xs">
-                    3
-                  </Badge>
-                </Button>
-              </div>
+              <NotificationBell />
 
               {/* Profile Dropdown */}
               <div className="relative">
