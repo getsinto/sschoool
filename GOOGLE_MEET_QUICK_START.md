@@ -2,288 +2,164 @@
 
 ## 🚀 5-Minute Setup
 
-### Step 1: Install Dependencies
+### Step 1: Get Google Credentials (2 minutes)
 
-```bash
-npm install googleapis google-auth-library
-```
+1. Go to https://console.cloud.google.com/
+2. Create new project or select existing
+3. Enable "Google Calendar API"
+4. Create OAuth 2.0 Client ID
+5. Add redirect URI: `https://yourdomain.com/api/google-meet/callback`
+6. Copy Client ID and Secret
 
-### Step 2: Get Google OAuth Credentials
-
-1. Visit [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select existing
-3. Enable **Google Calendar API**
-4. Go to **Credentials** → **Create Credentials** → **OAuth 2.0 Client ID**
-5. Configure OAuth consent screen
-6. Add redirect URIs:
-   - Development: `http://localhost:3000/api/google-meet/callback`
-   - Production: `https://yourdomain.com/api/google-meet/callback`
-7. Copy Client ID and Client Secret
-
-### Step 3: Configure Environment Variables
-
-Add to `.env.local`:
+### Step 2: Add Environment Variables (1 minute)
 
 ```env
 GOOGLE_CLIENT_ID=your_client_id_here
 GOOGLE_CLIENT_SECRET=your_client_secret_here
-GOOGLE_REDIRECT_URI=http://localhost:3000/api/google-meet/callback
+GOOGLE_REDIRECT_URI=https://yourdomain.com/api/google-meet/callback
 ```
 
-### Step 4: Run Database Migration
+### Step 3: Run Database Migration (1 minute)
+
+```sql
+CREATE TABLE user_integrations (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  provider TEXT NOT NULL,
+  access_token TEXT NOT NULL,
+  refresh_token TEXT,
+  token_expiry TIMESTAMP WITH TIME ZONE,
+  scopes TEXT,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id, provider)
+);
+
+ALTER TABLE live_classes 
+ADD COLUMN google_event_id TEXT,
+ADD COLUMN platform_data JSONB;
+```
+
+### Step 4: Deploy (1 minute)
 
 ```bash
-# Using Supabase CLI
-supabase db push
-
-# Or manually in Supabase Dashboard
-# Run: supabase/migrations/011_google_meet_integration.sql
+git add .
+git commit -m "feat: Add Google Meet integration"
+git push origin main
 ```
 
-### Step 5: Start Development Server
+### Step 5: Test (30 seconds)
 
-```bash
-npm run dev
-```
-
----
-
-## 📱 Usage
-
-### For Teachers
-
-1. **Connect Google Account**
-   - Go to Settings → Integrations
-   - Click "Connect Google Meet"
-   - Authorize access
-
-2. **Create Live Class with Google Meet**
-   - Go to Live Classes → Create New
-   - Select "Google Meet" as platform
-   - Fill in class details
-   - Click Create
-
-3. **Meeting Created!**
-   - Google Calendar event created automatically
-   - Meet link generated
-   - Calendar invites sent to students
-
-### For Students
-
-1. **View Live Classes**
-   - Go to Live Classes
-   - See upcoming Google Meet sessions
-   - Click "Join" to open meeting
-
-2. **Calendar Integration**
-   - Receive calendar invite via email
-   - Add to personal calendar
-   - Get reminders before class
-
----
-
-## 🔧 Integration Points
-
-### Teacher Settings Page
-
-Add Google Meet connection UI:
-
-```tsx
-import { GoogleMeetConnect } from '@/components/google-meet/GoogleMeetConnect';
-
-export default function SettingsPage() {
-  return (
-    <div className="space-y-6">
-      <h1>Integration Settings</h1>
-      <GoogleMeetConnect />
-    </div>
-  );
-}
-```
-
-### Live Class Creation Form
-
-Add platform selector and Google Meet integration:
-
-```tsx
-import { GoogleMeetSelector } from '@/components/google-meet/GoogleMeetSelector';
-import { useState } from 'react';
-
-export default function CreateLiveClass() {
-  const [platform, setPlatform] = useState<'zoom' | 'google_meet'>('zoom');
-  const [meetingData, setMeetingData] = useState(null);
-
-  return (
-    <form>
-      {/* Platform Selection */}
-      <select value={platform} onChange={(e) => setPlatform(e.target.value)}>
-        <option value="zoom">Zoom</option>
-        <option value="google_meet">Google Meet</option>
-      </select>
-
-      {/* Google Meet Integration */}
-      {platform === 'google_meet' && (
-        <GoogleMeetSelector
-          title={formData.title}
-          description={formData.description}
-          startTime={formData.startTime}
-          endTime={formData.endTime}
-          attendees={studentEmails}
-          onMeetingCreated={(meetLink, eventId) => {
-            setMeetingData({ meetLink, eventId });
-            // Save to database
-          }}
-        />
-      )}
-    </form>
-  );
-}
-```
-
-### Using the Hook Directly
-
-```tsx
-import { useGoogleMeet } from '@/hooks/useGoogleMeet';
-
-export default function MyComponent() {
-  const { status, createMeeting, listMeetings } = useGoogleMeet();
-
-  const handleCreate = async () => {
-    const meeting = await createMeeting({
-      title: 'Math Class',
-      start_time: '2024-01-15T10:00:00Z',
-      end_time: '2024-01-15T11:00:00Z',
-      attendees: ['student@example.com']
-    });
-    console.log('Join URL:', meeting.meetLink);
-  };
-
-  return (
-    <div>
-      {status?.connected ? (
-        <button onClick={handleCreate}>Create Meeting</button>
-      ) : (
-        <p>Please connect Google Meet first</p>
-      )}
-    </div>
-  );
-}
-```
-
----
-
-## 🧪 Testing
-
-### Test OAuth Flow
-
-1. Navigate to `/dashboard/teacher/settings`
+1. Go to `/teacher/integrations/google`
 2. Click "Connect Google Meet"
-3. Authorize with Google account
-4. Verify connection status shows "Connected"
-
-### Test Meeting Creation
-
-1. Go to Live Classes → Create New
-2. Select "Google Meet" platform
-3. Fill in details
-4. Click "Create Google Meet"
-5. Verify:
-   - Meeting created successfully
-   - Join URL displayed
-   - Calendar event created
-   - Invites sent
-
-### Test Calendar Sync
-
-1. Open Google Calendar
-2. Find the created event
-3. Verify:
-   - Event details correct
-   - Meet link present
-   - Attendees listed
+3. Authorize
+4. Done! ✅
 
 ---
 
-## 🐛 Common Issues
+## 📁 What Was Created
 
-### "Google Meet not configured"
+### New Files (12):
+- 7 API routes in `app/api/google-meet/`
+- 2 pages (teacher integration, student join)
+- 3 components (MeetButton, MeetEmbed, CalendarSync)
 
-**Solution**: Check environment variables are set correctly
+### Existing Files (8):
+- 4 library files in `lib/google-meet/`
+- 2 components (GoogleMeetConnect, GoogleMeetSelector)
+- 1 hook (useGoogleMeet)
+- 1 types file
 
-```bash
-# Verify in .env.local
-echo $GOOGLE_CLIENT_ID
-echo $GOOGLE_CLIENT_SECRET
+---
+
+## 🎯 How to Use
+
+### For Teachers:
+
+```typescript
+// 1. Connect Google account
+Navigate to: /teacher/integrations/google
+Click: "Connect Google Meet"
+
+// 2. Create live class with Google Meet
+When creating class, select "Google Meet" as platform
+Meeting auto-created, invites sent automatically
+
+// 3. Manage meetings
+Update class → Meeting auto-updates
+Delete class → Meeting auto-deleted
 ```
 
-### "OAuth callback failed"
+### For Students:
 
-**Solution**: Verify redirect URI matches Google Cloud Console
+```typescript
+// 1. Receive calendar invite (automatic)
+Check email for Google Calendar invite
 
+// 2. Join class
+Navigate to: /student/live-classes
+Click on class
+Click: "Join Google Meet"
+Opens in new tab
 ```
-Development: http://localhost:3000/api/google-meet/callback
-Production: https://yourdomain.com/api/google-meet/callback
+
+### In Code:
+
+```typescript
+// Create meeting
+import { createMeeting } from '@/lib/google-meet/meetings'
+
+const meeting = await createMeeting(userId, {
+  title: 'My Class',
+  start_time: '2024-01-15T10:00:00Z',
+  end_time: '2024-01-15T11:00:00Z',
+  attendees: ['student@example.com']
+})
+
+console.log(meeting.meetLink) // https://meet.google.com/xxx-xxxx-xxx
 ```
+
+---
+
+## 🔧 Troubleshooting
+
+### "OAuth failed"
+- Check environment variables are set
+- Verify redirect URI in Google Console matches exactly
+- Ensure Google Calendar API is enabled
 
 ### "Failed to create meeting"
+- Check user has connected Google account
+- Verify tokens haven't expired (auto-refresh should handle this)
+- Check Google Calendar API quota
 
-**Solution**: 
-1. Check Google Calendar API is enabled
-2. Verify OAuth scopes include calendar access
-3. Check token hasn't expired
-
-### "Token refresh failed"
-
-**Solution**: User needs to reconnect their Google account
-
----
-
-## 📊 API Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/google-meet/auth` | POST | Initiate OAuth |
-| `/api/google-meet/callback` | GET | OAuth callback |
-| `/api/google-meet/status` | GET | Check status |
-| `/api/google-meet/disconnect` | POST | Disconnect |
-| `/api/google-meet/meetings` | GET | List meetings |
-| `/api/google-meet/meetings` | POST | Create meeting |
-| `/api/google-meet/meetings/[id]` | GET | Get meeting |
-| `/api/google-meet/meetings/[id]` | PATCH | Update meeting |
-| `/api/google-meet/meetings/[id]` | DELETE | Delete meeting |
+### "Meeting not found"
+- Verify `google_event_id` is stored in database
+- Check meeting wasn't deleted in Google Calendar
+- Ensure user has access to the calendar
 
 ---
 
-## 🎯 Next Steps
+## 📊 Features
 
-1. ✅ Install dependencies
-2. ✅ Configure Google OAuth
-3. ✅ Set environment variables
-4. ✅ Run database migration
-5. ✅ Test OAuth flow
-6. ✅ Create test meeting
-7. ✅ Integrate into live classes UI
-8. ✅ Deploy to production
-
----
-
-## 📚 Additional Resources
-
-- [Full Documentation](./GOOGLE_MEET_COMPLETE.md)
-- [Google Calendar API Docs](https://developers.google.com/calendar/api)
-- [OAuth 2.0 Guide](https://developers.google.com/identity/protocols/oauth2)
+✅ OAuth 2.0 authentication
+✅ Auto-create meetings
+✅ Calendar sync
+✅ Auto-send invites
+✅ Update meetings
+✅ Delete meetings
+✅ Token auto-refresh
+✅ Student join page
+✅ Attendance marking
+✅ Mobile-friendly
 
 ---
 
-## ✨ Features
+## 🎉 That's It!
 
-- ✅ OAuth 2.0 authentication
-- ✅ Automatic token refresh
-- ✅ Calendar event creation
-- ✅ Attendee management
-- ✅ Email invitations
-- ✅ Time conflict detection
-- ✅ Multi-user support
-- ✅ Seamless Zoom/Google Meet switching
+You now have a fully functional Google Meet integration. Teachers can create meetings with one click, and students can join seamlessly.
 
-**Status**: Ready to use! 🎉
+**Need more details?** See `GOOGLE_MEET_INTEGRATION_COMPLETE_AUDIT.md`
+
+**Ready to deploy?** See `GOOGLE_MEET_DEPLOYMENT_READY.md`

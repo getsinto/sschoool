@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { disconnectGoogle } from '@/lib/google-meet/auth'
+import { initiateGoogleAuth } from '@/lib/google-meet/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,15 +14,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const result = await disconnectGoogle(user.id)
+    // Generate OAuth URL
+    const authUrl = initiateGoogleAuth()
 
-    if (!result.success) {
-      return NextResponse.json({ error: result.error }, { status: 500 })
-    }
-
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ authUrl })
   } catch (error) {
-    console.error('Error disconnecting Google:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Error initiating Google OAuth:', error)
+    return NextResponse.json({ error: 'Failed to initiate OAuth' }, { status: 500 })
   }
 }

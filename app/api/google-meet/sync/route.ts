@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { disconnectGoogle } from '@/lib/google-meet/auth'
+import { syncAllLiveClasses } from '@/lib/google-meet/sync'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,15 +14,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const result = await disconnectGoogle(user.id)
+    const result = await syncAllLiveClasses(user.id)
 
-    if (!result.success) {
-      return NextResponse.json({ error: result.error }, { status: 500 })
-    }
-
-    return NextResponse.json({ success: true })
+    return NextResponse.json(result)
   } catch (error) {
-    console.error('Error disconnecting Google:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Error syncing calendar:', error)
+    return NextResponse.json({ error: 'Sync failed' }, { status: 500 })
   }
 }
