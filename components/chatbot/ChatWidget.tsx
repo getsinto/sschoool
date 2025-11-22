@@ -47,7 +47,7 @@ export default function ChatWidget() {
     <>
       {/* Chat Interface */}
       {isOpen && !isMinimized && (
-        <div className="fixed bottom-20 right-4 w-full sm:w-96 max-w-[calc(100vw-2rem)] h-[600px] max-h-[calc(100vh-8rem)] bg-white rounded-lg shadow-2xl z-50 flex flex-col border border-gray-200 animate-in slide-in-from-bottom-5">
+        <div className="fixed bottom-4 right-4 sm:bottom-20 sm:right-6 w-full sm:w-96 max-w-[calc(100vw-2rem)] h-[calc(100vh-5rem)] sm:h-[600px] sm:max-h-[calc(100vh-10rem)] bg-white rounded-lg shadow-2xl z-[9999] flex flex-col border border-gray-200">
           <ChatInterface
             onClose={handleToggle}
             onMinimize={handleMinimize}
@@ -59,7 +59,7 @@ export default function ChatWidget() {
       {/* Floating Chat Button */}
       <Button
         onClick={handleToggle}
-        className="fixed bottom-4 right-4 h-12 w-12 sm:h-14 sm:w-14 rounded-full shadow-lg z-50 bg-blue-600 hover:bg-blue-700"
+        className="fixed bottom-4 right-4 h-12 w-12 sm:h-14 sm:w-14 rounded-full shadow-lg z-[9998] bg-blue-600 hover:bg-blue-700"
         size="icon"
       >
         {isOpen ? (

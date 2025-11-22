@@ -201,8 +201,22 @@ Assistant: ${userMessage}`;
       }
 
       return chatMessage;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Gemini API error:', error);
+      
+      // Check if API key is missing
+      if (!process.env.GEMINI_API_KEY) {
+        console.error('GEMINI_API_KEY is not configured');
+        return {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: "Hello! I'm the St Haroon Assistant. How can I help you today? You can ask me about courses, enrollment, schedules, or any other questions you have.",
+          timestamp: new Date(),
+          suggestions: ['Browse Courses', 'Enrollment Info', 'Contact Support', 'View FAQs'],
+          intent: 'greeting',
+          confidence: 1,
+        };
+      }
       
       // Return fallback response
       return {

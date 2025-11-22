@@ -99,11 +99,21 @@ export async function POST(request: NextRequest) {
       suggestions: response.suggestions,
       success: true
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Chatbot message error:', error)
-    return NextResponse.json(
-      { error: 'Failed to process message' },
-      { status: 500 }
-    )
+    
+    // Return a user-friendly error response
+    return NextResponse.json({
+      message: "I apologize, but I'm having trouble connecting right now. Please try again in a moment, or contact our support team for immediate assistance.",
+      response: {
+        content: "I apologize, but I'm having trouble connecting right now. Please try again in a moment, or contact our support team for immediate assistance.",
+        intent: 'error',
+        confidence: 0,
+        suggestions: ['Try Again', 'Contact Support', 'View FAQs']
+      },
+      suggestions: ['Try Again', 'Contact Support', 'View FAQs'],
+      success: false,
+      error: error.message || 'Failed to process message'
+    }, { status: 200 }) // Return 200 so frontend can display the message
   }
 }
