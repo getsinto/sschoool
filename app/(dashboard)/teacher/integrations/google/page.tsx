@@ -5,9 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { CheckCircle, Info } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 
-export default function GoogleIntegrationPage() {
+function GoogleIntegrationContent() {
   const searchParams = useSearchParams()
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
@@ -141,5 +141,20 @@ export default function GoogleIntegrationPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function GoogleIntegrationPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto p-6 max-w-4xl">
+        <div className="animate-pulse space-y-6">
+          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+          <div className="h-64 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    }>
+      <GoogleIntegrationContent />
+    </Suspense>
   )
 }

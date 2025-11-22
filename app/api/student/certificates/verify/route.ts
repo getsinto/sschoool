@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 // GET /api/student/certificates/verify - Verify certificate
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
+    const searchParams = request.nextUrl.searchParams
     const code = searchParams.get('code')
 
     if (!code) {

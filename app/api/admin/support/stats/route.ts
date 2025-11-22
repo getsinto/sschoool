@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     const cookieStore = cookies()
@@ -28,7 +30,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const { searchParams } = new URL(request.url)
+    const searchParams = request.nextUrl.searchParams
     const period = searchParams.get('period') || '30' // days
     const startDate = new Date()
     startDate.setDate(startDate.getDate() - parseInt(period))

@@ -244,3 +244,11 @@ Assistant: ${userMessage}`;
 
 // Export singleton instance
 export const geminiChatbot = new GeminiChatbot();
+
+// Export helper function for chat response
+export async function generateChatResponse(
+  message: string,
+  context: UserContext
+): Promise<ChatMessage> {
+  return geminiChatbot.sendMessage(message, context);
+}

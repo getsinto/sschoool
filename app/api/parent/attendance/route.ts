@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/parent/attendance - Get attendance overview for all children
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
+    const searchParams = request.nextUrl.searchParams
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
 

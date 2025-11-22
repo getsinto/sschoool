@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/parent/dashboard - Get parent dashboard overview
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
+    const searchParams = request.nextUrl.searchParams
     const childId = searchParams.get('childId')
 
     // Mock dashboard data - replace with actual database queries
