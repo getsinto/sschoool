@@ -93,8 +93,10 @@ export async function POST(request: NextRequest) {
       })
 
     return NextResponse.json({
+      message: response.content,
       response,
       conversationId: conversation?.id,
+      suggestions: response.suggestions,
       success: true
     })
   } catch (error) {

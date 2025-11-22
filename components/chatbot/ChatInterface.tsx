@@ -87,9 +87,9 @@ export default function ChatInterface({ onClose, onMinimize, onNewMessage }: Cha
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.message,
+        content: data.response?.content || data.message || "I'm sorry, I couldn't process that request.",
         timestamp: new Date(),
-        suggestions: data.suggestions
+        suggestions: data.response?.suggestions || data.suggestions
       }
 
       setMessages(prev => [...prev, botMessage])
