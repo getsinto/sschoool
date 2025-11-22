@@ -2,9 +2,13 @@
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { UserContext, ChatMessage } from '@/types/chatbot';
+import { fallbackChatbot } from './fallback';
 
-// Initialize Gemini API
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+// Check if API key is available
+const hasApiKey = !!process.env.GEMINI_API_KEY;
+
+// Initialize Gemini API only if key is available
+const genAI = hasApiKey ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY!) : null;
 
 // Rate limiting
 const rateLimiter = new Map<string, number[]>();
@@ -16,7 +20,9 @@ export class GeminiChatbot {
   private conversationHistory: ChatMessage[] = [];
 
   constructor() {
-    this.model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    if (genAI) {
+      this.model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    }
   }
 
   // Check rate limit
@@ -133,6 +139,12 @@ Remember: You're representing an educational institution. Be professional and he
     userMessage: string,
     context: UserContext
   ): Promise<ChatMessage> {
+    // Use fallback if no API key
+    if (!hasApiKey || !genAI) {
+      console.log('Using fallback chatbot (no Gemini API key)');
+      return fallbackChatbot.sendMessage(userMessage, context);
+    }
+
     try {
       // Check rate limit
       const userId = context.userId || 'anonymous';
@@ -204,30 +216,9 @@ Assistant: ${userMessage}`;
     } catch (error: any) {
       console.error('Gemini API error:', error);
       
-      // Check if API key is missing
-      if (!process.env.GEMINI_API_KEY) {
-        console.error('GEMINI_API_KEY is not configured');
-        return {
-          id: Date.now().toString(),
-          role: 'assistant',
-          content: "Hello! I'm the St Haroon Assistant. How can I help you today? You can ask me about courses, enrollment, schedules, or any other questions you have.",
-          timestamp: new Date(),
-          suggestions: ['Browse Courses', 'Enrollment Info', 'Contact Support', 'View FAQs'],
-          intent: 'greeting',
-          confidence: 1,
-        };
-      }
-      
-      // Return fallback response
-      return {
-        id: Date.now().toString(),
-        role: 'assistant',
-        content: "I'm having trouble processing your request right now. Would you like to speak with a human support agent?",
-        timestamp: new Date(),
-        suggestions: ['Talk to Support', 'Try Again', 'View FAQs'],
-        intent: 'error',
-        confidence: 0,
-      };
+      // Use fallback on error
+      console.log('Falling back to simple chatbot due to error');
+      return fallbackChatbot.sendMessage(userMessage, context);
     }
   }
 
