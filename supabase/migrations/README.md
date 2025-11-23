@@ -21,6 +21,10 @@ This directory contains all database migrations for the platform. All migrations
 14. **20250101000013_create_triggers.sql** - Automated triggers
 15. **20250101000014_enable_rls.sql** - Enable Row Level Security
 16. **20250101000015_create_rls_policies.sql** - Security policies
+17. **20250101000016_create_missing_tables.sql** - Q&A, achievements, email, integrations
+18. **20250101000017_missing_rls_triggers.sql** - Additional RLS policies and triggers
+19. **20250101000018_add_critical_missing_tables.sql** - Meeting participants, ticket surveys, messages
+20. **20250101000019_missing_rls_policies.sql** - RLS policies for critical tables
 
 ## How to Deploy
 
@@ -97,11 +101,11 @@ psql "your-connection-string" -f supabase/migrations/20250101000001_create_enums
 - subjects, teacher_subjects
 - custom_subject_requests
 
-## Total Tables: 50+
-## Total Indexes: 100+
-## Total Functions: 7
-## Total Triggers: 20+
-## Total RLS Policies: 40+
+## Total Tables: 67+
+## Total Indexes: 130+
+## Total Functions: 9
+## Total Triggers: 27+
+## Total RLS Policies: 75+
 
 ## Verification
 
