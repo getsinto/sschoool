@@ -1,93 +1,144 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
 
-export const dynamic = 'force-dynamic'
-
-// Mock data - In real app, this would come from Supabase
-const mockFiles = [
-  {
-    id: 'file_1',
-    name: 'Introduction to Mathematics.mp4',
-    type: 'video/mp4',
-    fileType: 'video',
-    size: 157286400, // ~150MB
-    folder: 'mathematics',
-    url: '/uploads/mathematics/intro.mp4',
-    thumbnail: '/api/placeholder/300/200',
-    uploadedBy: 'admin',
-    uploadedAt: '2024-01-15T10:30:00Z',
-    metadata: {
-      duration: 1800,
-      dimensions: { width: 1920, height: 1080 }
-    },
-    usage: [
-      { courseId: 'course_1', courseTitle: 'Basic Mathematics', usageType: 'lesson' }
-    ]
-  },
-  {
-    id: 'file_2',
-    name: 'Course Syllabus.pdf',
-    type: 'application/pdf',
-    fileType: 'document',
-    size: 2048000, // ~2MB
-    folder: 'documents',
-    url: '/uploads/documents/syllabus.pdf',
-    uploadedBy: 'admin',
-    uploadedAt: '2024-01-14T14:20:00Z',
-    metadata: {
-      pages: 15
-    },
-    usage: []
-  }
-]
-
-// GET /api/admin/content/files - Get all files
+// GET - Fetch all files with optional filters
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const folder = searchParams.get('folder')
+    const supabase = createClient()
+    
+    // Check authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Get query parameters
+    const searchParams = request.nextUrl.searchParams
+    const folderId = searchParams.get('folderId')
     const type = searchParams.get('type')
+    const category = searchParams.get('category')
     const search = searchParams.get('search')
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '20')
+    const tags = searchParams.get('tags')?.split(',')
+    const isArchived = searchParams.get('isArchived') === 'true'
 
-    let filteredFiles = [...mockFiles]
+    // Build query
+    let query = supabase
+      .from('content_files')
+      .select(`
+        *,
+        uploaded_by_user:profiles!content_files_uploaded_by_fkey(id, full_name)
+      `)
+      .eq('is_archived', isArchived)
+      .order('created_at', { ascending: false })
 
-    // Filter by folder
-    if (folder && folder !== 'all') {
-      filteredFiles = filteredFiles.filter(file => file.folder === folder)
+    // Apply filters
+    if (folderId) {
+      query = query.eq('folder_id', folderId)
     }
-
-    // Filter by type
     if (type && type !== 'all') {
-      filteredFiles = filteredFiles.filter(file => file.fileType === type)
+      query = query.eq('type', type)
+    }
+    if (category && category !== 'all') {
+      query = query.eq('category', category)
+    }
+    if (search) {
+      query = query.ilike('name', `%${search}%`)
+    }
+    if (tags && tags.length > 0) {
+      query = query.contains('tags', tags)
     }
 
-    // Search by name
-    if (search) {
-      filteredFiles = filteredFiles.filter(file => 
-        file.name.toLowerCase().includes(search.toLowerCase())
+    const { data: files, error } = await query
+
+    if (error) {
+      console.error('Error fetching files:', error)
+      return NextResponse.json({ error: 'Failed to fetch files' }, { status: 500 })
+    }
+
+    return NextResponse.json({ files })
+  } catch (error) {
+    console.error('Error in files API:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+// POST - Upload new file
+export async function POST(request: NextRequest) {
+  try {
+    const supabase = createClient()
+    
+    // Check authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Check if user is admin or teacher
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile || !['admin', 'teacher'].includes(profile.role)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    const body = await request.json()
+    const {
+      name,
+      original_name,
+      type,
+      mime_type,
+      size,
+      url,
+      thumbnail_url,
+      folder_id,
+      folder_path,
+      category,
+      tags,
+      metadata,
+      is_public
+    } = body
+
+    // Validate required fields
+    if (!name || !type || !mime_type || !size || !url) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
       )
     }
 
-    // Pagination
-    const startIndex = (page - 1) * limit
-    const endIndex = startIndex + limit
-    const paginatedFiles = filteredFiles.slice(startIndex, endIndex)
+    // Insert file record
+    const { data: file, error } = await supabase
+      .from('content_files')
+      .insert({
+        name,
+        original_name: original_name || name,
+        type,
+        mime_type,
+        size,
+        url,
+        thumbnail_url,
+        folder_id,
+        folder_path: folder_path || '/',
+        category: category || 'general',
+        tags: tags || [],
+        metadata: metadata || {},
+        is_public: is_public || false,
+        uploaded_by: user.id
+      })
+      .select()
+      .single()
 
-    return NextResponse.json({
-      files: paginatedFiles,
-      pagination: {
-        page,
-        limit,
-        total: filteredFiles.length,
-        totalPages: Math.ceil(filteredFiles.length / limit)
-      }
-    })
+    if (error) {
+      console.error('Error creating file:', error)
+      return NextResponse.json({ error: 'Failed to create file' }, { status: 500 })
+    }
+
+    return NextResponse.json({ file }, { status: 201 })
   } catch (error) {
-    console.error('Error fetching files:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch files' },
-      { status: 500 }
-    )
+    console.error('Error in files API:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
