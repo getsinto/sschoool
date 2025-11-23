@@ -100,7 +100,7 @@ export default function DashboardLayout({
   const router = useRouter()
   const { signOut, user } = useAuth()
 
-  // Fetch actual user role from database
+  // Fetch actual user role from database and enforce role-based access
   useEffect(() => {
     const fetchUserRole = async () => {
       if (!user) return
@@ -110,6 +110,30 @@ export default function DashboardLayout({
         const data = await response.json()
         if (data.role) {
           setActualUserRole(data.role)
+          
+          // Enforce role-based routing
+          const roleDashboardMap: Record<string, string> = {
+            'admin': '/admin',
+            'teacher': '/teacher',
+            'student': '/student',
+            'parent': '/parent'
+          }
+          
+          const correctDashboard = roleDashboardMap[data.role]
+          
+          // Check if user is on the wrong dashboard
+          const currentDashboard = Object.entries(roleDashboardMap).find(([role, path]) => 
+            pathname.startsWith(path)
+          )
+          
+          if (currentDashboard && correctDashboard) {
+            const [currentRole] = currentDashboard
+            
+            // If user's role doesn't match the current dashboard, redirect
+            if (data.role !== currentRole) {
+              router.push(correctDashboard)
+            }
+          }
         }
       } catch (error) {
         console.error('Error fetching user role:', error)
@@ -117,7 +141,7 @@ export default function DashboardLayout({
     }
     
     fetchUserRole()
-  }, [user])
+  }, [user, pathname, router])
 
   // Determine user role from pathname or actual role for shared routes
   const isTeacher = pathname.startsWith('/teacher') || (pathname.startsWith('/support') && actualUserRole === 'teacher')

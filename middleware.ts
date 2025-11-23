@@ -89,6 +89,52 @@ export async function middleware(request: NextRequest) {
       loginUrl.searchParams.set('redirect', request.nextUrl.pathname)
       return NextResponse.redirect(loginUrl)
     }
+
+    // Role-based access control
+    // Fetch user role from database
+    const { data: userData } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    const userRole = userData?.role
+
+    if (userRole) {
+      // Define role-based dashboard paths
+      const roleDashboardMap: Record<string, string> = {
+        'admin': '/admin',
+        'teacher': '/teacher',
+        'student': '/student',
+        'parent': '/parent'
+      }
+
+      // Check if user is trying to access a dashboard
+      const requestedDashboard = Object.entries(roleDashboardMap).find(([role, path]) => 
+        request.nextUrl.pathname.startsWith(path)
+      )
+
+      if (requestedDashboard) {
+        const [requestedRole, requestedPath] = requestedDashboard
+        
+        // If user is trying to access a dashboard that doesn't match their role
+        if (userRole !== requestedRole) {
+          // Redirect to their correct dashboard
+          const correctDashboard = roleDashboardMap[userRole]
+          if (correctDashboard) {
+            return NextResponse.redirect(new URL(correctDashboard, request.url))
+          }
+        }
+      }
+
+      // Handle generic /dashboard route - redirect to role-specific dashboard
+      if (request.nextUrl.pathname === '/dashboard') {
+        const correctDashboard = roleDashboardMap[userRole]
+        if (correctDashboard) {
+          return NextResponse.redirect(new URL(correctDashboard, request.url))
+        }
+      }
+    }
   }
   
   // Redirect /login to /auth/login

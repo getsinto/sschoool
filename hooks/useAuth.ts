@@ -22,6 +22,9 @@ export function useAuth() {
   const supabase = createClient()
 
   useEffect(() => {
+    // Track if this is the initial mount to prevent duplicate notifications
+    let isInitialMount = true
+    
     // Get initial session
     const getInitialSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
@@ -30,6 +33,10 @@ export function useAuth() {
         session,
         loading: false,
       })
+      // After initial session is loaded, mark as not initial mount
+      setTimeout(() => {
+        isInitialMount = false
+      }, 100)
     }
 
     getInitialSession()
@@ -43,7 +50,9 @@ export function useAuth() {
           loading: false,
         })
 
-        if (event === 'SIGNED_IN') {
+        // Only show notification for actual sign in events, not session refreshes
+        // TOKEN_REFRESHED and INITIAL_SESSION events should not trigger notifications
+        if (event === 'SIGNED_IN' && !isInitialMount) {
           toast.success('Successfully signed in!')
         } else if (event === 'SIGNED_OUT') {
           toast.success('Successfully signed out!')
