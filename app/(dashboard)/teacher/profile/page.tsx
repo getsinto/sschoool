@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { User, Edit, Settings, Award, BookOpen } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import Link from 'next/link'
 
 export default function ProfilePage() {
   return (
@@ -13,10 +14,12 @@ export default function ProfilePage() {
           <h1 className="text-3xl font-bold text-gray-900">Teacher Profile</h1>
           <p className="text-gray-600 mt-1">Manage your profile and teaching credentials</p>
         </div>
-        <Button>
-          <Edit className="w-4 h-4 mr-2" />
-          Edit Profile
-        </Button>
+        <Link href="/teacher/profile/edit">
+          <Button>
+            <Edit className="w-4 h-4 mr-2" />
+            Edit Profile
+          </Button>
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -102,18 +105,24 @@ export default function ProfilePage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button variant="outline" className="w-full justify-start">
-              <User className="w-4 h-4 mr-2" />
-              Personal Information
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              <Settings className="w-4 h-4 mr-2" />
-              Privacy Settings
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              <Award className="w-4 h-4 mr-2" />
-              Certifications
-            </Button>
+            <Link href="/teacher/settings/personal" className="block">
+              <Button variant="outline" className="w-full justify-start">
+                <User className="w-4 h-4 mr-2" />
+                Personal Information
+              </Button>
+            </Link>
+            <Link href="/teacher/settings/privacy" className="block">
+              <Button variant="outline" className="w-full justify-start">
+                <Settings className="w-4 h-4 mr-2" />
+                Privacy Settings
+              </Button>
+            </Link>
+            <Link href="/teacher/settings/certifications" className="block">
+              <Button variant="outline" className="w-full justify-start">
+                <Award className="w-4 h-4 mr-2" />
+                Certifications
+              </Button>
+            </Link>
           </CardContent>
         </Card>
       </div>

@@ -131,6 +131,8 @@ export default function TeacherGradingPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCourse, setSelectedCourse] = useState('all')
   const [selectedType, setSelectedType] = useState('all')
+  const [showScheduleModal, setShowScheduleModal] = useState(false)
+  const [showBulkFeedbackModal, setShowBulkFeedbackModal] = useState(false)
 
   const filteredTasks = mockGradingTasks.filter(task => {
     const matchesTab = selectedTab === 'all' || task.status === selectedTab
@@ -189,11 +191,11 @@ export default function TeacherGradingPage() {
           <p className="text-gray-600 mt-1">Review and grade student submissions</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => setShowScheduleModal(true)}>
             <Calendar className="w-4 h-4 mr-2" />
             Schedule
           </Button>
-          <Button size="sm">
+          <Button size="sm" onClick={() => setShowBulkFeedbackModal(true)}>
             <MessageSquare className="w-4 h-4 mr-2" />
             Bulk Feedback
           </Button>

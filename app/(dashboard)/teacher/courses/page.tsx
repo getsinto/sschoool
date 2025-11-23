@@ -117,7 +117,7 @@ export default function TeacherCoursesPage() {
           <h1 className="text-3xl font-bold text-gray-900">My Courses</h1>
           <p className="text-gray-600 mt-1">Manage and track your courses</p>
         </div>
-        <Link href="/dashboard/teacher/course-builder">
+        <Link href="/teacher/courses/create">
           <Button size="lg" className="gap-2">
             <Plus className="w-5 h-5" />
             Create New Course

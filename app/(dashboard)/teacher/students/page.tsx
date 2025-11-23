@@ -145,6 +145,8 @@ export default function TeacherStudentsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCourse, setSelectedCourse] = useState('all')
   const [selectedStatus, setSelectedStatus] = useState('all')
+  const [showBulkEmailModal, setShowBulkEmailModal] = useState(false)
+  const [showMessageModal, setShowMessageModal] = useState(false)
 
   const filteredStudents = mockStudents.filter(student => {
     const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -199,11 +201,11 @@ export default function TeacherStudentsPage() {
           <p className="text-gray-600 mt-1">Monitor and support your students' progress</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => setShowBulkEmailModal(true)}>
             <Mail className="w-4 h-4 mr-2" />
             Bulk Email
           </Button>
-          <Button size="sm">
+          <Button size="sm" onClick={() => setShowMessageModal(true)}>
             <MessageSquare className="w-4 h-4 mr-2" />
             Send Message
           </Button>

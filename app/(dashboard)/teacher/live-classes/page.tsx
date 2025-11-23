@@ -114,7 +114,7 @@ export default function TeacherLiveClassesPage() {
           <h1 className="text-3xl font-bold text-gray-900">Live Classes</h1>
           <p className="text-gray-600 mt-1">Manage your scheduled live sessions</p>
         </div>
-        <Link href="/dashboard/teacher/live-classes/schedule">
+        <Link href="/teacher/live-classes/create">
           <Button size="lg">
             <Plus className="w-5 h-5 mr-2" />
             Schedule New Class

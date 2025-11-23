@@ -163,7 +163,7 @@ export default function TeacherMessagesPage() {
           <p className="text-gray-600 mt-1">Communicate with your students</p>
         </div>
         <div className="flex gap-2">
-          <Link href="/dashboard/teacher/messages/compose">
+          <Link href="/teacher/messages/compose">
             <Button>
               <Plus className="w-4 h-4 mr-2" />
               New Message
