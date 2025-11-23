@@ -17,8 +17,17 @@ import {
   Download, 
   Filter,
   Search,
-  RefreshCw
+  RefreshCw,
+  ChevronDown
 } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 interface User {
   id: string
@@ -184,10 +193,40 @@ export default function UsersPage() {
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
-          <Button onClick={() => router.push('/admin/users/create')}>
-            <UserPlus className="w-4 h-4 mr-2" />
-            Add Admin
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button>
+                <UserPlus className="w-4 h-4 mr-2" />
+                Add User
+                <ChevronDown className="w-4 h-4 ml-2" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>Select User Type</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => router.push('/admin/users/create?type=student')}>
+                <Users className="w-4 h-4 mr-2" />
+                Add Student
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push('/admin/users/create?type=teacher')}>
+                <Users className="w-4 h-4 mr-2" />
+                Add Teacher
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push('/admin/users/create?type=parent')}>
+                <Users className="w-4 h-4 mr-2" />
+                Add Parent
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push('/admin/users/create?type=spoken_english')}>
+                <Users className="w-4 h-4 mr-2" />
+                Add Spoken English Student
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => router.push('/admin/users/create?type=admin')}>
+                <UserPlus className="w-4 h-4 mr-2" />
+                Add Admin
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
