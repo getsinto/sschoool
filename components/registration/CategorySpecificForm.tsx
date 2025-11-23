@@ -659,7 +659,7 @@ export function CategorySpecificForm({
       <div>
         <Label>Preferred Lesson Duration *</Label>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
-          {[30, 45, 60, 90].map((duration) => (
+          {['30', '45', '60', '90'].map((duration) => (
             <div key={duration} className="flex items-center space-x-2">
               <Checkbox
                 id={`duration-${duration}`}
