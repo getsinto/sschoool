@@ -676,25 +676,25 @@ export default function TeacherDashboard() {
               <CardDescription>Common tasks and shortcuts</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Link href="/dashboard/teacher/course-builder">
+              <Link href="/teacher/courses/create">
                 <Button className="w-full justify-start" variant="outline">
                   <BookOpen className="w-4 h-4 mr-2" />
                   Create New Course
                 </Button>
               </Link>
-              <Link href="/dashboard/teacher/live-classes/schedule">
+              <Link href="/teacher/live-classes/create">
                 <Button className="w-full justify-start" variant="outline">
                   <Video className="w-4 h-4 mr-2" />
                   Schedule Live Class
                 </Button>
               </Link>
-              <Link href="/dashboard/teacher/messages">
+              <Link href="/teacher/messages/compose">
                 <Button className="w-full justify-start" variant="outline">
                   <Send className="w-4 h-4 mr-2" />
                   Send Message to Students
                 </Button>
               </Link>
-              <Link href="/dashboard/teacher/grading">
+              <Link href="/teacher/gradebook">
                 <Button className="w-full justify-start" variant="outline">
                   <ClipboardCheck className="w-4 h-4 mr-2" />
                   View Pending Grading
