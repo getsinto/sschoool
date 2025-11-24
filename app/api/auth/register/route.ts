@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     // Validate input
     const validatedData = registerSchema.parse(body)
     
-    const adminClient = createAdminClient()
+    const adminClient = await createAdminClient()
     
     // Create user with Supabase Auth
     const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = createClient()
+    const supabase = await createClient()
     
     // Create user profile in profiles table
     const { data: profile, error: profileError } = await supabase
