@@ -182,3 +182,29 @@ Assistant:`;
 
 // Export singleton instance
 export const geminiChatbot = new GeminiChatbot();
+
+// Export function for compatibility with existing code
+export async function generateChatResponse(
+  message: string,
+  history: any[],
+  context: any,
+  userId?: string
+): Promise<any> {
+  const userContext: UserContext = {
+    userId: userId || 'anonymous',
+    userName: context?.userName,
+    userRole: context?.userRole,
+    currentPage: context?.currentPage,
+    enrolledCourses: context?.enrolledCourses
+  };
+
+  const response = await geminiChatbot.sendMessage(message, userContext);
+  
+  return {
+    message: response.content,
+    intent: response.intent || 'general',
+    confidence: response.confidence || 0.8,
+    suggestedActions: response.suggestions || [],
+    requiresEscalation: false
+  };
+}

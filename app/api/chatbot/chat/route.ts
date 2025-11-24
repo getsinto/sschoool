@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = createClient();
+    const supabase = await createClient();
     const body = await request.json();
     const { message, session_id, context } = body;
 
