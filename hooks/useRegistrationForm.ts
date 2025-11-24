@@ -197,7 +197,9 @@ export function useRegistrationForm() {
   const uploadFile = useCallback(async (file: File, type: 'id_front' | 'id_back' | 'profile_photo' | 'selfie_with_id' | 'resume'): Promise<string> => {
     const formData = new FormData()
     formData.append('file', file)
-    formData.append('type', type)
+    // Map type to fileType expected by API
+    const fileType = type === 'profile_photo' ? 'photo' : 'document'
+    formData.append('fileType', fileType)
     formData.append('userId', data.personalInfo.email || 'temp')
 
     const response = await fetch('/api/auth/upload-file', {
