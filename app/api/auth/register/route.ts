@@ -91,16 +91,16 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient()
     
     // Create user profile in users table
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError} = await supabase
       .from('users')
       .insert({
         id: user.id,
         email: user.email,
-        first_name: validatedData.personalInfo.firstName,
+        full_name: validatedData.personalInfo.firstName,
         last_name: validatedData.personalInfo.lastName,
         role: validatedData.userType,
-        mobile_number: validatedData.personalInfo.mobileNumber,
-        whatsapp_number: validatedData.personalInfo.whatsappNumber,
+        mobile: validatedData.personalInfo.mobileNumber,
+        whatsapp: validatedData.personalInfo.whatsappNumber,
         date_of_birth: validatedData.personalInfo.dateOfBirth,
         gender: validatedData.personalInfo.gender,
         country: validatedData.addressInfo.country,
@@ -108,16 +108,10 @@ export async function POST(request: NextRequest) {
         city: validatedData.addressInfo.city,
         address: validatedData.addressInfo.address,
         postal_code: validatedData.addressInfo.postalCode,
-        id_type: validatedData.idVerification.idType,
-        id_number: validatedData.idVerification.idNumber,
-        id_front_url: validatedData.idVerification.idFrontUrl,
-        id_back_url: validatedData.idVerification.idBackUrl,
-        profile_photo_url: validatedData.idVerification.profilePhotoUrl,
-        selfie_with_id_url: validatedData.idVerification.selfieWithIdUrl,
-        category_specific_data: validatedData.categorySpecific,
-        consent_data: validatedData.consents,
+        id_card_type: validatedData.idVerification.idType,
+        id_card_url: validatedData.idVerification.idFrontUrl,
+        profile_pic: validatedData.idVerification.profilePhotoUrl,
         account_status: validatedData.userType === 'teacher' ? 'pending_review' : 'pending_verification',
-        registration_completed: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
