@@ -6,16 +6,16 @@
 
 -- Function: Update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $
+RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- Function: Get unread notification count
 CREATE OR REPLACE FUNCTION get_unread_notification_count(user_uuid UUID)
-RETURNS INTEGER AS $
+RETURNS INTEGER AS $$
 BEGIN
     RETURN (
         SELECT COUNT(*)::INTEGER
@@ -25,11 +25,11 @@ BEGIN
           AND (expires_at IS NULL OR expires_at > NOW())
     );
 END;
-$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Function: Mark all notifications as read
 CREATE OR REPLACE FUNCTION mark_all_notifications_read(user_uuid UUID)
-RETURNS INTEGER AS $
+RETURNS INTEGER AS $$
 DECLARE
     updated_count INTEGER;
 BEGIN
@@ -44,11 +44,11 @@ BEGIN
     GET DIAGNOSTICS updated_count = ROW_COUNT;
     RETURN updated_count;
 END;
-$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Function: Check verification time elapsed
 CREATE OR REPLACE FUNCTION check_verification_time_elapsed(user_uuid UUID)
-RETURNS BOOLEAN AS $
+RETURNS BOOLEAN AS $$
 DECLARE
     verification_time TIMESTAMPTZ;
     user_role_val TEXT;
@@ -72,7 +72,7 @@ BEGIN
             RETURN hours_elapsed >= 24;
     END CASE;
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- Function: Get teacher subjects with details
 CREATE OR REPLACE FUNCTION get_teacher_subjects(p_teacher_id UUID)
@@ -85,7 +85,7 @@ RETURNS TABLE(
     years_experience INTEGER,
     status TEXT,
     approved_at TIMESTAMPTZ
-) AS $
+) AS $$
 BEGIN
     RETURN QUERY
     SELECT
@@ -102,17 +102,17 @@ BEGIN
     WHERE ts.teacher_id = p_teacher_id
     ORDER BY ts.is_primary DESC, s.name;
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- Function: Increment file usage count
 CREATE OR REPLACE FUNCTION increment_file_usage(file_uuid UUID)
-RETURNS VOID AS $
+RETURNS VOID AS $$
 BEGIN
     UPDATE content_files
     SET usage_count = usage_count + 1
     WHERE id = file_uuid;
 END;
-$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Function: Get storage statistics
 CREATE OR REPLACE FUNCTION get_storage_stats()
@@ -125,7 +125,7 @@ RETURNS TABLE (
     documents_size BIGINT,
     images_count BIGINT,
     images_size BIGINT
-) AS $
+) AS $$
 BEGIN
     RETURN QUERY
     SELECT
@@ -140,7 +140,7 @@ BEGIN
     FROM content_files
     WHERE is_archived = FALSE;
 END;
-$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Grant execute permissions
 GRANT EXECUTE ON FUNCTION get_unread_notification_count(UUID) TO authenticated;

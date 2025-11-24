@@ -1,31 +1,29 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 
-export const dynamic = 'force-dynamic'
-
-const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
-const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
-const ALLOWED_DOCUMENT_TYPES = ['application/pdf']
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const ALLOWED_DOCUMENT_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
 
 export async function POST(request: NextRequest) {
   try {
-    const formData = await request.formData()
-    const file = formData.get('file') as File
-    const type = formData.get('type') as string
-    const userId = formData.get('userId') as string
+    const formData = await request.formData();
+    const file = formData.get('file') as File;
+    const fileType = formData.get('fileType') as string;
+    const userId = formData.get('userId') as string;
 
     if (!file) {
       return NextResponse.json(
         { error: 'No file provided' },
         { status: 400 }
-      )
+      );
     }
 
-    if (!type) {
+    if (!fileType || !userId) {
       return NextResponse.json(
-        { error: 'File type not specified' },
+        { error: 'Missing required fields' },
         { status: 400 }
-      )
+      );
     }
 
     // Validate file size
@@ -33,71 +31,65 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'File size exceeds 5MB limit' },
         { status: 400 }
-      )
+      );
     }
 
-    // Validate file type based on upload type
-    const isResume = type === 'resume'
-    const allowedTypes = isResume 
-      ? ALLOWED_DOCUMENT_TYPES 
-      : [...ALLOWED_IMAGE_TYPES, ...ALLOWED_DOCUMENT_TYPES]
-
+    // Validate file type
+    const allowedTypes = fileType === 'photo' ? ALLOWED_IMAGE_TYPES : ALLOWED_DOCUMENT_TYPES;
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
-        { error: `Invalid file type. Allowed: ${allowedTypes.join(', ')}` },
+        { error: `Invalid file type. Allowed types: ${allowedTypes.join(', ')}` },
         { status: 400 }
-      )
+      );
     }
 
-    const supabase = createClient()
+    const supabase = await createClient();
+
+    // Create bucket name based on file type
+    const bucketName = fileType === 'photo' ? 'profile-photos' : 'verification-documents';
 
     // Generate unique filename
-    const timestamp = Date.now()
-    const randomString = Math.random().toString(36).substring(7)
-    const fileExtension = file.name.split('.').pop()
-    const fileName = `${userId || 'temp'}_${type}_${timestamp}_${randomString}.${fileExtension}`
-
-    // Determine storage bucket based on file type
-    const bucket = type === 'resume' ? 'documents' : 'id-verification'
+    const timestamp = Date.now();
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${userId}_${timestamp}.${fileExt}`;
+    const filePath = `${fileType}/${fileName}`;
 
     // Convert File to ArrayBuffer then to Buffer
-    const arrayBuffer = await file.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
 
     // Upload to Supabase Storage
     const { data, error } = await supabase.storage
-      .from(bucket)
-      .upload(fileName, buffer, {
+      .from(bucketName)
+      .upload(filePath, buffer, {
         contentType: file.type,
-        cacheControl: '3600',
-        upsert: false
-      })
+        upsert: false,
+      });
 
     if (error) {
-      console.error('Supabase storage error:', error)
+      console.error('Supabase storage error:', error);
       return NextResponse.json(
         { error: 'Failed to upload file to storage' },
         { status: 500 }
-      )
+      );
     }
 
     // Get public URL
     const { data: urlData } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(fileName)
+      .from(bucketName)
+      .getPublicUrl(filePath);
 
     return NextResponse.json({
+      success: true,
       url: urlData.publicUrl,
+      path: filePath,
       fileName: fileName,
-      fileSize: file.size,
-      fileType: file.type
-    })
-
+    });
   } catch (error) {
-    console.error('File upload error:', error)
+    console.error('File upload error:', error);
     return NextResponse.json(
       { error: 'Internal server error during file upload' },
       { status: 500 }
-    )
+    );
   }
 }
