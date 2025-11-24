@@ -90,9 +90,9 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient()
     
-    // Create user profile in profiles table
+    // Create user profile in users table
     const { data: profile, error: profileError } = await supabase
-      .from('profiles')
+      .from('users')
       .insert({
         id: user.id,
         email: user.email,
@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
     
     // Store verification token
     const { error: tokenError } = await supabase
-      .from('profiles')
+      .from('users')
       .update({
         verification_token: verificationToken,
         token_expires_at: expiresAt.toISOString(),
