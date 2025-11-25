@@ -103,6 +103,11 @@ export async function POST(request: NextRequest) {
     // Create user profile in users table using admin client to bypass RLS
     console.log('Creating user profile for:', user.id, user.email)
     
+    // Map gender value - database only accepts 'male', 'female', 'other'
+    const genderValue = validatedData.personalInfo.gender === 'prefer_not_to_say' 
+      ? 'other' 
+      : validatedData.personalInfo.gender
+
     const profileData = {
       id: user.id,
       email: user.email?.toLowerCase(),
@@ -112,7 +117,7 @@ export async function POST(request: NextRequest) {
       mobile: validatedData.personalInfo.mobileNumber,
       whatsapp: validatedData.personalInfo.whatsappNumber || validatedData.personalInfo.mobileNumber,
       date_of_birth: validatedData.personalInfo.dateOfBirth,
-      gender: validatedData.personalInfo.gender,
+      gender: genderValue,
       country: validatedData.addressInfo.country,
       state: validatedData.addressInfo.state || null,
       city: validatedData.addressInfo.city,
