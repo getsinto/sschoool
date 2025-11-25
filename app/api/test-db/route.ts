@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,13 +16,13 @@ export async function GET() {
 
     console.log('Environment check:', envCheck)
 
-    // Try to create a client
-    const supabase = await createClient()
+    // Try to create an admin client (bypasses RLS)
+    const supabase = await createAdminClient()
     
     // Try a simple query
     const { data, error } = await supabase
       .from('users')
-      .select('count')
+      .select('id')
       .limit(1)
 
     if (error) {
