@@ -115,37 +115,27 @@ export async function POST(request: NextRequest) {
     // 'spoken_english' users are students with a different student_type
     const roleValue = validatedData.userType === 'spoken_english' ? 'student' : validatedData.userType
 
-    const profileData = {
-      id: user.id,
-      email: user.email?.toLowerCase(),
-      full_name: `${validatedData.personalInfo.firstName} ${validatedData.personalInfo.lastName}`,
-      last_name: validatedData.personalInfo.lastName,
-      role: roleValue,
-      mobile: validatedData.personalInfo.mobileNumber,
-      whatsapp: validatedData.personalInfo.whatsappNumber || validatedData.personalInfo.mobileNumber,
-      date_of_birth: validatedData.personalInfo.dateOfBirth,
-      gender: genderValue,
-      country: validatedData.addressInfo.country,
-      state: validatedData.addressInfo.state || null,
-      city: validatedData.addressInfo.city,
-      address: validatedData.addressInfo.address,
-      postal_code: validatedData.addressInfo.postalCode,
-      id_card_type: validatedData.idVerification.idType,
-      id_card_url: validatedData.idVerification.idFrontUrl,
-      profile_pic: validatedData.idVerification.profilePhotoUrl || null,
-      account_status: validatedData.userType === 'teacher' ? 'pending_review' : 'pending_verification',
-      is_verified: false,
-      is_active: true,
-      email_verified: false
-    }
-    
-    console.log('Profile data to insert:', JSON.stringify(profileData, null, 2))
-    
-    const { data: profile, error: profileError } = await adminClient
-      .from('users')
-      .insert(profileData)
-      .select()
-      .single()
+    // Use direct SQL to bypass RLS and type issues
+    const { data: profile, error: profileError } = await adminClient.rpc('create_user_profile', {
+      p_id: user.id,
+      p_email: user.email?.toLowerCase() || '',
+      p_full_name: `${validatedData.personalInfo.firstName} ${validatedData.personalInfo.lastName}`,
+      p_last_name: validatedData.personalInfo.lastName,
+      p_role: roleValue,
+      p_mobile: validatedData.personalInfo.mobileNumber,
+      p_whatsapp: validatedData.personalInfo.whatsappNumber || validatedData.personalInfo.mobileNumber,
+      p_date_of_birth: validatedData.personalInfo.dateOfBirth,
+      p_gender: genderValue,
+      p_country: validatedData.addressInfo.country,
+      p_state: validatedData.addressInfo.state || null,
+      p_city: validatedData.addressInfo.city,
+      p_address: validatedData.addressInfo.address,
+      p_postal_code: validatedData.addressInfo.postalCode,
+      p_id_card_type: validatedData.idVerification.idType,
+      p_id_card_url: validatedData.idVerification.idFrontUrl,
+      p_profile_pic: validatedData.idVerification.profilePhotoUrl || null,
+      p_account_status: validatedData.userType === 'teacher' ? 'pending_review' : 'pending_verification'
+    })
     
     if (profileError) {
       console.error('Profile creation error:', {
