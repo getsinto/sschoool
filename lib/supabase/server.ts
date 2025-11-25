@@ -36,28 +36,18 @@ export const createClient = async () => {
   )
 }
 
-// For route handlers that need admin access
+// For route handlers that need admin access (bypasses RLS)
 export const createAdminClient = async () => {
-  const cookieStore = await cookies()
-  
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     {
       cookies: {
         getAll() {
-          return cookieStore.getAll()
+          return []
         },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
-          } catch {
-            // The `setAll` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
-          }
+        setAll() {
+          // No-op for admin client
         },
       },
       auth: {
