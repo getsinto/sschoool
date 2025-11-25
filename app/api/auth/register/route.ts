@@ -101,10 +101,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = await createClient()
-    
-    // Create user profile in users table
-    const { data: profile, error: profileError} = await supabase
+    // Create user profile in users table using admin client to bypass RLS
+    const { data: profile, error: profileError} = await adminClient
       .from('users')
       .insert({
         id: user.id,
@@ -140,8 +138,8 @@ export async function POST(request: NextRequest) {
     const verificationToken = crypto.randomUUID()
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
     
-    // Store verification token
-    const { error: tokenError } = await supabase
+    // Store verification token using admin client
+    const { error: tokenError } = await adminClient
       .from('users')
       .update({
         verification_token: verificationToken,
