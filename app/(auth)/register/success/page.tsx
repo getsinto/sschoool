@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import { RegisterSuccessWrapper } from '@/components/auth/RegisterSuccessWrapper'
+import SharedLayout from '@/components/layout/SharedLayout'
 
 function RegisterSuccessFallback() {
   return (
@@ -14,8 +15,10 @@ function RegisterSuccessFallback() {
 
 export default function RegisterSuccessPage() {
   return (
-    <Suspense fallback={<RegisterSuccessFallback />}>
-      <RegisterSuccessWrapper />
-    </Suspense>
+    <SharedLayout>
+      <Suspense fallback={<RegisterSuccessFallback />}>
+        <RegisterSuccessWrapper />
+      </Suspense>
+    </SharedLayout>
   )
 }
