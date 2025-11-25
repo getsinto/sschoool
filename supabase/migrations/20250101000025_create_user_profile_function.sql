@@ -8,7 +8,7 @@ CREATE OR REPLACE FUNCTION create_user_profile(
   p_mobile TEXT,
   p_whatsapp TEXT,
   p_date_of_birth DATE,
-  p_gender gender_type,
+  p_gender TEXT,
   p_country TEXT,
   p_state TEXT DEFAULT NULL,
   p_city TEXT,
@@ -17,7 +17,7 @@ CREATE OR REPLACE FUNCTION create_user_profile(
   p_id_card_type TEXT,
   p_id_card_url TEXT,
   p_profile_pic TEXT DEFAULT NULL,
-  p_account_status account_status DEFAULT 'pending_verification'
+  p_account_status account_status_type DEFAULT 'pending_verification'
 )
 RETURNS JSON
 LANGUAGE plpgsql
