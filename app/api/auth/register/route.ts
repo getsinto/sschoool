@@ -108,12 +108,16 @@ export async function POST(request: NextRequest) {
       ? 'other' 
       : validatedData.personalInfo.gender
 
+    // Map userType to role - database only accepts 'admin', 'teacher', 'student', 'parent'
+    // 'spoken_english' users are students with a different student_type
+    const roleValue = validatedData.userType === 'spoken_english' ? 'student' : validatedData.userType
+
     const profileData = {
       id: user.id,
       email: user.email?.toLowerCase(),
       full_name: validatedData.personalInfo.firstName,
       last_name: validatedData.personalInfo.lastName,
-      role: validatedData.userType,
+      role: roleValue,
       mobile: validatedData.personalInfo.mobileNumber,
       whatsapp: validatedData.personalInfo.whatsappNumber || validatedData.personalInfo.mobileNumber,
       date_of_birth: validatedData.personalInfo.dateOfBirth,
