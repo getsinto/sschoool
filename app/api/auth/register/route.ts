@@ -48,6 +48,14 @@ const registerSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    // Log environment check
+    console.log('Registration API - Environment check:', {
+      hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 30) + '...'
+    })
+    
     const body: RegistrationData = await request.json()
     
     // Validate input
@@ -75,7 +83,12 @@ export async function POST(request: NextRequest) {
     if (authError) {
       console.error('Auth user creation error:', authError)
       return NextResponse.json(
-        { error: authError.message || 'Failed to create user account' },
+        { 
+          error: authError.message || 'Failed to create user account',
+          code: authError.code,
+          details: authError.details,
+          hint: authError.hint
+        },
         { status: 500 }
       )
     }
@@ -197,8 +210,20 @@ export async function POST(request: NextRequest) {
     }
     
     console.error('Registration error:', error)
+    console.error('Error type:', error?.constructor?.name)
+    console.error('Error details:', {
+      message: error?.message,
+      code: error?.code,
+      details: error?.details
+    })
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error',
+        details: error?.message || 'Unknown error',
+        type: error?.constructor?.name,
+        stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined
+      },
       { status: 500 }
     )
   }

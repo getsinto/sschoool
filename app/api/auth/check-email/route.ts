@@ -27,7 +27,12 @@ export async function GET(request: NextRequest) {
     if (error) {
       console.error('Error checking email:', error)
       return NextResponse.json(
-        { error: 'Failed to check email' },
+        { 
+          error: 'Failed to check email',
+          details: error.message,
+          code: error.code,
+          hint: error.hint
+        },
         { status: 500 }
       )
     }
@@ -36,10 +41,14 @@ export async function GET(request: NextRequest) {
       exists: !!data,
       available: !data
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Check email error:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error',
+        details: error?.message || 'Unknown error',
+        stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined
+      },
       { status: 500 }
     )
   }
