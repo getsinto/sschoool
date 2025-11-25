@@ -102,37 +102,64 @@ export async function POST(request: NextRequest) {
     }
 
     // Create user profile in users table using admin client to bypass RLS
-    const { data: profile, error: profileError} = await adminClient
+    console.log('Creating user profile for:', user.id, user.email)
+    
+    const profileData = {
+      id: user.id,
+      email: user.email?.toLowerCase(),
+      full_name: validatedData.personalInfo.firstName,
+      last_name: validatedData.personalInfo.lastName,
+      role: validatedData.userType,
+      mobile: validatedData.personalInfo.mobileNumber,
+      whatsapp: validatedData.personalInfo.whatsappNumber || validatedData.personalInfo.mobileNumber,
+      date_of_birth: validatedData.personalInfo.dateOfBirth,
+      gender: validatedData.personalInfo.gender,
+      country: validatedData.addressInfo.country,
+      state: validatedData.addressInfo.state || null,
+      city: validatedData.addressInfo.city,
+      address: validatedData.addressInfo.address,
+      postal_code: validatedData.addressInfo.postalCode,
+      id_card_type: validatedData.idVerification.idType,
+      id_card_url: validatedData.idVerification.idFrontUrl,
+      profile_pic: validatedData.idVerification.profilePhotoUrl || null,
+      account_status: validatedData.userType === 'teacher' ? 'pending_review' : 'pending_verification',
+      is_verified: false,
+      is_active: true,
+      email_verified: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }
+    
+    console.log('Profile data to insert:', JSON.stringify(profileData, null, 2))
+    
+    const { data: profile, error: profileError } = await adminClient
       .from('users')
-      .insert({
-        id: user.id,
-        email: user.email,
-        full_name: validatedData.personalInfo.firstName,
-        last_name: validatedData.personalInfo.lastName,
-        role: validatedData.userType as any,
-        mobile: validatedData.personalInfo.mobileNumber,
-        whatsapp: validatedData.personalInfo.whatsappNumber,
-        date_of_birth: validatedData.personalInfo.dateOfBirth,
-        gender: validatedData.personalInfo.gender,
-        country: validatedData.addressInfo.country,
-        state: validatedData.addressInfo.state,
-        city: validatedData.addressInfo.city,
-        address: validatedData.addressInfo.address,
-        postal_code: validatedData.addressInfo.postalCode,
-        id_card_type: validatedData.idVerification.idType,
-        id_card_url: validatedData.idVerification.idFrontUrl,
-        profile_pic: validatedData.idVerification.profilePhotoUrl,
-        account_status: validatedData.userType === 'teacher' ? 'pending_review' as any : 'pending_verification' as any,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      } as any)
+      .insert(profileData)
       .select()
       .single()
     
     if (profileError) {
-      console.error('Profile creation error:', profileError)
-      // Continue with registration even if profile creation fails
+      console.error('Profile creation error:', {
+        message: profileError.message,
+        details: profileError.details,
+        hint: profileError.hint,
+        code: profileError.code
+      })
+      
+      // This is critical - if profile creation fails, we should clean up the auth user
+      await adminClient.auth.admin.deleteUser(user.id)
+      
+      return NextResponse.json(
+        { 
+          error: 'Failed to create user profile',
+          details: profileError.message,
+          hint: profileError.hint
+        },
+        { status: 500 }
+      )
     }
+    
+    console.log('Profile created successfully:', profile)
     
     // Generate verification token
     const verificationToken = crypto.randomUUID()
