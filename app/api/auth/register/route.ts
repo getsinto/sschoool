@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
     // Create user profile in users table
     const { data: profile, error: profileError} = await supabase
       .from('users')
-      .insert({
+      .insert([{
         id: user.id,
         email: user.email,
         full_name: validatedData.personalInfo.firstName,
@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
         account_status: validatedData.userType === 'teacher' ? 'pending_review' : 'pending_verification',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      })
+      }])
       .select()
       .single()
     
@@ -130,10 +130,10 @@ export async function POST(request: NextRequest) {
     // Store verification token
     const { error: tokenError } = await supabase
       .from('users')
-      .update({
+      .update([{
         verification_token: verificationToken,
         token_expires_at: expiresAt.toISOString(),
-      })
+      }])
       .eq('id', user.id)
     
     if (tokenError) {
@@ -152,11 +152,12 @@ export async function POST(request: NextRequest) {
         await sendEmail({
           to: validatedData.personalInfo.email,
           subject: 'Teacher Application Received - St Haroon School',
-          template: 'TeacherRegistrationPending',
+          template: 'welcome',
           data: {
             firstName: validatedData.personalInfo.firstName,
             lastName: validatedData.personalInfo.lastName,
-            submittedAt: new Date().toLocaleDateString()
+            submittedAt: new Date().toLocaleDateString(),
+            message: 'Your teacher application has been received and is under review. You will be notified within 24-48 hours.'
           }
         })
       } else {
@@ -164,7 +165,7 @@ export async function POST(request: NextRequest) {
         await sendEmail({
           to: validatedData.personalInfo.email,
           subject: 'Verify your email - St Haroon School',
-          template: 'RegistrationVerification',
+          template: 'email-verification',
           data: {
             firstName: validatedData.personalInfo.firstName,
             verificationUrl,
