@@ -10,12 +10,12 @@ CREATE OR REPLACE FUNCTION create_user_profile(
   p_date_of_birth DATE,
   p_gender TEXT,
   p_country TEXT,
-  p_state TEXT DEFAULT NULL,
   p_city TEXT,
   p_address TEXT,
   p_postal_code TEXT,
   p_id_card_type TEXT,
   p_id_card_url TEXT,
+  p_state TEXT DEFAULT NULL,
   p_profile_pic TEXT DEFAULT NULL,
   p_account_status account_status_type DEFAULT 'pending_verification'
 )
