@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, createAdminClient } from '@/lib/supabase/server'
-import bcrypt from 'bcryptjs'
+import { createAdminClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 import { RegistrationData } from '@/types/registration'
 
