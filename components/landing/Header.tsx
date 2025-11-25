@@ -2,12 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
-import { Menu, X } from 'lucide-react'
+import { Menu } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import BrandLogo from '@/components/ui/BrandLogo'
 
 const navigation = [
   { name: 'About Us', href: '/about' },
@@ -53,15 +51,32 @@ export default function Header() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-18 lg:h-22">
-          {/* Professional Animated Logo */}
+          {/* Logo matching Footer */}
           <div className="flex items-center">
-            <Link href="/" className="block">
-              <BrandLogo 
-                size="md" 
-                variant={isScrolled ? 'light' : 'dark'}
-                showText={true}
-                animated={true}
-              />
+            <Link href="/" className="flex items-center space-x-3 group">
+              <div className="relative">
+                <div className={cn(
+                  "w-12 h-12 bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg transition-all duration-300 group-hover:scale-105",
+                  isScrolled ? "shadow-xl" : "shadow-2xl"
+                )}>
+                  <span className="text-white font-bold text-xl">SH</span>
+                </div>
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl blur opacity-20 group-hover:opacity-30 transition-opacity duration-300"></div>
+              </div>
+              <div className="hidden sm:block">
+                <h1 className={cn(
+                  "text-xl font-bold transition-colors duration-300 drop-shadow-sm",
+                  isScrolled ? "text-gray-900" : "text-white"
+                )}>
+                  St Haroon
+                </h1>
+                <p className={cn(
+                  "text-sm font-medium transition-colors duration-300 drop-shadow-sm",
+                  isScrolled ? "text-gray-600" : "text-gray-200"
+                )}>
+                  Online School
+                </p>
+              </div>
             </Link>
           </div>
 
@@ -125,14 +140,15 @@ export default function Header() {
               </SheetTrigger>
               <SheetContent side="right" className="w-[300px] sm:w-[400px]">
                 <div className="flex flex-col space-y-6 mt-6">
-                  {/* Mobile Professional Logo */}
-                  <div className="pb-6 border-b">
-                    <BrandLogo 
-                      size="sm" 
-                      variant="light"
-                      showText={true}
-                      animated={true}
-                    />
+                  {/* Mobile Logo matching Footer */}
+                  <div className="flex items-center space-x-2 pb-6 border-b">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                      <span className="text-white font-bold text-lg">SH</span>
+                    </div>
+                    <div>
+                      <h1 className="text-lg font-bold text-gray-900">St Haroon</h1>
+                      <p className="text-xs text-gray-600">Online School</p>
+                    </div>
                   </div>
 
                   {/* Mobile Navigation */}
