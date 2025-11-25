@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Menu, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import BrandLogo from '@/components/ui/BrandLogo'
 
 const navigation = [
   { name: 'About Us', href: '/about' },
@@ -52,54 +53,15 @@ export default function Header() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-18 lg:h-22">
-          {/* Enhanced Animated Logo */}
+          {/* Professional Animated Logo */}
           <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-3 group">
-              <div className="relative">
-                <style jsx>{`
-                  @keyframes gentle-glow {
-                    0%, 100% { 
-                      box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3), 0 4px 6px -2px rgba(59, 130, 246, 0.2);
-                    }
-                    50% { 
-                      box-shadow: 0 20px 25px -5px rgba(147, 51, 234, 0.4), 0 10px 10px -5px rgba(147, 51, 234, 0.3);
-                    }
-                  }
-                  @keyframes float {
-                    0%, 100% { transform: translateY(0px); }
-                    50% { transform: translateY(-4px); }
-                  }
-                  @keyframes rotate-gradient {
-                    0% { background-position: 0% 50%; }
-                    50% { background-position: 100% 50%; }
-                    100% { background-position: 0% 50%; }
-                  }
-                  .logo-animate {
-                    animation: gentle-glow 3s ease-in-out infinite, float 4s ease-in-out infinite;
-                    background: linear-gradient(135deg, #3b82f6, #8b5cf6, #6366f1);
-                    background-size: 200% 200%;
-                    animation: gentle-glow 3s ease-in-out infinite, float 4s ease-in-out infinite, rotate-gradient 6s ease infinite;
-                  }
-                `}</style>
-                <div className="w-12 h-12 logo-animate rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110">
-                  <span className="text-white font-bold text-xl">SH</span>
-                </div>
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-xl blur opacity-20 group-hover:opacity-30 transition-opacity duration-500"></div>
-              </div>
-              <div className="hidden sm:block">
-                <h1 className={cn(
-                  "text-xl font-bold transition-colors duration-300 drop-shadow-sm",
-                  isScrolled ? "text-gray-900" : "text-white"
-                )}>
-                  St Haroon
-                </h1>
-                <p className={cn(
-                  "text-sm font-medium transition-colors duration-300 drop-shadow-sm",
-                  isScrolled ? "text-gray-600" : "text-gray-200"
-                )}>
-                  Online School
-                </p>
-              </div>
+            <Link href="/" className="block">
+              <BrandLogo 
+                size="md" 
+                variant={isScrolled ? 'light' : 'dark'}
+                showText={true}
+                animated={true}
+              />
             </Link>
           </div>
 
@@ -163,39 +125,14 @@ export default function Header() {
               </SheetTrigger>
               <SheetContent side="right" className="w-[300px] sm:w-[400px]">
                 <div className="flex flex-col space-y-6 mt-6">
-                  {/* Mobile Animated Logo */}
-                  <div className="flex items-center space-x-2 pb-6 border-b">
-                    <style jsx>{`
-                      @keyframes mobile-glow {
-                        0%, 100% { 
-                          box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
-                        }
-                        50% { 
-                          box-shadow: 0 10px 15px -3px rgba(147, 51, 234, 0.4);
-                        }
-                      }
-                      @keyframes mobile-float {
-                        0%, 100% { transform: translateY(0px); }
-                        50% { transform: translateY(-2px); }
-                      }
-                      @keyframes mobile-gradient {
-                        0% { background-position: 0% 50%; }
-                        50% { background-position: 100% 50%; }
-                        100% { background-position: 0% 50%; }
-                      }
-                      .mobile-logo-animate {
-                        background: linear-gradient(135deg, #3b82f6, #8b5cf6, #6366f1);
-                        background-size: 200% 200%;
-                        animation: mobile-glow 3s ease-in-out infinite, mobile-float 4s ease-in-out infinite, mobile-gradient 6s ease infinite;
-                      }
-                    `}</style>
-                    <div className="w-8 h-8 mobile-logo-animate rounded-lg flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">SH</span>
-                    </div>
-                    <div>
-                      <h1 className="text-lg font-bold text-gray-900">St Haroon</h1>
-                      <p className="text-xs text-gray-600">Online School</p>
-                    </div>
+                  {/* Mobile Professional Logo */}
+                  <div className="pb-6 border-b">
+                    <BrandLogo 
+                      size="sm" 
+                      variant="light"
+                      showText={true}
+                      animated={true}
+                    />
                   </div>
 
                   {/* Mobile Navigation */}
