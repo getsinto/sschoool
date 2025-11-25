@@ -12,8 +12,10 @@ const registerSchema = z.object({
     lastName: z.string().min(1, 'Last name is required'),
     email: z.string().email('Invalid email address'),
     password: z.string().min(8, 'Password must be at least 8 characters'),
+    confirmPassword: z.string().optional(), // Frontend sends this for validation
     mobileNumber: z.string().min(1, 'Mobile number is required'),
     whatsappNumber: z.string().optional(),
+    sameAsMobile: z.boolean().optional(), // Frontend sends this for UI logic
     dateOfBirth: z.string().min(1, 'Date of birth is required'),
     gender: z.enum(['male', 'female', 'other', 'prefer_not_to_say']),
   }),
@@ -43,7 +45,8 @@ const registerSchema = z.object({
     whatsappNotifications: z.boolean(),
     dataSharing: z.boolean().refine(val => val === true, 'Data sharing consent is required'),
   }),
-})
+  currentStep: z.number().optional(), // Frontend sends this for tracking
+}).passthrough() // Allow extra fields to pass through without causing validation errors
 
 export async function POST(request: NextRequest) {
   try {
