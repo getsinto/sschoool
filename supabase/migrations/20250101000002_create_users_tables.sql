@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS users (
     account_status account_status_type DEFAULT 'pending_verification',
     email_verified BOOLEAN DEFAULT FALSE,
     verification_token TEXT,
+    token_expires_at TIMESTAMPTZ,
     verification_requested_at TIMESTAMPTZ,
     verified_at TIMESTAMPTZ,
     verified_by UUID REFERENCES auth.users(id),

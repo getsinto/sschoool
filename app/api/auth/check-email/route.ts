@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
+    const searchParams = request.nextUrl.searchParams
     const email = searchParams.get('email')
 
     if (!email) {
@@ -17,28 +17,27 @@ export async function GET(request: NextRequest) {
 
     const supabase = await createClient()
 
-    // Check if email already exists in users table
-    const { data: existingUser, error } = await supabase
+    // Check if email exists in users table
+    const { data, error } = await supabase
       .from('users')
-      .select('id')
+      .select('email')
       .eq('email', email.toLowerCase())
-      .single()
+      .maybeSingle()
 
-    if (error && error.code !== 'PGRST116') {
-      // PGRST116 is "not found" error, which is what we want
+    if (error) {
       console.error('Error checking email:', error)
       return NextResponse.json(
-        { error: 'Database error' },
+        { error: 'Failed to check email' },
         { status: 500 }
       )
     }
 
-    // Email is available if no user was found
-    const available = !existingUser
-
-    return NextResponse.json({ available })
+    return NextResponse.json({
+      exists: !!data,
+      available: !data
+    })
   } catch (error) {
-    console.error('Email check error:', error)
+    console.error('Check email error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
