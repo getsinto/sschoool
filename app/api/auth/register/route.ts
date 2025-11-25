@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
     const profileData = {
       id: user.id,
       email: user.email?.toLowerCase(),
-      full_name: validatedData.personalInfo.firstName,
+      full_name: `${validatedData.personalInfo.firstName} ${validatedData.personalInfo.lastName}`,
       last_name: validatedData.personalInfo.lastName,
       role: roleValue,
       mobile: validatedData.personalInfo.mobileNumber,
@@ -133,9 +133,7 @@ export async function POST(request: NextRequest) {
       account_status: validatedData.userType === 'teacher' ? 'pending_review' : 'pending_verification',
       is_verified: false,
       is_active: true,
-      email_verified: false,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      email_verified: false
     }
     
     console.log('Profile data to insert:', JSON.stringify(profileData, null, 2))
