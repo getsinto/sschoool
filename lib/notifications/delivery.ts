@@ -1,240 +1,278 @@
 import { createClient } from '@/lib/supabase/server';
-import { CreateNotificationPayload, DeliveryMethod } from '@/types/notification';
-import { generateNotification } from './templates';
+import { Notification, NotificationPreferences, NotificationDelivery } from './types';
+import { sendPushNotification, PushSubscription } from './push';
+import { sendEmail } from '@/lib/email/service';
 
 /**
- * Notification delivery service
- * Handles creating notifications and delivering them via multiple channels
+ * Notification Delivery Service
+ * Handles multi-channel notification delivery (in-app, email, push, SMS)
  */
-export class NotificationDelivery {
+
+export class NotificationDeliveryService {
   /**
-   * Create and deliver a notification
+   * Deliver notification through all enabled channels
    */
-  static async send(payload: CreateNotificationPayload): Promise<string | null> {
-    try {
-      const supabase = createClient();
-
-      // Create notification in database
-      const payloadData = payload.data || {};
-      const insertResult = await supabase
-        .from('notifications')
-        .insert({
-          user_id: payload.user_id,
-          type: payload.type,
-          title: payload.title,
-          message: payload.message,
-          data: payloadData,
-          priority: payload.priority || 'normal',
-          action_url: payload.action_url,
-          icon: payload.icon,
-          expires_at: payload.expires_at
-        } as any)
-        .select()
-        .single();
-      
-      const notification = insertResult.data;
-      const error = insertResult.error;
-
-      if (error || !notification) {
-        console.error('Error creating notification:', error);
-        return null;
-      }
-
-      // Get user preferences
-      const preferences = await this.getUserPreferences(payload.user_id, payload.type);
-
-      // Deliver via enabled channels
-      const deliveryPromises: Promise<void>[] = [];
-      const notificationId = (notification as any).id;
-
-      if (preferences.in_app_enabled) {
-        // In-app notification already created above
-        await this.logDelivery(notificationId, 'in_app', 'delivered');
-      }
-
-      if (preferences.email_enabled) {
-        deliveryPromises.push(this.sendEmail(notification));
-      }
-
-      if (preferences.push_enabled) {
-        deliveryPromises.push(this.sendPush(notification));
-      }
-
-      if (preferences.sms_enabled) {
-        deliveryPromises.push(this.sendSMS(notification));
-      }
-
-      // Execute all deliveries in parallel
-      await Promise.allSettled(deliveryPromises);
-
-      return notificationId;
-    } catch (error) {
-      console.error('Error sending notification:', error);
-      return null;
-    }
-  }
-
-  /**
-   * Send notification using template
-   */
-  static async sendFromTemplate(
-    templateKey: string,
+  async deliverNotification(
     userId: string,
-    templateData: any
-  ): Promise<string | null> {
-    try {
-      const notification = generateNotification(templateKey, templateData);
-      const notificationPayloadData = notification.data;
-
-      return await this.send({
-        user_id: userId,
-        type: notification.type,
-        title: notification.title,
-        message: notification.message,
-        data: notificationPayloadData,
-        priority: notification.priority,
-        action_url: notification.action_url,
-        icon: notification.icon
-      });
-    } catch (error) {
-      console.error('Error sending notification from template:', error);
-      return null;
-    }
-  }
-
-  /**
-   * Send bulk notifications
-   */
-  static async sendBulk(
-    userIds: string[],
-    payload: Omit<CreateNotificationPayload, 'user_id'>
-  ): Promise<number> {
-    let successCount = 0;
-
-    for (const userId of userIds) {
-      const result = await this.send({
-        ...payload,
-        user_id: userId
-      });
-
-      if (result) successCount++;
-    }
-
-    return successCount;
-  }
-
-  /**
-   * Get user notification preferences
-   */
-  private static async getUserPreferences(userId: string, type: string) {
+    notification: Omit<Notification, 'id' | 'user_id' | 'created_at' | 'updated_at'>
+  ): Promise<void> {
     const supabase = createClient();
 
+    // Get user preferences
     const { data: preferences } = await supabase
       .from('user_notification_preferences')
       .select('*')
       .eq('user_id', userId)
-      .eq('notification_type', type)
+      .eq('notification_type', notification.type)
       .single();
 
-    return preferences || {
-      in_app_enabled: true,
-      email_enabled: true,
-      push_enabled: true,
-      sms_enabled: false
-    };
-  }
+    // Create in-app notification (always created)
+    const { data: inAppNotification, error: inAppError } = await supabase
+      .from('notifications')
+      .insert({
+        user_id: userId,
+        ...notification,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single();
 
-  /**
-   * Send email notification
-   */
-  private static async sendEmail(notification: any): Promise<void> {
-    try {
-      // Integrate with email system
-      await fetch('/api/email/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          to: notification.user_id,
-          subject: notification.title,
-          template: 'notification',
-          templateData: {
-            title: notification.title,
-            message: notification.message,
-            actionUrl: notification.action_url
-          }
-        })
-      });
+    if (inAppError) {
+      console.error('Error creating in-app notification:', inAppError);
+      return;
+    }
 
-      await this.logDelivery(notification.id, 'email', 'sent');
-    } catch (error) {
-      console.error('Error sending email notification:', error);
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      await this.logDelivery(notification.id, 'email', 'failed', errorMsg);
+    // Track delivery
+    await this.trackDelivery(inAppNotification.id, 'in_app', 'delivered');
+
+    // Deliver through other channels based on preferences
+    if (preferences?.email_enabled) {
+      await this.deliverEmail(userId, notification);
+      await this.trackDelivery(inAppNotification.id, 'email', 'sent');
+    }
+
+    if (preferences?.push_enabled) {
+      await this.deliverPush(userId, notification);
+      await this.trackDelivery(inAppNotification.id, 'push', 'sent');
+    }
+
+    if (preferences?.sms_enabled) {
+      await this.deliverSMS(userId, notification);
+      await this.trackDelivery(inAppNotification.id, 'sms', 'sent');
     }
   }
 
   /**
-   * Send push notification
+   * Deliver email notification
    */
-  private static async sendPush(notification: any): Promise<void> {
+  private async deliverEmail(
+    userId: string,
+    notification: Omit<Notification, 'id' | 'user_id' | 'created_at' | 'updated_at'>
+  ): Promise<void> {
     try {
-      const pushData = notification.data;
-      await fetch('/api/notifications/send-push', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: notification.user_id,
+      const supabase = createClient();
+
+      // Get user email
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('email, full_name')
+        .eq('user_id', userId)
+        .single();
+
+      if (!profile?.email) {
+        console.error('User email not found');
+        return;
+      }
+
+      // Send email
+      await sendEmail({
+        to: profile.email,
+        subject: notification.title,
+        template: 'notification',
+        data: {
+          name: profile.full_name,
+          title: notification.title,
+          message: notification.message,
+          type: notification.type,
+          actionUrl: this.getNotificationActionUrl(notification)
+        }
+      });
+    } catch (error) {
+      console.error('Error delivering email notification:', error);
+    }
+  }
+
+  /**
+   * Deliver push notification
+   */
+  private async deliverPush(
+    userId: string,
+    notification: Omit<Notification, 'id' | 'user_id' | 'created_at' | 'updated_at'>
+  ): Promise<void> {
+    try {
+      const supabase = createClient();
+
+      // Get user push subscriptions
+      const { data: subscriptions } = await supabase
+        .from('push_subscriptions')
+        .select('*')
+        .eq('user_id', userId);
+
+      if (!subscriptions || subscriptions.length === 0) {
+        return;
+      }
+
+      // Send push notification to all subscriptions
+      for (const sub of subscriptions) {
+        const pushSubscription: PushSubscription = {
+          endpoint: sub.endpoint,
+          keys: {
+            p256dh: sub.p256dh,
+            auth: sub.auth
+          }
+        };
+
+        const success = await sendPushNotification(pushSubscription, {
           title: notification.title,
           body: notification.message,
-          notificationData: pushData,
-          url: notification.action_url
-        })
-      });
+          data: notification.data,
+          tag: notification.type
+        });
 
-      await this.logDelivery(notification.id, 'push', 'sent');
+        // Remove expired subscriptions
+        if (!success) {
+          await supabase
+            .from('push_subscriptions')
+            .delete()
+            .eq('id', sub.id);
+        }
+      }
     } catch (error) {
-      console.error('Error sending push notification:', error);
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      await this.logDelivery(notification.id, 'push', 'failed', errorMsg);
+      console.error('Error delivering push notification:', error);
     }
   }
 
   /**
-   * Send SMS notification
+   * Deliver SMS notification
    */
-  private static async sendSMS(notification: any): Promise<void> {
-    try {
-      // Implement SMS sending logic here
-      // For now, just log
-      console.log('SMS notification:', notification);
-      await this.logDelivery(notification.id, 'sms', 'sent');
-    } catch (error) {
-      console.error('Error sending SMS notification:', error);
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      await this.logDelivery(notification.id, 'sms', 'failed', errorMsg);
-    }
-  }
-
-  /**
-   * Log delivery attempt
-   */
-  private static async logDelivery(
-    notificationId: string,
-    method: DeliveryMethod,
-    status: string,
-    errorMessage?: string
+  private async deliverSMS(
+    userId: string,
+    notification: Omit<Notification, 'id' | 'user_id' | 'created_at' | 'updated_at'>
   ): Promise<void> {
+    try {
+      const supabase = createClient();
+
+      // Get user phone number
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('phone')
+        .eq('user_id', userId)
+        .single();
+
+      if (!profile?.phone) {
+        return;
+      }
+
+      // TODO: Implement SMS delivery using Twilio or similar service
+      console.log('SMS delivery not yet implemented');
+    } catch (error) {
+      console.error('Error delivering SMS notification:', error);
+    }
+  }
+
+  /**
+   * Track notification delivery
+   */
+  private async trackDelivery(
+    notificationId: string,
+    method: 'in_app' | 'email' | 'push' | 'sms',
+    status: 'pending' | 'sent' | 'delivered' | 'failed'
+  ): Promise<void> {
+    try {
+      const supabase = createClient();
+
+      await supabase
+        .from('notification_delivery')
+        .insert({
+          notification_id: notificationId,
+          delivery_method: method,
+          status,
+          sent_at: status === 'sent' || status === 'delivered' ? new Date().toISOString() : null,
+          delivered_at: status === 'delivered' ? new Date().toISOString() : null
+        });
+    } catch (error) {
+      console.error('Error tracking delivery:', error);
+    }
+  }
+
+  /**
+   * Get action URL for notification
+   */
+  private getNotificationActionUrl(
+    notification: Omit<Notification, 'id' | 'user_id' | 'created_at' | 'updated_at'>
+  ): string {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
+    switch (notification.type) {
+      case 'course':
+        return `${baseUrl}/courses/${notification.data?.courseId}`;
+      case 'assignment':
+        return `${baseUrl}/assignments/${notification.data?.assignmentId}`;
+      case 'grade':
+        return `${baseUrl}/grades`;
+      case 'live-class':
+        return `${baseUrl}/live-classes/${notification.data?.classId}`;
+      case 'payment':
+        return `${baseUrl}/payments`;
+      case 'message':
+        return `${baseUrl}/messages`;
+      case 'announcement':
+        return `${baseUrl}/announcements/${notification.data?.announcementId}`;
+      default:
+        return `${baseUrl}/notifications`;
+    }
+  }
+
+  /**
+   * Bulk deliver notifications to multiple users
+   */
+  async bulkDeliverNotifications(
+    userIds: string[],
+    notification: Omit<Notification, 'id' | 'user_id' | 'created_at' | 'updated_at'>
+  ): Promise<void> {
+    await Promise.all(
+      userIds.map(userId => this.deliverNotification(userId, notification))
+    );
+  }
+
+  /**
+   * Get delivery statistics for a notification
+   */
+  async getDeliveryStats(notificationId: string): Promise<{
+    total: number;
+    delivered: number;
+    failed: number;
+    pending: number;
+  }> {
     const supabase = createClient();
 
-    await supabase.from('notification_delivery_log').insert({
-      notification_id: notificationId,
-      delivery_method: method,
-      status,
-      error_message: errorMessage
-    } as any);
+    const { data: deliveries } = await supabase
+      .from('notification_delivery')
+      .select('status')
+      .eq('notification_id', notificationId);
+
+    if (!deliveries) {
+      return { total: 0, delivered: 0, failed: 0, pending: 0 };
+    }
+
+    return {
+      total: deliveries.length,
+      delivered: deliveries.filter(d => d.status === 'delivered').length,
+      failed: deliveries.filter(d => d.status === 'failed').length,
+      pending: deliveries.filter(d => d.status === 'pending').length
+    };
   }
 }
 
-// Export both named and default
-export const NotificationService = NotificationDelivery;
-export default NotificationDelivery;
+export const notificationDeliveryService = new NotificationDeliveryService();
