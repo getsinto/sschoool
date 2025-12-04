@@ -10,32 +10,58 @@ import { Textarea } from '@/components/ui/textarea'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Video, FileText, HelpCircle, FileCheck, Calendar } from 'lucide-react'
+import { Video, FileText, HelpCircle, FileCheck, Calendar, Type, Image as ImageIcon } from 'lucide-react'
+import { TextLessonEditor } from './TextLessonEditor'
+import { ImageLessonGallery } from './ImageLessonGallery'
+import { VideoEnhancementsForm } from './VideoEnhancementsForm'
+import { LessonResourcesManager } from './LessonResourcesManager'
+import { 
+  LessonType, 
+  TextLessonContent, 
+  ImageLessonContent,
+  VideoQualityOptions,
+  VideoSubtitle,
+  VideoChapter,
+  LessonResource,
+  CompletionRequirement,
+  LessonAccessType
+} from '@/types/lesson'
 
 interface LessonModalProps {
   open: boolean
   onClose: () => void
   onSave: (lesson: any) => void
-  sectionId: string
+  moduleId: string // Changed from sectionId
   lesson?: any
 }
 
-type LessonType = 'video' | 'document' | 'quiz' | 'assignment' | 'live-class'
-
-export function LessonModal({ open, onClose, onSave, sectionId, lesson }: LessonModalProps) {
+export function LessonModal({ open, onClose, onSave, moduleId, lesson }: LessonModalProps) {
   const [formData, setFormData] = useState({
     title: lesson?.title || '',
+    subtitle: lesson?.subtitle || '',
     description: lesson?.description || '',
     type: (lesson?.type || 'video') as LessonType,
     duration: lesson?.duration || '',
     // Content specific
     videoUrl: lesson?.videoUrl || '',
     documentUrl: lesson?.documentUrl || '',
+    textContent: lesson?.textContent as TextLessonContent | undefined,
+    imageContent: lesson?.imageContent as ImageLessonContent | undefined,
+    // Video enhancements
+    videoQualityOptions: lesson?.videoQualityOptions as VideoQualityOptions | undefined,
+    videoSubtitles: lesson?.videoSubtitles as VideoSubtitle[] | undefined,
+    videoChapters: lesson?.videoChapters as VideoChapter[] | undefined,
+    // Resources
+    resources: lesson?.resources as LessonResource[] | undefined,
     // Settings
-    freePreview: lesson?.freePreview || false,
-    requiredToComplete: lesson?.requiredToComplete || true,
-    allowDownload: lesson?.allowDownload || false,
-    dripDays: lesson?.dripDays || 0
+    accessType: (lesson?.accessType || 'enrolled_only') as LessonAccessType,
+    completionRequirement: (lesson?.completionRequirement || 'manual') as CompletionRequirement,
+    downloadAllowed: lesson?.downloadAllowed ?? true,
+    printAllowed: lesson?.printAllowed ?? true,
+    canAnnotate: lesson?.canAnnotate ?? false,
+    enableDiscussion: lesson?.enableDiscussion ?? true,
+    scheduledPublishAt: lesson?.scheduledPublishAt || '',
+    isPublished: lesson?.isPublished ?? true
   })
 
   const handleChange = (field: string, value: any) => {
@@ -45,7 +71,7 @@ export function LessonModal({ open, onClose, onSave, sectionId, lesson }: Lesson
   const handleSave = () => {
     onSave({
       ...formData,
-      sectionId,
+      moduleId,
       id: lesson?.id || `lesson-${Date.now()}`
     })
     onClose()
@@ -55,7 +81,7 @@ export function LessonModal({ open, onClose, onSave, sectionId, lesson }: Lesson
     switch (formData.type) {
       case 'video':
         return (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div>
               <Label>Video URL or Upload</Label>
               <Input
@@ -67,7 +93,19 @@ export function LessonModal({ open, onClose, onSave, sectionId, lesson }: Lesson
                 Paste a video URL or click to upload (MP4, MOV, AVI up to 2GB)
               </p>
             </div>
-            {/* TODO: Add full VideoUploader component */}
+
+            {/* Video Enhancements */}
+            <div className="border-t pt-4">
+              <h3 className="font-medium mb-4">Video Enhancements</h3>
+              <VideoEnhancementsForm
+                qualityOptions={formData.videoQualityOptions}
+                subtitles={formData.videoSubtitles || []}
+                chapters={formData.videoChapters || []}
+                onQualityChange={(options) => handleChange('videoQualityOptions', options)}
+                onSubtitlesChange={(subs) => handleChange('videoSubtitles', subs)}
+                onChaptersChange={(chaps) => handleChange('videoChapters', chaps)}
+              />
+            </div>
           </div>
         )
 
@@ -78,7 +116,7 @@ export function LessonModal({ open, onClose, onSave, sectionId, lesson }: Lesson
               <Label>Document Upload</Label>
               <Input
                 type="file"
-                accept=".pdf,.doc,.docx,.ppt,.pptx"
+                accept=".pdf,.doc,.docx,.ppt,.pptx,.xlsx"
                 onChange={(e) => {
                   const file = e.target.files?.[0]
                   if (file) {
@@ -87,10 +125,67 @@ export function LessonModal({ open, onClose, onSave, sectionId, lesson }: Lesson
                 }}
               />
               <p className="text-xs text-gray-500 mt-1">
-                PDF, DOC, DOCX, PPT, PPTX up to 50MB
+                PDF, DOC, DOCX, PPT, PPTX, XLSX up to 50MB
               </p>
             </div>
-            {/* TODO: Add full DocumentUploader component */}
+
+            {/* Document Permissions */}
+            <div className="border-t pt-4 space-y-4">
+              <h3 className="font-medium">Document Permissions</h3>
+              
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Allow Download</Label>
+                  <p className="text-xs text-gray-500">Students can download this document</p>
+                </div>
+                <Switch
+                  checked={formData.downloadAllowed}
+                  onCheckedChange={(checked) => handleChange('downloadAllowed', checked)}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Allow Print</Label>
+                  <p className="text-xs text-gray-500">Students can print this document</p>
+                </div>
+                <Switch
+                  checked={formData.printAllowed}
+                  onCheckedChange={(checked) => handleChange('printAllowed', checked)}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Allow Annotations</Label>
+                  <p className="text-xs text-gray-500">Students can highlight and annotate</p>
+                </div>
+                <Switch
+                  checked={formData.canAnnotate}
+                  onCheckedChange={(checked) => handleChange('canAnnotate', checked)}
+                />
+              </div>
+            </div>
+          </div>
+        )
+
+      case 'text':
+        return (
+          <div className="space-y-4">
+            <TextLessonEditor
+              content={formData.textContent}
+              onChange={(content) => handleChange('textContent', content)}
+            />
+          </div>
+        )
+
+      case 'image':
+        return (
+          <div className="space-y-4">
+            <ImageLessonGallery
+              content={formData.imageContent}
+              onChange={(content) => handleChange('imageContent', content)}
+            />
           </div>
         )
 
@@ -114,7 +209,7 @@ export function LessonModal({ open, onClose, onSave, sectionId, lesson }: Lesson
           </div>
         )
 
-      case 'live-class':
+      case 'live_class':
         return (
           <div className="space-y-4">
             <p className="text-sm text-gray-600">
@@ -171,50 +266,77 @@ export function LessonModal({ open, onClose, onSave, sectionId, lesson }: Lesson
             </div>
 
             <div>
+              <Label>Lesson Subtitle (optional)</Label>
+              <Input
+                value={formData.subtitle}
+                onChange={(e) => handleChange('subtitle', e.target.value)}
+                placeholder="Short subtitle or tagline"
+              />
+            </div>
+
+            <div>
               <Label>
                 Lesson Type <span className="text-red-500">*</span>
               </Label>
               <RadioGroup
                 value={formData.type}
                 onValueChange={(value) => handleChange('type', value as LessonType)}
-                className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2"
+                className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2"
               >
-                <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-gray-50">
+                <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-gray-50">
                   <RadioGroupItem value="video" id="video" />
                   <Label htmlFor="video" className="flex items-center gap-2 cursor-pointer">
-                    <Video className="w-5 h-5 text-blue-600" />
-                    Video Lesson
+                    <Video className="w-4 h-4 text-blue-600" />
+                    <span className="text-sm">Video</span>
                   </Label>
                 </div>
-                <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-gray-50">
+                <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-gray-50">
                   <RadioGroupItem value="document" id="document" />
                   <Label htmlFor="document" className="flex items-center gap-2 cursor-pointer">
-                    <FileText className="w-5 h-5 text-green-600" />
-                    Document
+                    <FileText className="w-4 h-4 text-green-600" />
+                    <span className="text-sm">Document</span>
                   </Label>
                 </div>
-                <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-gray-50">
+                <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-gray-50 bg-blue-50">
+                  <RadioGroupItem value="text" id="text" />
+                  <Label htmlFor="text" className="flex items-center gap-2 cursor-pointer">
+                    <Type className="w-4 h-4 text-indigo-600" />
+                    <span className="text-sm">Text</span>
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-gray-50 bg-blue-50">
+                  <RadioGroupItem value="image" id="image" />
+                  <Label htmlFor="image" className="flex items-center gap-2 cursor-pointer">
+                    <ImageIcon className="w-4 h-4 text-pink-600" />
+                    <span className="text-sm">Image</span>
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-gray-50">
                   <RadioGroupItem value="quiz" id="quiz" />
                   <Label htmlFor="quiz" className="flex items-center gap-2 cursor-pointer">
-                    <HelpCircle className="w-5 h-5 text-purple-600" />
-                    Quiz
+                    <HelpCircle className="w-4 h-4 text-purple-600" />
+                    <span className="text-sm">Quiz</span>
                   </Label>
                 </div>
-                <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-gray-50">
+                <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-gray-50">
                   <RadioGroupItem value="assignment" id="assignment" />
                   <Label htmlFor="assignment" className="flex items-center gap-2 cursor-pointer">
-                    <FileCheck className="w-5 h-5 text-orange-600" />
-                    Assignment
+                    <FileCheck className="w-4 h-4 text-orange-600" />
+                    <span className="text-sm">Assignment</span>
                   </Label>
                 </div>
-                <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-gray-50">
-                  <RadioGroupItem value="live-class" id="live-class" />
-                  <Label htmlFor="live-class" className="flex items-center gap-2 cursor-pointer">
-                    <Calendar className="w-5 h-5 text-red-600" />
-                    Live Class
+                <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-gray-50">
+                  <RadioGroupItem value="live_class" id="live_class" />
+                  <Label htmlFor="live_class" className="flex items-center gap-2 cursor-pointer">
+                    <Calendar className="w-4 h-4 text-red-600" />
+                    <span className="text-sm">Live Class</span>
                   </Label>
                 </div>
               </RadioGroup>
+              <p className="text-xs text-gray-500 mt-2">
+                {formData.type === 'text' && '✨ NEW: Rich text lesson with formatting'}
+                {formData.type === 'image' && '✨ NEW: Image gallery with multiple layouts'}
+              </p>
             </div>
 
             <div>
@@ -239,70 +361,100 @@ export function LessonModal({ open, onClose, onSave, sectionId, lesson }: Lesson
 
           {/* Resources Tab */}
           <TabsContent value="resources" className="space-y-4">
-            <div>
-              <Label>Additional Resources</Label>
-              <p className="text-sm text-gray-600 mb-4">
-                Upload supplementary files, add links, or embed content
-              </p>
-              {/* TODO: Add resources uploader */}
-              <Button variant="outline" size="sm">
-                Add Resource
-              </Button>
-            </div>
+            <LessonResourcesManager
+              resources={formData.resources || []}
+              onChange={(resources) => handleChange('resources', resources)}
+            />
           </TabsContent>
 
           {/* Settings Tab */}
           <TabsContent value="settings" className="space-y-6">
+            <div>
+              <Label>Access Type</Label>
+              <Select
+                value={formData.accessType}
+                onValueChange={(value: LessonAccessType) => handleChange('accessType', value)}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="free_preview">
+                    <div>
+                      <p className="font-medium">Free Preview</p>
+                      <p className="text-xs text-gray-500">Anyone can access</p>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="enrolled_only">
+                    <div>
+                      <p className="font-medium">Enrolled Only</p>
+                      <p className="text-xs text-gray-500">Requires enrollment</p>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="prerequisite">
+                    <div>
+                      <p className="font-medium">Prerequisite Required</p>
+                      <p className="text-xs text-gray-500">Previous lessons must be completed</p>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>Completion Requirement</Label>
+              <Select
+                value={formData.completionRequirement}
+                onValueChange={(value: CompletionRequirement) => handleChange('completionRequirement', value)}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="manual">Manual - Student marks complete</SelectItem>
+                  <SelectItem value="auto_video_80">Auto - Video watched 80%+</SelectItem>
+                  <SelectItem value="auto_document">Auto - Document read</SelectItem>
+                  <SelectItem value="quiz_pass">Quiz - Must pass to complete</SelectItem>
+                  <SelectItem value="assignment_submit">Assignment - Must submit</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="flex items-center justify-between">
               <div>
-                <Label>Free Preview</Label>
+                <Label>Enable Discussion</Label>
                 <p className="text-sm text-gray-500">
-                  Make this lesson accessible without enrollment
+                  Allow students to ask questions and comment
                 </p>
               </div>
               <Switch
-                checked={formData.freePreview}
-                onCheckedChange={(checked) => handleChange('freePreview', checked)}
+                checked={formData.enableDiscussion}
+                onCheckedChange={(checked) => handleChange('enableDiscussion', checked)}
               />
             </div>
 
             <div className="flex items-center justify-between">
               <div>
-                <Label>Required to Complete</Label>
+                <Label>Published</Label>
                 <p className="text-sm text-gray-500">
-                  Students must complete this lesson to proceed
+                  Make this lesson visible to students
                 </p>
               </div>
               <Switch
-                checked={formData.requiredToComplete}
-                onCheckedChange={(checked) => handleChange('requiredToComplete', checked)}
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>Allow Download</Label>
-                <p className="text-sm text-gray-500">
-                  Allow students to download lesson content
-                </p>
-              </div>
-              <Switch
-                checked={formData.allowDownload}
-                onCheckedChange={(checked) => handleChange('allowDownload', checked)}
+                checked={formData.isPublished}
+                onCheckedChange={(checked) => handleChange('isPublished', checked)}
               />
             </div>
 
             <div>
-              <Label>Drip Content (Days from Enrollment)</Label>
+              <Label>Scheduled Publish Date (optional)</Label>
               <Input
-                type="number"
-                value={formData.dripDays}
-                onChange={(e) => handleChange('dripDays', parseInt(e.target.value) || 0)}
-                placeholder="0"
-                min="0"
+                type="datetime-local"
+                value={formData.scheduledPublishAt}
+                onChange={(e) => handleChange('scheduledPublishAt', e.target.value)}
               />
               <p className="text-sm text-gray-500 mt-1">
-                0 = Available immediately. Set days to delay access.
+                Leave empty to publish immediately
               </p>
             </div>
           </TabsContent>
@@ -320,15 +472,26 @@ export function LessonModal({ open, onClose, onSave, sectionId, lesson }: Lesson
             // Reset form for next lesson
             setFormData({
               title: '',
+              subtitle: '',
               description: '',
               type: 'video',
               duration: '',
               videoUrl: '',
               documentUrl: '',
-              freePreview: false,
-              requiredToComplete: true,
-              allowDownload: false,
-              dripDays: 0
+              textContent: undefined,
+              imageContent: undefined,
+              videoQualityOptions: undefined,
+              videoSubtitles: undefined,
+              videoChapters: undefined,
+              resources: undefined,
+              accessType: 'enrolled_only',
+              completionRequirement: 'manual',
+              downloadAllowed: true,
+              printAllowed: true,
+              canAnnotate: false,
+              enableDiscussion: true,
+              scheduledPublishAt: '',
+              isPublished: true
             })
           }}>
             Save & Add Another
