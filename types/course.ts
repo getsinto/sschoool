@@ -207,3 +207,118 @@ export const HIGHLIGHT_ICONS = [
 ] as const
 
 export type HighlightIcon = typeof HIGHLIGHT_ICONS[number]
+
+// ============================================================================
+// COURSE MEDIA TYPES
+// ============================================================================
+
+/**
+ * Course banner URLs for different sizes
+ */
+export interface CourseBanners {
+  desktop?: string | null
+  mobile?: string | null
+  card?: string | null
+  featured?: string | null
+}
+
+/**
+ * Promotional video information
+ */
+export interface PromoVideo {
+  url: string
+  thumbnail?: string | null
+  title?: string | null
+  description?: string | null
+  duration?: number | null
+  provider?: 'upload' | 'youtube' | 'vimeo' | 'wistia' | 'google_drive'
+}
+
+/**
+ * Course media gallery item
+ */
+export interface CourseMediaItem {
+  id: string
+  course_id: string
+  media_type: 'image' | 'video' | 'demo_video'
+  media_url: string
+  thumbnail_url?: string | null
+  title?: string | null
+  description?: string | null
+  caption?: string | null
+  alt_text?: string | null
+  display_order: number
+  is_free_preview: boolean
+  duration_seconds?: number | null
+  file_size_bytes?: number | null
+  mime_type?: string | null
+  width?: number | null
+  height?: number | null
+  created_at: string
+  updated_at: string
+  created_by?: string | null
+}
+
+/**
+ * Course media gallery insert type
+ */
+export interface CourseMediaInsert {
+  course_id: string
+  media_type: 'image' | 'video' | 'demo_video'
+  media_url: string
+  thumbnail_url?: string | null
+  title?: string | null
+  description?: string | null
+  caption?: string | null
+  alt_text?: string | null
+  display_order?: number
+  is_free_preview?: boolean
+  duration_seconds?: number | null
+  file_size_bytes?: number | null
+  mime_type?: string | null
+  width?: number | null
+  height?: number | null
+  created_by?: string | null
+}
+
+/**
+ * Course with all media
+ */
+export interface CourseWithMedia extends Course {
+  banners?: CourseBanners
+  promo_video?: PromoVideo
+  gallery?: CourseMediaItem[]
+  demo_videos?: CourseMediaItem[]
+}
+
+/**
+ * Media upload progress
+ */
+export interface MediaUploadProgress {
+  file: File
+  progress: number
+  status: 'pending' | 'uploading' | 'processing' | 'complete' | 'error'
+  url?: string
+  error?: string
+}
+
+/**
+ * Banner upload state
+ */
+export interface BannerUploadState {
+  desktop?: MediaUploadProgress
+  mobile?: MediaUploadProgress
+  card?: MediaUploadProgress
+  featured?: MediaUploadProgress
+}
+
+/**
+ * Media manager state
+ */
+export interface MediaManagerState {
+  thumbnail?: MediaUploadProgress
+  banners?: BannerUploadState
+  promoVideo?: MediaUploadProgress
+  demoVideos?: MediaUploadProgress[]
+  gallery?: MediaUploadProgress[]
+}

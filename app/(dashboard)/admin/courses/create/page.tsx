@@ -7,6 +7,7 @@ import { BasicInfoForm } from '@/components/teacher/course-builder/BasicInfoForm
 import { CurriculumForm } from '@/components/teacher/course-builder/CurriculumForm'
 import { OrganizationForm } from '@/components/teacher/course-builder/OrganizationForm'
 import { PricingForm } from '@/components/teacher/course-builder/PricingForm'
+import { MediaManager } from '@/components/teacher/course-builder/MediaManager'
 import { ReviewForm } from '@/components/teacher/course-builder/ReviewForm'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
