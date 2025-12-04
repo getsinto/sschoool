@@ -322,3 +322,9 @@ export interface MediaManagerState {
   demoVideos?: MediaUploadProgress[]
   gallery?: MediaUploadProgress[]
 }
+
+// ============================================================================
+// RE-EXPORT LESSON TYPES
+// ============================================================================
+
+export * from './lesson'
