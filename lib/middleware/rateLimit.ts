@@ -131,3 +131,39 @@ export function cleanupRateLimitStore(): void {
 if (typeof setInterval !== 'undefined') {
   setInterval(cleanupRateLimitStore, 5 * 60 * 1000);
 }
+
+/**
+ * Rate limit for category creation (5 per minute per admin)
+ * Implements Task 13.3
+ */
+export async function rateLimitCategoryCreation(userId: string): Promise<RateLimitResult> {
+  return checkRateLimit(userId, 'category_creation', {
+    maxRequests: 5,
+    windowMs: 60 * 1000, // 1 minute
+    keyPrefix: 'ratelimit'
+  });
+}
+
+/**
+ * Rate limit for file uploads (20 per hour per user)
+ * Implements Task 13.3
+ */
+export async function rateLimitFileUpload(userId: string): Promise<RateLimitResult> {
+  return checkRateLimit(userId, 'file_upload', {
+    maxRequests: 20,
+    windowMs: 60 * 60 * 1000, // 1 hour
+    keyPrefix: 'ratelimit'
+  });
+}
+
+/**
+ * Rate limit for category updates (10 per minute per admin)
+ * Implements Task 13.3
+ */
+export async function rateLimitCategoryUpdate(userId: string): Promise<RateLimitResult> {
+  return checkRateLimit(userId, 'category_update', {
+    maxRequests: 10,
+    windowMs: 60 * 1000, // 1 minute
+    keyPrefix: 'ratelimit'
+  });
+}

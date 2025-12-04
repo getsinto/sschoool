@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus, X, Upload, ArrowRight } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -14,6 +14,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import CategoryModal from '@/components/admin/categories/CategoryModal'
+import IconSelector from '@/components/teacher/course-builder/IconSelector'
+import AgeGroupSelector from '@/components/teacher/course-builder/AgeGroupSelector'
+import { LANGUAGES, STUDENT_TYPES, GRADE_LEVELS } from '@/types/course'
+import type { CourseHighlight } from '@/types/course'
 
 interface BasicInfoFormProps {
   data: any
@@ -24,19 +29,48 @@ interface BasicInfoFormProps {
 export function BasicInfoForm({ data, onUpdate, onNext }: BasicInfoFormProps) {
   const [formData, setFormData] = useState({
     title: data.title || '',
+    subtitle: data.subtitle || '',
     shortDescription: data.shortDescription || '',
     fullDescription: data.fullDescription || '',
     category: data.category || '',
     grade: data.grade || '',
     subject: data.subject || '',
+    language: data.language || 'English',
+    customLanguage: data.customLanguage || '',
     thumbnail: data.thumbnail || null,
     introVideo: data.introVideo || '',
     learningObjectives: data.learningObjectives || [''],
     prerequisites: data.prerequisites || [''],
-    difficultyLevel: data.difficultyLevel || ''
+    difficultyLevel: data.difficultyLevel || '',
+    ageGroups: data.ageGroups || [],
+    studentTypes: data.studentTypes || [],
+    highlights: data.highlights || [{ text: '', icon: '' }, { text: '', icon: '' }, { text: '', icon: '' }],
+    outcomes: data.outcomes || ['', '', '']
   })
 
   const [errors, setErrors] = useState<any>({})
+  const [categories, setCategories] = useState<any[]>([])
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
+  const [loadingCategories, setLoadingCategories] = useState(true)
+
+  // Fetch categories on mount
+  useEffect(() => {
+    fetchCategories()
+  }, [])
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch('/api/admin/categories')
+      if (response.ok) {
+        const data = await response.json()
+        setCategories(data.categories || [])
+      }
+    } catch (error) {
+      console.error('Failed to fetch categories:', error)
+    } finally {
+      setLoadingCategories(false)
+    }
+  }
 
   const handleChange = (field: string, value: any) => {
     setFormData({ ...formData, [field]: value })
@@ -66,6 +100,54 @@ export function BasicInfoForm({ data, onUpdate, onNext }: BasicInfoFormProps) {
     onUpdate({ [field]: newList })
   }
 
+  // Highlights management
+  const addHighlight = () => {
+    if (formData.highlights.length < 10) {
+      const newHighlights = [...formData.highlights, { text: '', icon: '' }]
+      setFormData({ ...formData, highlights: newHighlights })
+      onUpdate({ highlights: newHighlights })
+    }
+  }
+
+  const removeHighlight = (index: number) => {
+    if (formData.highlights.length > 3) {
+      const newHighlights = formData.highlights.filter((_: CourseHighlight, i: number) => i !== index)
+      setFormData({ ...formData, highlights: newHighlights })
+      onUpdate({ highlights: newHighlights })
+    }
+  }
+
+  const updateHighlight = (index: number, field: 'text' | 'icon', value: string) => {
+    const newHighlights = [...formData.highlights]
+    newHighlights[index] = { ...newHighlights[index], [field]: value }
+    setFormData({ ...formData, highlights: newHighlights })
+    onUpdate({ highlights: newHighlights })
+  }
+
+  // Outcomes management
+  const addOutcome = () => {
+    if (formData.outcomes.length < 8) {
+      const newOutcomes = [...formData.outcomes, '']
+      setFormData({ ...formData, outcomes: newOutcomes })
+      onUpdate({ outcomes: newOutcomes })
+    }
+  }
+
+  const removeOutcome = (index: number) => {
+    if (formData.outcomes.length > 3) {
+      const newOutcomes = formData.outcomes.filter((_: string, i: number) => i !== index)
+      setFormData({ ...formData, outcomes: newOutcomes })
+      onUpdate({ outcomes: newOutcomes })
+    }
+  }
+
+  const updateOutcome = (index: number, value: string) => {
+    const newOutcomes = [...formData.outcomes]
+    newOutcomes[index] = value
+    setFormData({ ...formData, outcomes: newOutcomes })
+    onUpdate({ outcomes: newOutcomes })
+  }
+
   const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
@@ -82,17 +164,68 @@ export function BasicInfoForm({ data, onUpdate, onNext }: BasicInfoFormProps) {
     const newErrors: any = {}
 
     if (!formData.title.trim()) newErrors.title = 'Course title is required'
+    
+    // Subtitle validation
+    if (!formData.subtitle.trim()) {
+      newErrors.subtitle = 'Course subtitle is required'
+    } else if (formData.subtitle.length < 10) {
+      newErrors.subtitle = 'Subtitle must be at least 10 characters'
+    } else if (formData.subtitle.length > 150) {
+      newErrors.subtitle = 'Subtitle must be 150 characters or less'
+    }
+    
     if (!formData.shortDescription.trim()) newErrors.shortDescription = 'Short description is required'
     if (formData.shortDescription.length > 150) newErrors.shortDescription = 'Short description must be 150 characters or less'
     if (!formData.fullDescription.trim()) newErrors.fullDescription = 'Full description is required'
     if (!formData.category) newErrors.category = 'Category is required'
     if (!formData.grade) newErrors.grade = 'Grade/Level is required'
     if (!formData.subject) newErrors.subject = 'Subject is required'
+    
+    // Language validation
+    if (!formData.language) {
+      newErrors.language = 'Language is required'
+    } else if (formData.language === 'Other' && !formData.customLanguage.trim()) {
+      newErrors.customLanguage = 'Please specify the language'
+    }
+    
     if (!formData.thumbnail) newErrors.thumbnail = 'Course thumbnail is required'
     if (!formData.difficultyLevel) newErrors.difficultyLevel = 'Difficulty level is required'
     
+    // Age groups validation
+    if (formData.ageGroups.length === 0) {
+      newErrors.ageGroups = 'Please select at least one age group'
+    }
+    
+    // Student types validation
+    if (formData.studentTypes.length === 0) {
+      newErrors.studentTypes = 'Please select at least one student type'
+    }
+    
     const validObjectives = formData.learningObjectives.filter((obj: string) => obj.trim())
     if (validObjectives.length === 0) newErrors.learningObjectives = 'At least one learning objective is required'
+    
+    // Highlights validation
+    const validHighlights = formData.highlights.filter((h: CourseHighlight) => h.text.trim())
+    if (validHighlights.length < 3) {
+      newErrors.highlights = 'At least 3 highlights are required'
+    } else if (validHighlights.length > 10) {
+      newErrors.highlights = 'Maximum 10 highlights allowed'
+    }
+    
+    // Check individual highlight length
+    formData.highlights.forEach((h: CourseHighlight, i: number) => {
+      if (h.text.length > 100) {
+        newErrors[`highlight_${i}`] = 'Highlight must be 100 characters or less'
+      }
+    })
+    
+    // Outcomes validation
+    const validOutcomes = formData.outcomes.filter((o: string) => o.trim())
+    if (validOutcomes.length < 3) {
+      newErrors.outcomes = 'At least 3 outcomes are required'
+    } else if (validOutcomes.length > 8) {
+      newErrors.outcomes = 'Maximum 8 outcomes allowed'
+    }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -124,6 +257,25 @@ export function BasicInfoForm({ data, onUpdate, onNext }: BasicInfoFormProps) {
               className={errors.title ? 'border-red-500' : ''}
             />
             {errors.title && <p className="text-sm text-red-500 mt-1">{errors.title}</p>}
+          </div>
+
+          {/* Course Subtitle */}
+          <div>
+            <Label htmlFor="subtitle">
+              Course Subtitle <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="subtitle"
+              value={formData.subtitle}
+              onChange={(e) => handleChange('subtitle', e.target.value)}
+              placeholder="e.g., Master the fundamentals of mathematics"
+              maxLength={150}
+              className={errors.subtitle ? 'border-red-500' : ''}
+            />
+            <p className="text-sm text-gray-500 mt-1">
+              {formData.subtitle.length}/150 characters (minimum 10)
+            </p>
+            {errors.subtitle && <p className="text-sm text-red-500 mt-1">{errors.subtitle}</p>}
           </div>
 
           {/* Short Description */}
@@ -168,14 +320,33 @@ export function BasicInfoForm({ data, onUpdate, onNext }: BasicInfoFormProps) {
               <Label htmlFor="category">
                 Category <span className="text-red-500">*</span>
               </Label>
-              <Select value={formData.category} onValueChange={(value) => handleChange('category', value)}>
+              <Select 
+                value={formData.category} 
+                onValueChange={(value) => {
+                  if (value === '__add_new__') {
+                    setIsCategoryModalOpen(true)
+                  } else {
+                    handleChange('category', value)
+                  }
+                }}
+              >
                 <SelectTrigger className={errors.category ? 'border-red-500' : ''}>
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue placeholder={loadingCategories ? "Loading..." : "Select category"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="online-school">Online School</SelectItem>
-                  <SelectItem value="spoken-english">Spoken English</SelectItem>
-                  <SelectItem value="tuition">Tuition</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.slug}>
+                      <div className="flex items-center gap-2">
+                        {cat.icon_url && (
+                          <img src={cat.icon_url} alt="" className="w-4 h-4" />
+                        )}
+                        <span>{cat.name}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                  <SelectItem value="__add_new__" className="text-blue-600 font-medium">
+                    + Add New Category
+                  </SelectItem>
                 </SelectContent>
               </Select>
               {errors.category && <p className="text-sm text-red-500 mt-1">{errors.category}</p>}
@@ -190,18 +361,20 @@ export function BasicInfoForm({ data, onUpdate, onNext }: BasicInfoFormProps) {
                   <SelectValue placeholder="Select grade" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="grade-1">Grade 1</SelectItem>
-                  <SelectItem value="grade-2">Grade 2</SelectItem>
-                  <SelectItem value="grade-3">Grade 3</SelectItem>
-                  <SelectItem value="grade-4">Grade 4</SelectItem>
-                  <SelectItem value="grade-5">Grade 5</SelectItem>
-                  <SelectItem value="grade-6">Grade 6</SelectItem>
-                  <SelectItem value="grade-7">Grade 7</SelectItem>
-                  <SelectItem value="grade-8">Grade 8</SelectItem>
-                  <SelectItem value="grade-9">Grade 9</SelectItem>
-                  <SelectItem value="grade-10">Grade 10</SelectItem>
-                  <SelectItem value="grade-11">Grade 11</SelectItem>
-                  <SelectItem value="grade-12">Grade 12</SelectItem>
+                  {GRADE_LEVELS.map((level) => {
+                    // Show conditional options based on category
+                    if (level.value === 'spoken-english-all' && formData.category !== 'spoken-english') {
+                      return null
+                    }
+                    if (level.value === 'tuition-custom' && formData.category !== 'tuition') {
+                      return null
+                    }
+                    return (
+                      <SelectItem key={level.value} value={level.value}>
+                        {level.label}
+                      </SelectItem>
+                    )
+                  })}
                 </SelectContent>
               </Select>
               {errors.grade && <p className="text-sm text-red-500 mt-1">{errors.grade}</p>}
@@ -228,6 +401,39 @@ export function BasicInfoForm({ data, onUpdate, onNext }: BasicInfoFormProps) {
               </Select>
               {errors.subject && <p className="text-sm text-red-500 mt-1">{errors.subject}</p>}
             </div>
+          </div>
+
+          {/* Language Selector */}
+          <div>
+            <Label htmlFor="language">
+              Language of Instruction <span className="text-red-500">*</span>
+            </Label>
+            <Select value={formData.language} onValueChange={(value) => handleChange('language', value)}>
+              <SelectTrigger className={errors.language ? 'border-red-500' : ''}>
+                <SelectValue placeholder="Select language" />
+              </SelectTrigger>
+              <SelectContent>
+                {LANGUAGES.map((lang) => (
+                  <SelectItem key={lang.value} value={lang.value}>
+                    {lang.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.language && <p className="text-sm text-red-500 mt-1">{errors.language}</p>}
+            
+            {/* Custom Language Input */}
+            {formData.language === 'Other' && (
+              <div className="mt-3">
+                <Input
+                  value={formData.customLanguage}
+                  onChange={(e) => handleChange('customLanguage', e.target.value)}
+                  placeholder="Please specify the language"
+                  className={errors.customLanguage ? 'border-red-500' : ''}
+                />
+                {errors.customLanguage && <p className="text-sm text-red-500 mt-1">{errors.customLanguage}</p>}
+              </div>
+            )}
           </div>
 
           {/* Thumbnail Upload */}
@@ -305,7 +511,65 @@ export function BasicInfoForm({ data, onUpdate, onNext }: BasicInfoFormProps) {
             </Select>
             {errors.difficultyLevel && <p className="text-sm text-red-500 mt-1">{errors.difficultyLevel}</p>}
           </div>
+        </CardContent>
+      </Card>
 
+      {/* Target Students Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Target Students</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Age Groups */}
+          <AgeGroupSelector
+            selectedGroups={formData.ageGroups}
+            onChange={(groups) => handleChange('ageGroups', groups)}
+            error={errors.ageGroups}
+          />
+
+          {/* Student Types */}
+          <div>
+            <Label>
+              Student Types <span className="text-red-500">*</span>
+            </Label>
+            <p className="text-sm text-gray-500 mb-3">
+              Select the types of students this course is designed for
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {STUDENT_TYPES.map((type) => {
+                const isSelected = formData.studentTypes.includes(type.value)
+                return (
+                  <button
+                    key={type.value}
+                    type="button"
+                    onClick={() => {
+                      const newTypes = isSelected
+                        ? formData.studentTypes.filter((t: string) => t !== type.value)
+                        : [...formData.studentTypes, type.value]
+                      handleChange('studentTypes', newTypes)
+                    }}
+                    className={`
+                      p-4 rounded-lg border-2 text-left transition-all
+                      ${isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white hover:border-gray-300'}
+                      ${errors.studentTypes ? 'border-red-300' : ''}
+                    `}
+                  >
+                    <div className="font-medium text-sm">{type.label}</div>
+                    <div className="text-xs text-gray-500 mt-1">{type.description}</div>
+                  </button>
+                )
+              })}
+            </div>
+            {errors.studentTypes && <p className="text-sm text-red-500 mt-2">{errors.studentTypes}</p>}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Course Details</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
           {/* Learning Objectives */}
           <div>
             <Label>
@@ -374,8 +638,120 @@ export function BasicInfoForm({ data, onUpdate, onNext }: BasicInfoFormProps) {
               </Button>
             </div>
           </div>
+
+          {/* Course Highlights */}
+          <div>
+            <Label>
+              Course Highlights <span className="text-red-500">*</span>
+            </Label>
+            <p className="text-sm text-gray-500 mb-3">
+              Add 3-10 key features or benefits of this course (max 100 characters each)
+            </p>
+            <div className="space-y-3">
+              {formData.highlights.map((highlight: CourseHighlight, index: number) => (
+                <div key={index} className="space-y-2">
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <Input
+                        value={highlight.text}
+                        onChange={(e) => updateHighlight(index, 'text', e.target.value)}
+                        placeholder={`Highlight ${index + 1}`}
+                        maxLength={100}
+                        className={errors[`highlight_${index}`] ? 'border-red-500' : ''}
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        {highlight.text.length}/100 characters
+                      </p>
+                      {errors[`highlight_${index}`] && (
+                        <p className="text-xs text-red-500 mt-1">{errors[`highlight_${index}`]}</p>
+                      )}
+                    </div>
+                    {formData.highlights.length > 3 && (
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => removeHighlight(index)}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                  {/* Icon Selector for this highlight */}
+                  <div className="ml-2">
+                    <IconSelector
+                      selectedIcon={highlight.icon || undefined}
+                      onSelect={(icon) => updateHighlight(index, 'icon', icon || '')}
+                    />
+                  </div>
+                </div>
+              ))}
+              {formData.highlights.length < 10 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={addHighlight}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Highlight
+                </Button>
+              )}
+            </div>
+            {errors.highlights && <p className="text-sm text-red-500 mt-2">{errors.highlights}</p>}
+          </div>
+
+          {/* Course Outcomes */}
+          <div>
+            <Label>
+              Course Outcomes <span className="text-red-500">*</span>
+            </Label>
+            <p className="text-sm text-gray-500 mb-3">
+              What skills will students have after completing this course? (3-8 outcomes)
+            </p>
+            <div className="space-y-2">
+              {formData.outcomes.map((outcome: string, index: number) => (
+                <div key={index} className="flex gap-2">
+                  <Input
+                    value={outcome}
+                    onChange={(e) => updateOutcome(index, e.target.value)}
+                    placeholder={`Outcome ${index + 1}`}
+                  />
+                  {formData.outcomes.length > 3 && (
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => removeOutcome(index)}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+              {formData.outcomes.length < 8 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={addOutcome}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Outcome
+                </Button>
+              )}
+            </div>
+            {errors.outcomes && <p className="text-sm text-red-500 mt-2">{errors.outcomes}</p>}
+          </div>
         </CardContent>
       </Card>
+
+      {/* Category Modal */}
+      <CategoryModal
+        isOpen={isCategoryModalOpen}
+        onClose={() => setIsCategoryModalOpen(false)}
+        onSuccess={(newCategory) => {
+          fetchCategories()
+          handleChange('category', newCategory.slug)
+          setIsCategoryModalOpen(false)
+        }}
+      />
 
       {/* Action Buttons */}
       <div className="flex justify-end">

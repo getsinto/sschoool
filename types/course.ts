@@ -1,413 +1,209 @@
 /**
- * Course Types and Interfaces
- * Comprehensive type definitions for courses, sections, lessons, and enrollments
+ * Course-specific type definitions and interfaces
  */
 
-import { z } from 'zod'
+import { Database } from './database'
 
-// ============================================================================
-// ENUMS
-// ============================================================================
+// Extract course types from database
+export type Course = Database['public']['Tables']['courses']['Row']
+export type CourseInsert = Database['public']['Tables']['courses']['Insert']
+export type CourseUpdate = Database['public']['Tables']['courses']['Update']
 
-export enum CourseCategory {
-  ONLINE_SCHOOL = 'online_school',
-  SPOKEN_ENGLISH = 'spoken_english',
-  TUITION = 'tuition',
+// Extract course category types from database
+export type CourseCategoryRow = Database['public']['Tables']['course_categories']['Row']
+export type CourseCategoryInsert = Database['public']['Tables']['course_categories']['Insert']
+export type CourseCategoryUpdate = Database['public']['Tables']['course_categories']['Update']
+
+/**
+ * Course highlight with optional icon
+ */
+export interface CourseHighlight {
+  text: string
+  icon?: string
 }
 
-export enum CourseDifficulty {
-  BEGINNER = 'beginner',
-  INTERMEDIATE = 'intermediate',
-  ADVANCED = 'advanced',
-}
-
-export enum PaymentModel {
-  ONE_TIME = 'one_time',
-  SUBSCRIPTION = 'subscription',
-  FREE = 'free',
-}
-
-export enum LessonType {
-  VIDEO = 'video',
-  DOCUMENT = 'document',
-  QUIZ = 'quiz',
-  ASSIGNMENT = 'assignment',
-  LIVE_CLASS = 'live_class',
-}
-
-export enum EmbedPlatform {
-  YOUTUBE = 'youtube',
-  VIMEO = 'vimeo',
-  CUSTOM = 'custom',
-}
-
-export enum EnrollmentStatus {
-  ACTIVE = 'active',
-  COMPLETED = 'completed',
-  SUSPENDED = 'suspended',
-}
-
-export enum ProgressStatus {
-  NOT_STARTED = 'not_started',
-  IN_PROGRESS = 'in_progress',
-  COMPLETED = 'completed',
-}
-
-// ============================================================================
-// COURSE INTERFACE
-// ============================================================================
-
-export interface Course {
-  id: string
+/**
+ * Enhanced course data for form handling
+ */
+export interface EnhancedCourseData {
+  // Existing fields
   title: string
   slug: string
-  description: string | null
-  category: CourseCategory
-  grade_level: string | null
-  subject: string | null
+  description: string
+  category: string
+  grade_level: string
+  subject: string
   thumbnail_url: string | null
-  intro_video_url: string | null
+  intro_video_url: string
   learning_objectives: string[]
-  duration_minutes: number
-  difficulty: CourseDifficulty | null
+  prerequisites: string[]
+  difficulty: string
   price: number
-  payment_model: PaymentModel
-  enrollment_limit: number | null
-  validity_days: number
-  created_by: string
-  is_published: boolean
-  views_count: number
-  enrollments_count: number
-  created_at: string
-  updated_at: string
-}
-
-/**
- * Course with creator details
- */
-export interface CourseWithCreator extends Course {
-  creator: {
-    id: string
-    full_name: string | null
-    profile_pic: string | null
-  }
-}
-
-/**
- * Course with full curriculum
- */
-export interface CourseWithCurriculum extends Course {
-  sections: SectionWithLessons[]
-}
-
-// ============================================================================
-// SECTION INTERFACE
-// ============================================================================
-
-export interface Section {
-  id: string
-  course_id: string
-  title: string
-  order_index: number
-  created_at: string
-}
-
-/**
- * Section with lessons
- */
-export interface SectionWithLessons extends Section {
-  lessons: Lesson[]
-}
-
-// ============================================================================
-// LESSON INTERFACE
-// ============================================================================
-
-export interface Lesson {
-  id: string
-  section_id: string
-  title: string
-  description: string | null
-  lesson_type: LessonType
-  content_url: string | null
-  embed_url: string | null
-  embed_platform: EmbedPlatform | null
+  payment_model: string
   duration_minutes: number
-  is_free_preview: boolean
-  allow_download: boolean
-  is_required: boolean
-  order_index: number
-  created_at: string
+  
+  // New fields
+  subtitle: string
+  language: string
+  age_groups: string[]
+  student_types: string[]
+  highlights: CourseHighlight[]
+  outcomes: string[]
 }
 
 /**
- * Lesson with progress tracking
+ * Category form data for creation/update
  */
-export interface LessonWithProgress extends Lesson {
-  progress?: {
-    status: ProgressStatus
-    watch_percentage: number
-    completed_at: string | null
-  }
-}
-
-// ============================================================================
-// DOCUMENT INTERFACE
-// ============================================================================
-
-export interface Document {
-  id: string
-  lesson_id: string
-  file_name: string
-  file_url: string
-  file_type: string
-  file_size: number
-  created_at: string
-}
-
-// ============================================================================
-// ENROLLMENT INTERFACE
-// ============================================================================
-
-export interface Enrollment {
-  id: string
-  student_id: string
-  course_id: string
-  enrollment_date: string
-  completion_percentage: number
-  status: EnrollmentStatus
-  certificate_url: string | null
-  payment_id: string | null
-  last_accessed_at: string | null
-  created_at: string
+export interface CategoryFormData {
+  name: string
+  description: string
+  icon: File | null
+  color: string
 }
 
 /**
- * Enrollment with course details
+ * Available language options
  */
-export interface EnrollmentWithCourse extends Enrollment {
-  course: Course
+export const AVAILABLE_LANGUAGES = [
+  'English',
+  'Urdu',
+  'Arabic',
+  'Hindi',
+  'Other'
+] as const
+
+export type AvailableLanguage = typeof AVAILABLE_LANGUAGES[number]
+
+/**
+ * Language options for select dropdown
+ */
+export const LANGUAGES = [
+  { value: 'English', label: 'English' },
+  { value: 'Urdu', label: 'Urdu' },
+  { value: 'Arabic', label: 'Arabic' },
+  { value: 'Hindi', label: 'Hindi' },
+  { value: 'Other', label: 'Other' }
+] as const
+
+/**
+ * Available age group options
+ */
+export const AGE_GROUPS = [
+  '3-5 years',
+  '6-8 years',
+  '9-12 years',
+  '13-15 years',
+  '16-18 years',
+  'Adults'
+] as const
+
+export type AgeGroup = typeof AGE_GROUPS[number]
+
+/**
+ * Available student type options
+ */
+export const STUDENT_TYPE_VALUES = [
+  'online_school',
+  'spoken_english',
+  'tuition'
+] as const
+
+export type StudentTypeOption = typeof STUDENT_TYPE_VALUES[number]
+
+/**
+ * Student type display labels
+ */
+export const STUDENT_TYPE_LABELS: Record<StudentTypeOption, string> = {
+  online_school: 'Online School Students',
+  spoken_english: 'Spoken English Learners',
+  tuition: 'Tuition Students'
 }
 
 /**
- * Enrollment with student details
+ * Student types for select dropdown
  */
-export interface EnrollmentWithStudent extends Enrollment {
-  student: {
-    id: string
-    user_id: string
-    user: {
-      full_name: string | null
-      email: string
-      profile_pic: string | null
-    }
-  }
-}
-
-// ============================================================================
-// PROGRESS TRACKING INTERFACE
-// ============================================================================
-
-export interface ProgressTracking {
-  id: string
-  student_id: string
-  lesson_id: string
-  status: ProgressStatus
-  last_position_seconds: number
-  watch_percentage: number
-  completed_at: string | null
-  updated_at: string
-}
-
-// ============================================================================
-// FORM TYPES (for creating/updating)
-// ============================================================================
+export const STUDENT_TYPES = [
+  { value: 'online_school', label: 'Online School Students', description: 'Full curriculum courses' },
+  { value: 'spoken_english', label: 'Spoken English Learners', description: 'Language learning courses' },
+  { value: 'tuition', label: 'Tuition Students', description: 'Subject-specific tutoring' }
+] as const
 
 /**
- * Course creation form data
+ * Grade level options
  */
-export type CreateCourseInput = Omit<
-  Course,
-  'id' | 'slug' | 'views_count' | 'enrollments_count' | 'created_at' | 'updated_at'
->
+export const GRADE_LEVEL_VALUES = [
+  'Pre-Nursery',
+  'Nursery',
+  'LKG',
+  'UKG',
+  'Grade 1',
+  'Grade 2',
+  'Grade 3',
+  'Grade 4',
+  'Grade 5',
+  'Grade 6',
+  'Grade 7',
+  'Grade 8',
+  'Grade 9',
+  'Grade 10',
+  'Spoken English - All Ages',
+  'Tuition - Custom'
+] as const
+
+export type GradeLevel = typeof GRADE_LEVEL_VALUES[number]
 
 /**
- * Course update form data
+ * Grade levels for select dropdown
  */
-export type UpdateCourseInput = Partial<
-  Omit<Course, 'id' | 'created_by' | 'created_at' | 'updated_at'>
->
+export const GRADE_LEVELS = [
+  { value: 'pre-nursery', label: 'Pre-Nursery' },
+  { value: 'nursery', label: 'Nursery' },
+  { value: 'lkg', label: 'LKG' },
+  { value: 'ukg', label: 'UKG' },
+  { value: 'grade-1', label: 'Grade 1' },
+  { value: 'grade-2', label: 'Grade 2' },
+  { value: 'grade-3', label: 'Grade 3' },
+  { value: 'grade-4', label: 'Grade 4' },
+  { value: 'grade-5', label: 'Grade 5' },
+  { value: 'grade-6', label: 'Grade 6' },
+  { value: 'grade-7', label: 'Grade 7' },
+  { value: 'grade-8', label: 'Grade 8' },
+  { value: 'grade-9', label: 'Grade 9' },
+  { value: 'grade-10', label: 'Grade 10' },
+  { value: 'spoken-english-all', label: 'Spoken English - All Ages' },
+  { value: 'tuition-custom', label: 'Tuition - Custom' }
+] as const
 
 /**
- * Section creation form data
+ * Difficulty levels
  */
-export type CreateSectionInput = Omit<Section, 'id' | 'created_at'>
+export const DIFFICULTY_LEVELS = [
+  'beginner',
+  'intermediate',
+  'advanced'
+] as const
+
+export type DifficultyLevel = typeof DIFFICULTY_LEVELS[number]
 
 /**
- * Section update form data
+ * Icon options for course highlights
  */
-export type UpdateSectionInput = Partial<Omit<Section, 'id' | 'course_id' | 'created_at'>>
+export const HIGHLIGHT_ICONS = [
+  'book',
+  'video',
+  'certificate',
+  'trophy',
+  'star',
+  'check-circle',
+  'award',
+  'target',
+  'users',
+  'clock',
+  'calendar',
+  'globe',
+  'lightbulb',
+  'graduation-cap',
+  'bookmark'
+] as const
 
-/**
- * Lesson creation form data
- */
-export type CreateLessonInput = Omit<Lesson, 'id' | 'created_at'>
-
-/**
- * Lesson update form data
- */
-export type UpdateLessonInput = Partial<Omit<Lesson, 'id' | 'section_id' | 'created_at'>>
-
-/**
- * Enrollment creation form data
- */
-export type CreateEnrollmentInput = Pick<Enrollment, 'student_id' | 'course_id' | 'payment_id'>
-
-// ============================================================================
-// ZOD VALIDATION SCHEMAS
-// ============================================================================
-
-export const courseSchema = z.object({
-  title: z.string().min(3, 'Title must be at least 3 characters').max(200),
-  description: z.string().min(10, 'Description must be at least 10 characters').nullable(),
-  category: z.nativeEnum(CourseCategory),
-  grade_level: z.string().nullable(),
-  subject: z.string().nullable(),
-  thumbnail_url: z.string().url().nullable(),
-  intro_video_url: z.string().url().nullable(),
-  learning_objectives: z.array(z.string()).min(1, 'At least one learning objective is required'),
-  duration_minutes: z.number().min(0),
-  difficulty: z.nativeEnum(CourseDifficulty).nullable(),
-  price: z.number().min(0),
-  payment_model: z.nativeEnum(PaymentModel),
-  enrollment_limit: z.number().positive().nullable(),
-  validity_days: z.number().positive().default(365),
-  created_by: z.string().uuid(),
-  is_published: z.boolean().default(false),
-})
-
-export const sectionSchema = z.object({
-  course_id: z.string().uuid(),
-  title: z.string().min(2, 'Title must be at least 2 characters'),
-  order_index: z.number().min(0),
-})
-
-export const lessonSchema = z.object({
-  section_id: z.string().uuid(),
-  title: z.string().min(2, 'Title must be at least 2 characters'),
-  description: z.string().nullable(),
-  lesson_type: z.nativeEnum(LessonType),
-  content_url: z.string().url().nullable(),
-  embed_url: z.string().url().nullable(),
-  embed_platform: z.nativeEnum(EmbedPlatform).nullable(),
-  duration_minutes: z.number().min(0).default(0),
-  is_free_preview: z.boolean().default(false),
-  allow_download: z.boolean().default(false),
-  is_required: z.boolean().default(true),
-  order_index: z.number().min(0),
-})
-
-export const enrollmentSchema = z.object({
-  student_id: z.string().uuid(),
-  course_id: z.string().uuid(),
-  payment_id: z.string().uuid().nullable(),
-})
-
-// ============================================================================
-// UTILITY TYPES
-// ============================================================================
-
-/**
- * Course list item for tables/cards
- */
-export type CourseListItem = Pick<
-  Course,
-  | 'id'
-  | 'title'
-  | 'slug'
-  | 'category'
-  | 'thumbnail_url'
-  | 'price'
-  | 'payment_model'
-  | 'difficulty'
-  | 'duration_minutes'
-  | 'enrollments_count'
-  | 'is_published'
->
-
-/**
- * Course card data
- */
-export interface CourseCard extends CourseListItem {
-  creator_name: string | null
-  rating?: number
-  reviews_count?: number
-}
-
-/**
- * Course statistics
- */
-export interface CourseStats {
-  total_courses: number
-  published_courses: number
-  draft_courses: number
-  total_enrollments: number
-  total_revenue: number
-  avg_completion_rate: number
-  by_category: {
-    online_school: number
-    spoken_english: number
-    tuition: number
-  }
-}
-
-/**
- * Course analytics
- */
-export interface CourseAnalytics {
-  course_id: string
-  total_enrollments: number
-  active_students: number
-  completed_students: number
-  avg_completion_percentage: number
-  avg_rating: number | null
-  total_revenue: number
-  views_count: number
-  completion_rate: number
-  engagement_rate: number
-}
-
-/**
- * Student course progress
- */
-export interface StudentCourseProgress {
-  course_id: string
-  course_title: string
-  enrollment_date: string
-  completion_percentage: number
-  status: EnrollmentStatus
-  last_accessed_at: string | null
-  total_lessons: number
-  completed_lessons: number
-  current_lesson?: {
-    id: string
-    title: string
-    lesson_type: LessonType
-  }
-}
-
-/**
- * Course curriculum tree
- */
-export interface CourseCurriculumTree {
-  course: Course
-  sections: Array<{
-    section: Section
-    lessons: LessonWithProgress[]
-    total_duration: number
-    completed_count: number
-  }>
-  total_lessons: number
-  total_duration: number
-  completion_percentage: number
-}
+export type HighlightIcon = typeof HIGHLIGHT_ICONS[number]

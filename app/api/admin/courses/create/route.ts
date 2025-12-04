@@ -19,11 +19,23 @@ import { z } from 'zod';
 // VALIDATION SCHEMAS
 // ============================================================================
 
+// Course highlight schema
+const courseHighlightSchema = z.object({
+  text: z.string().min(1).max(100, 'Highlight text must be 100 characters or less'),
+  icon: z.string().optional()
+});
+
 const createCourseSchema = z.object({
   title: z.string().min(1, 'Course title is required').max(200, 'Title too long'),
+  // New field: subtitle
+  subtitle: z.string().min(10, 'Subtitle must be at least 10 characters').max(150, 'Subtitle must be 150 characters or less'),
   description: z.string().min(1, 'Course description is required').max(2000, 'Description too long'),
+  category: z.string().min(1, 'Category is required').optional(),
   subject_id: z.string().uuid('Invalid subject ID'),
   grade_level: z.string().min(1, 'Grade level is required'),
+  // New field: language
+  language: z.string().min(1, 'Language is required'),
+  customLanguage: z.string().optional(),
   level: z.enum(['beginner', 'intermediate', 'advanced']).optional(),
   duration_weeks: z.number().int().min(1).max(52).optional(),
   price: z.number().min(0).default(0),
@@ -32,6 +44,11 @@ const createCourseSchema = z.object({
   thumbnail_url: z.string().url().optional().nullable(),
   status: z.enum(['draft', 'published', 'archived']).default('draft'),
   is_visible: z.boolean().default(true),
+  // New fields: age groups, student types, highlights, outcomes
+  ageGroups: z.array(z.string()).min(1, 'At least one age group is required'),
+  studentTypes: z.array(z.string()).min(1, 'At least one student type is required'),
+  highlights: z.array(courseHighlightSchema).min(3, 'At least 3 highlights are required').max(10, 'Maximum 10 highlights allowed'),
+  outcomes: z.array(z.string().min(1, 'Outcome cannot be empty')).min(3, 'At least 3 outcomes are required').max(8, 'Maximum 8 outcomes allowed'),
   // Optional teacher assignments during creation
   teacher_assignments: z.array(z.object({
     teacher_id: z.string().uuid(),
@@ -40,6 +57,22 @@ const createCourseSchema = z.object({
     can_communicate: z.boolean().default(true),
     is_primary_teacher: z.boolean().default(false)
   })).optional()
+}).refine((data) => {
+  // If language is "Other", customLanguage must be provided
+  if (data.language === 'Other' && !data.customLanguage) {
+    return false;
+  }
+  return true;
+}, {
+  message: 'Custom language must be specified when "Other" is selected',
+  path: ['customLanguage']
+}).refine((data) => {
+  // Validate that outcomes are distinct from learning objectives if provided
+  // This is a placeholder - actual implementation would need learning_objectives field
+  return true;
+}, {
+  message: 'Outcomes should describe skills students will gain, not just learning objectives',
+  path: ['outcomes']
 });
 
 const getFormDataSchema = z.object({
@@ -54,7 +87,7 @@ const getFormDataSchema = z.object({
 
 async function handleCourseCreation(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -126,6 +159,29 @@ async function handleCourseCreation(request: NextRequest) {
       );
     }
 
+    // Validate category exists and is active (if category field is provided)
+    if (courseFields.category) {
+      const { data: category, error: categoryError } = await supabase
+        .from('course_categories')
+        .select('id, name, slug, is_active')
+        .eq('slug', courseFields.category)
+        .single();
+
+      if (categoryError || !category) {
+        return NextResponse.json(
+          { error: 'Invalid category. Please select a valid category.' },
+          { status: 400 }
+        );
+      }
+
+      if (!category.is_active) {
+        return NextResponse.json(
+          { error: 'Selected category is not active. Please choose another category.' },
+          { status: 400 }
+        );
+      }
+    }
+
     // Validate teachers exist (if assignments provided)
     if (teacher_assignments && teacher_assignments.length > 0) {
       const teacherIds = teacher_assignments.map(ta => ta.teacher_id);
@@ -155,11 +211,22 @@ async function handleCourseCreation(request: NextRequest) {
     // Determine created_by_role based on role_level (Requirement 1.4)
     const created_by_role = userData.role_level >= 5 ? 'super_admin' : 'admin';
 
+    // Prepare the final language value
+    const finalLanguage = courseFields.language === 'Other' && courseFields.customLanguage
+      ? courseFields.customLanguage
+      : courseFields.language;
+
     // Create course (Requirement 1.4, 1.5)
+    // New fields: subtitle, language, age_groups, student_types, highlights, outcomes
     const { data: course, error: courseError } = await supabase
       .from('courses')
       .insert({
         ...courseFields,
+        language: finalLanguage,
+        age_groups: courseFields.ageGroups,
+        student_types: courseFields.studentTypes,
+        highlights: courseFields.highlights,
+        outcomes: courseFields.outcomes,
         created_by: user.id,
         created_by_role: created_by_role,
         status: 'draft', // Always start as draft (Requirement 1.5)
@@ -225,9 +292,15 @@ async function handleCourseCreation(request: NextRequest) {
       course.id,
       {
         title: course.title,
+        subtitle: course.subtitle,
         description: course.description,
         subject_id: course.subject_id,
         grade_level: course.grade_level,
+        language: course.language,
+        age_groups: course.age_groups,
+        student_types: course.student_types,
+        highlights_count: course.highlights?.length || 0,
+        outcomes_count: course.outcomes?.length || 0,
         status: course.status,
         teacher_assignments_count: assignments.length
       },
@@ -263,7 +336,7 @@ export const POST = withCourseCreationRateLimit(handleCourseCreation);
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();

@@ -225,6 +225,7 @@ export interface Database {
           title: string
           slug: string
           description: string | null
+          subtitle: string | null
           category: CourseCategory
           grade_level: string | null
           subject: string | null
@@ -241,6 +242,11 @@ export interface Database {
           is_published: boolean
           views_count: number
           enrollments_count: number
+          language: string
+          age_groups: string[] | null
+          student_types: string[] | null
+          highlights: Json | null
+          outcomes: string[] | null
           created_at: string
           updated_at: string
         }
@@ -249,6 +255,7 @@ export interface Database {
           title: string
           slug: string
           description?: string | null
+          subtitle?: string | null
           category: CourseCategory
           grade_level?: string | null
           subject?: string | null
@@ -265,6 +272,11 @@ export interface Database {
           is_published?: boolean
           views_count?: number
           enrollments_count?: number
+          language?: string
+          age_groups?: string[] | null
+          student_types?: string[] | null
+          highlights?: Json | null
+          outcomes?: string[] | null
           created_at?: string
           updated_at?: string
         }
@@ -273,6 +285,7 @@ export interface Database {
           title?: string
           slug?: string
           description?: string | null
+          subtitle?: string | null
           category?: CourseCategory
           grade_level?: string | null
           subject?: string | null
@@ -289,6 +302,49 @@ export interface Database {
           is_published?: boolean
           views_count?: number
           enrollments_count?: number
+          language?: string
+          age_groups?: string[] | null
+          student_types?: string[] | null
+          highlights?: Json | null
+          outcomes?: string[] | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      course_categories: {
+        Row: {
+          id: string
+          name: string
+          slug: string
+          description: string | null
+          icon_url: string | null
+          color: string
+          is_active: boolean
+          display_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          slug: string
+          description?: string | null
+          icon_url?: string | null
+          color?: string
+          is_active?: boolean
+          display_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          slug?: string
+          description?: string | null
+          icon_url?: string | null
+          color?: string
+          is_active?: boolean
+          display_order?: number
           created_at?: string
           updated_at?: string
         }

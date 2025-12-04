@@ -43,11 +43,17 @@ import { useToast } from '@/hooks/use-toast'
 interface CourseDetails {
   id: string
   title: string
+  subtitle?: string
   description: string
   thumbnail: string
   category: 'online-school' | 'spoken-english' | 'tuition'
   grade: string
   subject: string
+  language?: string
+  age_groups?: string[]
+  student_types?: string[]
+  highlights?: Array<string | { text: string; icon?: string }>
+  outcomes?: string[]
   teacher: {
     id: string
     name: string
@@ -547,8 +553,43 @@ export default function CourseDetailsPage() {
                   {/* Description */}
                   <div>
                     <h4 className="font-medium text-gray-900 mb-2">Description</h4>
+                    {course.subtitle && (
+                      <p className="text-lg text-gray-700 font-medium mb-2">{course.subtitle}</p>
+                    )}
                     <p className="text-gray-600 leading-relaxed">{course.description}</p>
                   </div>
+
+                  {/* Course Highlights */}
+                  {course.highlights && course.highlights.length > 0 && (
+                    <div>
+                      <h4 className="font-medium text-gray-900 mb-3">Course Highlights</h4>
+                      <ul className="space-y-2">
+                        {course.highlights.map((highlight, index) => (
+                          <li key={index} className="flex items-start gap-2 text-gray-700">
+                            <span className="text-blue-600 mt-1">✓</span>
+                            <span>{typeof highlight === 'string' ? highlight : highlight.text}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Learning Outcomes */}
+                  {course.outcomes && course.outcomes.length > 0 && (
+                    <div>
+                      <h4 className="font-medium text-gray-900 mb-3">Learning Outcomes</h4>
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <ul className="space-y-2">
+                          {course.outcomes.map((outcome, index) => (
+                            <li key={index} className="flex items-start gap-2 text-gray-700">
+                              <span className="text-green-600 font-bold mt-1">→</span>
+                              <span>{outcome}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Course Details */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -567,10 +608,46 @@ export default function CourseDetailsPage() {
                           <span className="text-gray-600">Subject:</span>
                           <span className="font-medium">{course.subject}</span>
                         </div>
+                        {course.language && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Language:</span>
+                            <span className="font-medium">{course.language}</span>
+                          </div>
+                        )}
                         <div className="flex justify-between">
                           <span className="text-gray-600">Price:</span>
                           <span className="font-medium">${course.price}</span>
                         </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="font-medium text-gray-900 mb-3">Target Audience</h4>
+                      <div className="space-y-3 text-sm">
+                        {course.age_groups && course.age_groups.length > 0 && (
+                          <div>
+                            <span className="text-gray-600 block mb-1">Age Groups:</span>
+                            <div className="flex flex-wrap gap-1">
+                              {course.age_groups.map((ageGroup) => (
+                                <Badge key={ageGroup} variant="secondary" className="text-xs">
+                                  {ageGroup}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {course.student_types && course.student_types.length > 0 && (
+                          <div>
+                            <span className="text-gray-600 block mb-1">Student Types:</span>
+                            <div className="flex flex-wrap gap-1">
+                              {course.student_types.map((type) => (
+                                <Badge key={type} variant="outline" className="text-xs">
+                                  {type}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
 

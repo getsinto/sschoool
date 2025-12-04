@@ -16,10 +16,14 @@ interface CourseCardProps {
   course: {
     id: string
     title: string
+    subtitle?: string
     thumbnail?: string
     category: string
     grade: string
     subject: string
+    language?: string
+    age_groups?: string[]
+    student_types?: string[]
     enrollments: number
     rating: number
     revenue: number
@@ -57,9 +61,16 @@ export function CourseCard({ course, onEdit, onDuplicate, onArchive }: CourseCar
 
       <CardContent className="p-4">
         {/* Title */}
-        <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-2">
+        <h3 className="font-semibold text-lg text-gray-900 mb-1 line-clamp-2">
           {course.title}
         </h3>
+
+        {/* Subtitle */}
+        {course.subtitle && (
+          <p className="text-sm text-gray-600 mb-3 line-clamp-1">
+            {course.subtitle}
+          </p>
+        )}
 
         {/* Category Info */}
         <div className="flex flex-wrap gap-2 mb-3">
@@ -72,7 +83,23 @@ export function CourseCard({ course, onEdit, onDuplicate, onArchive }: CourseCar
           <Badge variant="outline" className="text-xs">
             {course.subject}
           </Badge>
+          {course.language && (
+            <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+              {course.language}
+            </Badge>
+          )}
         </div>
+
+        {/* Age Groups */}
+        {course.age_groups && course.age_groups.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-3">
+            {course.age_groups.map((ageGroup) => (
+              <Badge key={ageGroup} variant="secondary" className="text-xs">
+                {ageGroup}
+              </Badge>
+            ))}
+          </div>
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-2 mb-4">

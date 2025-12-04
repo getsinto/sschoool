@@ -66,6 +66,11 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search')
     const sortBy = searchParams.get('sortBy') || 'createdDate'
     const sortOrder = searchParams.get('sortOrder') || 'desc'
+    
+    // New filter parameters (Requirement 4.5, 5.5, 6.5)
+    const language = searchParams.get('language')
+    const ageGroup = searchParams.get('ageGroup')
+    const studentType = searchParams.get('studentType')
 
     let filteredCourses = [...mockCourses]
 
@@ -95,6 +100,29 @@ export async function GET(request: NextRequest) {
       filteredCourses = filteredCourses.filter(course => 
         course.title.toLowerCase().includes(searchLower) ||
         course.teacher.name.toLowerCase().includes(searchLower)
+      )
+    }
+
+    // Apply language filter (Requirement 4.5)
+    if (language && language !== 'all') {
+      filteredCourses = filteredCourses.filter(course => 
+        (course as any).language === language
+      )
+    }
+
+    // Apply age group filter (Requirement 5.5)
+    if (ageGroup && ageGroup !== 'all') {
+      filteredCourses = filteredCourses.filter(course => 
+        (course as any).age_groups && 
+        (course as any).age_groups.includes(ageGroup)
+      )
+    }
+
+    // Apply student type filter (Requirement 6.5)
+    if (studentType && studentType !== 'all') {
+      filteredCourses = filteredCourses.filter(course => 
+        (course as any).student_types && 
+        (course as any).student_types.includes(studentType)
       )
     }
 
@@ -140,7 +168,10 @@ export async function GET(request: NextRequest) {
         subject,
         status,
         teacher,
-        search
+        search,
+        language,
+        ageGroup,
+        studentType
       }
     })
   } catch (error) {
