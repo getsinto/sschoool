@@ -1,186 +1,113 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/utils/supabase/server'
 
-// POST /api/admin/courses/[id]/publish - Publish or unpublish course
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = params
-    const body = await request.json()
-    const { action, adminId, reason } = body
-    
-    // Validate required fields
-    if (!action || !['publish', 'unpublish'].includes(action)) {
+    const supabase = await createClient()
+    const courseId = params.id
+
+    // Get current user
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
       return NextResponse.json(
-        { error: 'Invalid action. Must be "publish" or "unpublish"' },
-        { status: 400 }
+        { error: 'Unauthorized' },
+        { status: 401 }
       )
     }
 
-    // In real app, fetch course from database
-    // For now, we'll simulate the course data
-    const mockCourse = {
-      id,
-      title: 'Sample Course',
-      status: action === 'publish' ? 'draft' : 'published',
-      teacher: {
-        id: 't1',
-        name: 'Teacher Name',
-        email: 'teacher@example.com'
-      },
-      enrollments: 0
+    // Get user profile to check role_level
+    const { data: profile, error: profileError } = await supabase
+      .from('users')
+      .select('role, role_level')
+      .eq('id', user.id)
+      .single()
+
+    if (profileError || !profile) {
+      return NextResponse.json(
+        { error: 'User profile not found' },
+        { status: 404 }
+      )
     }
 
-    // Validation for publishing
-    if (action === 'publish') {
-      // Check if course is ready for publishing
-      const validationErrors = []
-      
-      // In real app, validate course content
-      // - Must have at least one section with lessons
-      // - Must have course description
-      // - Must have thumbnail
-      // - Must have price set
-      // - Teacher must be verified
-      
-      if (validationErrors.length > 0) {
-        return NextResponse.json(
-          { 
-            error: 'Course validation failed',
-            validationErrors
-          },
-          { status: 400 }
-        )
-      }
+    // Check if user is admin (role_level >= 4)
+    if (profile.role_level < 4) {
+      return NextResponse.json(
+        { error: 'Only administrators can publish courses' },
+        { status: 403 }
+      )
     }
 
-    // Validation for unpublishing
-    if (action === 'unpublish') {
-      if (mockCourse.enrollments > 0 && !reason) {
-        return NextResponse.json(
-          { error: 'Reason is required when unpublishing course with enrollments' },
-          { status: 400 }
-        )
-      }
+    // Get course details
+    const { data: course, error: courseError } = await supabase
+      .from('courses')
+      .select('id, title, status')
+      .eq('id', courseId)
+      .single()
+
+    if (courseError || !course) {
+      return NextResponse.json(
+        { error: 'Course not found' },
+        { status: 404 }
+      )
     }
 
-    const newStatus = action === 'publish' ? 'published' : 'draft'
-    const timestamp = new Date().toISOString()
-    
-    // Create activity log entry
-    const logEntry = {
-      courseId: id,
-      action: action === 'publish' ? 'Course Published' : 'Course Unpublished',
-      reason: reason || '',
-      adminId,
-      adminName: 'Admin User', // In real app, get from adminId
-      timestamp,
-      previousStatus: mockCourse.status,
-      newStatus,
-      metadata: {
-        enrollments: mockCourse.enrollments,
-        ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
-        userAgent: request.headers.get('user-agent') || 'unknown'
-      }
+    // Update course status to published
+    const { data: updatedCourse, error: updateError } = await supabase
+      .from('courses')
+      .update({
+        status: 'published',
+        published_at: new Date().toISOString(),
+        published_by: user.id,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', courseId)
+      .select()
+      .single()
+
+    if (updateError) {
+      return NextResponse.json(
+        { error: 'Failed to publish course', details: updateError.message },
+        { status: 500 }
+      )
     }
 
-    // In real app, update course status and log the action
-    
-    // Send notification email to teacher
-    const emailData = {
-      to: mockCourse.teacher.email,
-      subject: `Course ${action === 'publish' ? 'Published' : 'Unpublished'}: ${mockCourse.title}`,
-      template: action === 'publish' ? 'course-published' : 'course-unpublished',
-      data: {
-        teacherName: mockCourse.teacher.name,
-        courseTitle: mockCourse.title,
-        reason: reason || '',
-        adminName: 'Admin User',
-        timestamp,
-        dashboardUrl: 'https://example.com/dashboard'
-      }
-    }
+    // Get enrolled students for notifications
+    const { data: enrollments } = await supabase
+      .from('enrollments')
+      .select('student_id, students:users!enrollments_student_id_fkey(id, email, full_name)')
+      .eq('course_id', courseId)
 
-    console.log('Course status email would be sent:', emailData)
+    // Send notifications to enrolled students
+    if (enrollments && enrollments.length > 0) {
+      const notifications = enrollments.map(enrollment => ({
+        user_id: enrollment.student_id,
+        type: 'course_published',
+        title: 'Course Published',
+        message: `The course "${course.title}" has been published and is now available.`,
+        related_id: courseId,
+        related_type: 'course',
+        created_at: new Date().toISOString()
+      }))
 
-    // If publishing, update search index and cache
-    if (action === 'publish') {
-      console.log(`Updating search index for course ${id}`)
-      console.log(`Clearing course cache for course ${id}`)
-    }
-
-    // If unpublishing with enrollments, notify students
-    if (action === 'unpublish' && mockCourse.enrollments > 0) {
-      console.log(`Notifying ${mockCourse.enrollments} enrolled students about course unpublishing`)
+      await supabase
+        .from('notifications')
+        .insert(notifications)
     }
 
     return NextResponse.json({
-      message: `Course ${action}ed successfully`,
-      courseStatus: newStatus,
-      publishedAt: action === 'publish' ? timestamp : null,
-      unpublishedAt: action === 'unpublish' ? timestamp : null,
-      logEntry,
-      emailSent: true,
-      studentsNotified: action === 'unpublish' && mockCourse.enrollments > 0
+      success: true,
+      message: 'Course published successfully',
+      course: updatedCourse,
+      notified_students: enrollments?.length || 0
     })
-  } catch (error) {
-    console.error('Error processing course publish/unpublish:', error)
-    return NextResponse.json(
-      { error: 'Failed to process course status change' },
-      { status: 500 }
-    )
-  }
-}
 
-// GET /api/admin/courses/[id]/publish - Get publishing status and history
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const { id } = params
-    
-    // In real app, fetch publishing history from database
-    const publishingHistory = {
-      courseId: id,
-      currentStatus: 'published',
-      publishHistory: [
-        {
-          id: '1',
-          action: 'published',
-          timestamp: '2024-01-16T10:30:00Z',
-          adminName: 'Admin User',
-          adminId: 'admin1'
-        },
-        {
-          id: '2',
-          action: 'unpublished',
-          timestamp: '2024-01-15T14:20:00Z',
-          adminName: 'Admin User',
-          adminId: 'admin1',
-          reason: 'Content updates required'
-        }
-      ],
-      validationStatus: {
-        isValid: true,
-        errors: [],
-        warnings: [
-          'Course thumbnail could be higher quality',
-          'Consider adding more practice exercises'
-        ]
-      },
-      enrollmentImpact: {
-        currentEnrollments: 245,
-        potentialImpact: 'high' // high/medium/low based on enrollments
-      }
-    }
-
-    return NextResponse.json({ publishing: publishingHistory })
   } catch (error) {
-    console.error('Error fetching publishing status:', error)
+    console.error('Error publishing course:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch publishing status' },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }

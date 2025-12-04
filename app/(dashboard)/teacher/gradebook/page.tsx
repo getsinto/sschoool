@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   Download,
@@ -10,7 +10,10 @@ import {
   BookOpen,
   TrendingUp,
   TrendingDown,
-  Minus
+  Minus,
+  AlertCircle,
+  Shield,
+  ShieldCheck
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -90,6 +93,33 @@ export default function GradebookPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCourse, setSelectedCourse] = useState('course_1')
   const [sortBy, setSortBy] = useState('name')
+  const [assignedCourses, setAssignedCourses] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Fetch courses where teacher has grading permission
+  useEffect(() => {
+    const fetchAssignedCourses = async () => {
+      try {
+        const response = await fetch('/api/teacher/courses/assigned')
+        if (response.ok) {
+          const data = await response.json()
+          // Filter to only courses with grading permission
+          const gradingCourses = data.courses?.filter((c: any) => 
+            c.assignment?.can_grade
+          ) || []
+          setAssignedCourses(gradingCourses)
+          if (gradingCourses.length > 0) {
+            setSelectedCourse(gradingCourses[0].id)
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching assigned courses:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchAssignedCourses()
+  }, [])
 
   const calculateAverage = (grades: {[key: string]: number}) => {
     const assignments = mockGradebook.assignments
@@ -131,6 +161,27 @@ export default function GradebookPage() {
     window.print()
   }
 
+  // Permission indicator component
+  const PermissionIndicator = ({ hasPermission }: { hasPermission: boolean }) => (
+    <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
+      hasPermission 
+        ? 'bg-green-100 text-green-800 border border-green-200' 
+        : 'bg-red-100 text-red-800 border border-red-200'
+    }`}>
+      {hasPermission ? (
+        <>
+          <ShieldCheck className="h-4 w-4" />
+          <span>Grading Permission</span>
+        </>
+      ) : (
+        <>
+          <Shield className="h-4 w-4" />
+          <span>No Grading Permission</span>
+        </>
+      )}
+    </div>
+  )
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -138,6 +189,9 @@ export default function GradebookPage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Grade Book</h1>
           <p className="text-gray-600 mt-1">{mockGradebook.course.name} - {mockGradebook.course.term}</p>
+          <div className="mt-3">
+            <PermissionIndicator hasPermission={true} />
+          </div>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleExportCSV}>

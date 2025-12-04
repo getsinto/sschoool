@@ -1,22 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
-
-// Mock data
-let mockLessons = [
-  {
-    id: 'lesson-1',
-    sectionId: 'section-1',
-    courseId: '1',
-    title: 'Welcome to the Course',
-    type: 'video',
-    content: {},
-    duration: '10:30',
-    order: 1,
-    status: 'published',
-    isFree: true,
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-01-01T00:00:00Z'
-  }
-]
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { canManageCourseContent } from '@/lib/permissions/coursePermissions';
 
 // GET /api/teacher/courses/[id]/lessons - Get all lessons for a course
 export async function GET(
@@ -24,27 +8,61 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const courseId = params.id
-    const { searchParams } = new URL(request.url)
-    const sectionId = searchParams.get('sectionId')
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    // TODO: Verify teacher owns this course
-    let lessons = mockLessons.filter(l => l.courseId === courseId)
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const courseId = params.id;
+    const { searchParams } = new URL(request.url);
+    const sectionId = searchParams.get('sectionId');
+
+    // Check if user has content management permission
+    const hasPermission = await canManageCourseContent(user.id, courseId);
+    
+    if (!hasPermission) {
+      return NextResponse.json(
+        { error: 'You do not have permission to view lessons for this course' },
+        { status: 403 }
+      );
+    }
+
+    // Get lessons from database
+    let query = supabase
+      .from('lessons')
+      .select('*')
+      .eq('course_id', courseId)
+      .order('order_index', { ascending: true });
 
     if (sectionId) {
-      lessons = lessons.filter(l => l.sectionId === sectionId)
+      query = query.eq('section_id', sectionId);
+    }
+
+    const { data: lessons, error: lessonsError } = await query;
+
+    if (lessonsError) {
+      console.error('Get lessons error:', lessonsError);
+      return NextResponse.json(
+        { error: 'Failed to get lessons' },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({
       success: true,
-      data: lessons
-    })
+      data: lessons || []
+    });
   } catch (error) {
-    console.error('Get lessons error:', error)
+    console.error('Get lessons error:', error);
     return NextResponse.json(
       { error: 'Failed to get lessons' },
       { status: 500 }
-    )
+    );
   }
 }
 
@@ -54,63 +72,72 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const courseId = params.id
-    const body = await request.json()
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const courseId = params.id;
+    const body = await request.json();
 
     // Validation
     if (!body.title || body.title.trim() === '') {
       return NextResponse.json(
         { error: 'Lesson title is required' },
         { status: 400 }
-      )
+      );
     }
 
-    if (!body.sectionId) {
+    // Check if user has content management permission
+    const hasPermission = await canManageCourseContent(user.id, courseId);
+    
+    if (!hasPermission) {
       return NextResponse.json(
-        { error: 'Section ID is required' },
-        { status: 400 }
-      )
+        { error: 'You do not have permission to add lessons to this course' },
+        { status: 403 }
+      );
     }
-
-    if (!body.type || !['video', 'document', 'quiz', 'assignment', 'live-class'].includes(body.type)) {
-      return NextResponse.json(
-        { error: 'Valid lesson type is required' },
-        { status: 400 }
-      )
-    }
-
-    // TODO: Verify teacher owns this course
-    // TODO: Verify section exists
 
     // Create new lesson
-    const newLesson = {
-      id: `lesson-${Date.now()}`,
-      sectionId: body.sectionId,
-      courseId,
-      title: body.title,
-      type: body.type,
-      content: body.content || {},
-      duration: body.duration || '00:00',
-      order: body.order || mockLessons.filter(l => l.sectionId === body.sectionId).length + 1,
-      status: body.status || 'draft',
-      isFree: body.isFree || false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }
+    const { data: lesson, error: createError } = await supabase
+      .from('lessons')
+      .insert({
+        course_id: courseId,
+        section_id: body.section_id || null,
+        title: body.title,
+        description: body.description || '',
+        content: body.content || '',
+        duration: body.duration || 0,
+        order_index: body.order_index || 0,
+        video_url: body.video_url || null,
+        is_preview: body.is_preview || false
+      })
+      .select()
+      .single();
 
-    // TODO: Save to database
-    mockLessons.push(newLesson)
+    if (createError) {
+      console.error('Create lesson error:', createError);
+      return NextResponse.json(
+        { error: 'Failed to create lesson' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      data: newLesson
-    })
+      lesson
+    });
   } catch (error) {
-    console.error('Create lesson error:', error)
+    console.error('Create lesson error:', error);
     return NextResponse.json(
       { error: 'Failed to create lesson' },
       { status: 500 }
-    )
+    );
   }
 }
 
@@ -120,38 +147,59 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const courseId = params.id
-    const body = await request.json()
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const courseId = params.id;
+    const body = await request.json();
 
     if (!Array.isArray(body.lessons)) {
       return NextResponse.json(
         { error: 'Lessons array is required' },
         { status: 400 }
-      )
+      );
     }
 
-    // TODO: Verify teacher owns this course
-    // TODO: Update lessons in database
+    // Check if user has content management permission
+    const hasPermission = await canManageCourseContent(user.id, courseId);
+    
+    if (!hasPermission) {
+      return NextResponse.json(
+        { error: 'You do not have permission to update lessons for this course' },
+        { status: 403 }
+      );
+    }
 
     // Update order and section for each lesson
-    body.lessons.forEach((lesson: any, index: number) => {
-      const existingLesson = mockLessons.find(l => l.id === lesson.id)
-      if (existingLesson) {
-        existingLesson.order = index + 1
-        existingLesson.sectionId = lesson.sectionId || existingLesson.sectionId
-        existingLesson.updatedAt = new Date().toISOString()
-      }
-    })
+    const updates = body.lessons.map((lesson: any, index: number) => 
+      supabase
+        .from('lessons')
+        .update({ 
+          order_index: index,
+          section_id: lesson.section_id || null
+        })
+        .eq('id', lesson.id)
+        .eq('course_id', courseId)
+    );
+
+    await Promise.all(updates);
 
     return NextResponse.json({
       success: true,
       message: 'Lessons updated successfully'
-    })
+    });
   } catch (error) {
-    console.error('Update lessons error:', error)
+    console.error('Update lessons error:', error);
     return NextResponse.json(
       { error: 'Failed to update lessons' },
       { status: 500 }
-    )
+    );
   }
 }

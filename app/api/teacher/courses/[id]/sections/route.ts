@@ -1,17 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
-
-// Mock data - would be replaced with actual database operations
-let mockSections = [
-  {
-    id: 'section-1',
-    courseId: '1',
-    title: 'Introduction to the Course',
-    description: 'Get started with the basics',
-    order: 1,
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-01-01T00:00:00Z'
-  }
-]
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { canManageCourseContent } from '@/lib/permissions/coursePermissions';
 
 // GET /api/teacher/courses/[id]/sections - Get all sections for a course
 export async function GET(
@@ -19,22 +8,53 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const courseId = params.id
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    // TODO: Verify teacher owns this course
-    // TODO: Get sections from database
-    const sections = mockSections.filter(s => s.courseId === courseId)
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const courseId = params.id;
+
+    // Check if user has content management permission
+    const hasPermission = await canManageCourseContent(user.id, courseId);
+    
+    if (!hasPermission) {
+      return NextResponse.json(
+        { error: 'You do not have permission to view sections for this course' },
+        { status: 403 }
+      );
+    }
+
+    // Get sections from database
+    const { data: sections, error: sectionsError } = await supabase
+      .from('course_sections')
+      .select('*')
+      .eq('course_id', courseId)
+      .order('order_index', { ascending: true });
+
+    if (sectionsError) {
+      console.error('Get sections error:', sectionsError);
+      return NextResponse.json(
+        { error: 'Failed to get sections' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      data: sections
-    })
+      data: sections || []
+    });
   } catch (error) {
-    console.error('Get sections error:', error)
+    console.error('Get sections error:', error);
     return NextResponse.json(
       { error: 'Failed to get sections' },
       { status: 500 }
-    )
+    );
   }
 }
 
@@ -44,43 +64,67 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const courseId = params.id
-    const body = await request.json()
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const courseId = params.id;
+    const body = await request.json();
 
     // Validation
     if (!body.title || body.title.trim() === '') {
       return NextResponse.json(
         { error: 'Section title is required' },
         { status: 400 }
-      )
+      );
     }
 
-    // TODO: Verify teacher owns this course
+    // Check if user has content management permission
+    const hasPermission = await canManageCourseContent(user.id, courseId);
+    
+    if (!hasPermission) {
+      return NextResponse.json(
+        { error: 'You do not have permission to add sections to this course' },
+        { status: 403 }
+      );
+    }
 
     // Create new section
-    const newSection = {
-      id: `section-${Date.now()}`,
-      courseId,
-      title: body.title,
-      description: body.description || '',
-      order: body.order || mockSections.filter(s => s.courseId === courseId).length + 1,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }
+    const { data: section, error: createError } = await supabase
+      .from('course_sections')
+      .insert({
+        course_id: courseId,
+        title: body.title,
+        description: body.description || '',
+        order_index: body.order_index || 0
+      })
+      .select()
+      .single();
 
-    // TODO: Save to database
-    mockSections.push(newSection)
+    if (createError) {
+      console.error('Create section error:', createError);
+      return NextResponse.json(
+        { error: 'Failed to create section' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      data: newSection
-    })
+      section
+    });
   } catch (error) {
-    console.error('Create section error:', error)
+    console.error('Create section error:', error);
     return NextResponse.json(
       { error: 'Failed to create section' },
       { status: 500 }
-    )
+    );
   }
 }
 
@@ -90,37 +134,56 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const courseId = params.id
-    const body = await request.json()
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const courseId = params.id;
+    const body = await request.json();
 
     if (!Array.isArray(body.sections)) {
       return NextResponse.json(
         { error: 'Sections array is required' },
         { status: 400 }
-      )
+      );
     }
 
-    // TODO: Verify teacher owns this course
-    // TODO: Update sections in database
+    // Check if user has content management permission
+    const hasPermission = await canManageCourseContent(user.id, courseId);
+    
+    if (!hasPermission) {
+      return NextResponse.json(
+        { error: 'You do not have permission to update sections for this course' },
+        { status: 403 }
+      );
+    }
 
     // Update order for each section
-    body.sections.forEach((section: any, index: number) => {
-      const existingSection = mockSections.find(s => s.id === section.id)
-      if (existingSection) {
-        existingSection.order = index + 1
-        existingSection.updatedAt = new Date().toISOString()
-      }
-    })
+    const updates = body.sections.map((section: any, index: number) => 
+      supabase
+        .from('course_sections')
+        .update({ order_index: index })
+        .eq('id', section.id)
+        .eq('course_id', courseId)
+    );
+
+    await Promise.all(updates);
 
     return NextResponse.json({
       success: true,
       message: 'Sections updated successfully'
-    })
+    });
   } catch (error) {
-    console.error('Update sections error:', error)
+    console.error('Update sections error:', error);
     return NextResponse.json(
       { error: 'Failed to update sections' },
       { status: 500 }
-    )
+    );
   }
 }

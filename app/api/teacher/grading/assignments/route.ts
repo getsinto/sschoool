@@ -1,112 +1,163 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { canGradeCourse } from '@/lib/permissions/coursePermissions';
 
-export const dynamic = 'force-dynamic'
+export const dynamic = 'force-dynamic';
 
 // GET /api/teacher/grading/assignments - Get assignment submissions
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams
-    const courseId = searchParams.get('courseId')
-    const status = searchParams.get('status') || 'pending'
-    const sortBy = searchParams.get('sortBy') || 'oldest'
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    // TODO: Get teacher ID from session
-    const teacherId = 'teacher_123'
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
 
-    // TODO: Fetch from database
-    const mockAssignmentSubmissions = [
-      {
-        id: '1',
-        submissionId: 'sub_456',
-        assignmentId: 'assign_1',
-        assignmentTitle: 'Physics Lab Report',
-        courseId: 'course_2',
-        courseName: 'Grade 9 Physics',
-        student: {
-          id: 'student_3',
-          name: 'Emma Davis',
-          email: 'emma@example.com',
-          avatar: '/avatars/emma.jpg'
-        },
-        submittedAt: '2024-01-18T20:15:00',
-        dueDate: '2024-01-21T23:59:00',
-        isLate: false,
-        latePenalty: 0,
-        submissionType: 'file',
-        fileCount: 2,
-        wordCount: null,
-        maxPoints: 100,
-        status: 'pending'
-      },
-      {
-        id: '2',
-        submissionId: 'sub_457',
-        assignmentId: 'assign_2',
-        assignmentTitle: 'English Essay - Character Analysis',
-        courseId: 'course_3',
-        courseName: 'Grade 8 English',
-        student: {
-          id: 'student_4',
-          name: 'Alex Thompson',
-          email: 'alex@example.com',
-          avatar: '/avatars/alex.jpg'
-        },
-        submittedAt: '2024-01-17T22:30:00',
-        dueDate: '2024-01-18T23:59:00',
-        isLate: true,
-        latePenalty: 10,
-        submissionType: 'text',
-        fileCount: 0,
-        wordCount: 1250,
-        maxPoints: 100,
-        grade: 88,
-        status: 'graded'
+    const searchParams = request.nextUrl.searchParams;
+    const courseId = searchParams.get('courseId');
+    const status = searchParams.get('status') || 'pending';
+    const sortBy = searchParams.get('sortBy') || 'oldest';
+
+    // If courseId is provided, check grading permission for that course
+    if (courseId) {
+      const result = await canGradeCourse(user.id, courseId);
+      
+      if (!result.hasPermission) {
+        return NextResponse.json(
+          { error: 'You do not have permission to grade students in this course' },
+          { status: 403 }
+        );
       }
-    ]
+    }
 
-    // Filter by course
-    let filtered = courseId 
-      ? mockAssignmentSubmissions.filter(a => a.courseId === courseId)
-      : mockAssignmentSubmissions
+    // Get all courses where teacher has grading permission
+    const { data: assignments, error: assignmentsError } = await supabase
+      .from('course_assignments')
+      .select('course_id')
+      .eq('teacher_id', user.id)
+      .eq('can_grade', true);
+
+    if (assignmentsError) {
+      console.error('Error fetching teacher assignments:', assignmentsError);
+      return NextResponse.json(
+        { error: 'Failed to fetch assignments' },
+        { status: 500 }
+      );
+    }
+
+    const allowedCourseIds = assignments.map(a => a.course_id);
+
+    if (allowedCourseIds.length === 0) {
+      return NextResponse.json({
+        success: true,
+        data: [],
+        meta: {
+          total: 0,
+          pending: 0,
+          graded: 0,
+          late: 0
+        }
+      });
+    }
+
+    // Fetch assignment submissions for courses where teacher can grade
+    let query = supabase
+      .from('assignment_submissions')
+      .select(`
+        *,
+        assignment:assignment_id (
+          id,
+          title,
+          max_points,
+          due_date,
+          course_id
+        ),
+        student:student_id (
+          id,
+          full_name,
+          email,
+          avatar_url
+        )
+      `)
+      .in('assignment.course_id', allowedCourseIds);
+
+    // Filter by specific course if provided
+    if (courseId) {
+      query = query.eq('assignment.course_id', courseId);
+    }
 
     // Filter by status
     if (status !== 'all') {
-      filtered = filtered.filter(a => a.status === status)
+      query = query.eq('status', status);
     }
 
+    const { data: submissions, error: submissionsError } = await query;
+
+    if (submissionsError) {
+      console.error('Error fetching submissions:', submissionsError);
+      return NextResponse.json(
+        { error: 'Failed to fetch submissions' },
+        { status: 500 }
+      );
+    }
+
+    // Transform data for response
+    const formattedSubmissions = (submissions || []).map(sub => ({
+      id: sub.id,
+      submissionId: sub.id,
+      assignmentId: sub.assignment.id,
+      assignmentTitle: sub.assignment.title,
+      courseId: sub.assignment.course_id,
+      student: {
+        id: sub.student.id,
+        name: sub.student.full_name,
+        email: sub.student.email,
+        avatar: sub.student.avatar_url
+      },
+      submittedAt: sub.submitted_at,
+      dueDate: sub.assignment.due_date,
+      isLate: new Date(sub.submitted_at) > new Date(sub.assignment.due_date),
+      submissionType: sub.submission_type,
+      maxPoints: sub.assignment.max_points,
+      grade: sub.grade,
+      status: sub.status
+    }));
+
     // Sort
-    filtered.sort((a, b) => {
+    formattedSubmissions.sort((a, b) => {
       switch (sortBy) {
         case 'oldest':
-          return new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime()
+          return new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime();
         case 'newest':
-          return new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
+          return new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime();
         case 'dueDate':
-          return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+          return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
         case 'student':
-          return a.student.name.localeCompare(b.student.name)
-        case 'course':
-          return a.courseName.localeCompare(b.courseName)
+          return a.student.name.localeCompare(b.student.name);
         default:
-          return 0
+          return 0;
       }
-    })
+    });
 
     return NextResponse.json({
       success: true,
-      data: filtered,
+      data: formattedSubmissions,
       meta: {
-        total: filtered.length,
-        pending: filtered.filter(a => a.status === 'pending').length,
-        graded: filtered.filter(a => a.status === 'graded').length,
-        late: filtered.filter(a => a.isLate).length
+        total: formattedSubmissions.length,
+        pending: formattedSubmissions.filter(a => a.status === 'pending').length,
+        graded: formattedSubmissions.filter(a => a.status === 'graded').length,
+        late: formattedSubmissions.filter(a => a.isLate).length
       }
-    })
+    });
   } catch (error) {
-    console.error('Error fetching assignment submissions:', error)
+    console.error('Error fetching assignment submissions:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to fetch assignment submissions' },
       { status: 500 }
-    )
+    );
   }
 }
