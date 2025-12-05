@@ -8,6 +8,10 @@ const nextConfig = {
       allowedOrigins: ['localhost:3000', 'stharoonschool.com'],
     },
   },
+  // Increase static generation timeout
+  staticPageGenerationTimeout: 180,
+  // Skip static generation for dashboard pages
+  skipTrailingSlashRedirect: true,
   images: {
     remotePatterns: [
       {

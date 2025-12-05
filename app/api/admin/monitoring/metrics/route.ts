@@ -8,6 +8,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 import { createClient } from '@/lib/supabase/server';
 import { getMetricsSummary, checkAlerts, getMetricRate, METRICS } from '@/lib/monitoring/metrics';
 

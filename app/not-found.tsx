@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button'
 import PublicHeader from '@/components/public/Header'
 import PublicFooter from '@/components/public/Footer'
 
+export const dynamic = 'force-dynamic';
+
 export default function NotFound() {
   return (
     <div className="min-h-screen flex flex-col">
