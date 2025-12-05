@@ -9,6 +9,89 @@ export type Course = Database['public']['Tables']['courses']['Row']
 export type CourseInsert = Database['public']['Tables']['courses']['Insert']
 export type CourseUpdate = Database['public']['Tables']['courses']['Update']
 
+// ============================================================================
+// COURSE VISIBILITY & SEO TYPES
+// ============================================================================
+
+/**
+ * Course status options
+ */
+export const COURSE_STATUSES = [
+  'draft',
+  'pending_approval',
+  'approved',
+  'published',
+  'scheduled',
+  'hidden',
+  'archived',
+  'deprecated'
+] as const
+
+export type CourseStatus = typeof COURSE_STATUSES[number]
+
+/**
+ * Course visibility options
+ */
+export const COURSE_VISIBILITY_OPTIONS = [
+  'everyone',
+  'logged_in',
+  'specific_roles',
+  'specific_grades',
+  'invite_only'
+] as const
+
+export type CourseVisibility = typeof COURSE_VISIBILITY_OPTIONS[number]
+
+/**
+ * Course visibility settings
+ */
+export interface CourseVisibilitySettings {
+  status: CourseStatus
+  visibility: CourseVisibility
+  scheduled_publish_at?: string | null
+  allowed_roles?: string[] | null
+  allowed_grades?: string[] | null
+  allowed_countries?: string[] | null
+  excluded_countries?: string[] | null
+  visible_from?: string | null
+  visible_until?: string | null
+  is_featured?: boolean
+  featured_order?: number | null
+  access_codes?: string[] | null
+}
+
+/**
+ * Course SEO settings
+ */
+export interface CourseSEOSettings {
+  meta_title?: string | null
+  meta_description?: string | null
+  seo_keywords?: string[] | null
+  url_slug?: string | null
+  og_title?: string | null
+  og_description?: string | null
+  og_image_url?: string | null
+  twitter_card_type?: string | null
+  twitter_title?: string | null
+  twitter_description?: string | null
+  canonical_url?: string | null
+  robots_meta?: string | null
+  seo_score?: number | null
+}
+
+/**
+ * Course with visibility and SEO data
+ */
+export interface CourseWithSEO extends Course {
+  visibility_settings?: CourseVisibilitySettings
+  seo_settings?: CourseSEOSettings
+  custom_labels?: string[] | null
+  tags?: string[] | null
+  view_count?: number
+  is_trending?: boolean
+  is_bestseller?: boolean
+}
+
 // Extract course category types from database
 export type CourseCategoryRow = Database['public']['Tables']['course_categories']['Row']
 export type CourseCategoryInsert = Database['public']['Tables']['course_categories']['Insert']

@@ -129,13 +129,13 @@ export default function ExportButton({
   const getStatusIcon = () => {
     switch (exportStatus.status) {
       case 'loading':
-        return <Loader2 className=\"w-4 h-4 animate-spin\" />
+        return <Loader2 className="w-4 h-4 animate-spin" />
       case 'success':
-        return <CheckCircle className=\"w-4 h-4 text-green-600\" />
+        return <CheckCircle className="w-4 h-4 text-green-600" />
       case 'error':
-        return <AlertCircle className=\"w-4 h-4 text-red-600\" />
+        return <AlertCircle className="w-4 h-4 text-red-600" />
       default:
-        return <Download className=\"w-4 h-4\" />
+        return <Download className="w-4 h-4" />
     }
   }
 
@@ -164,15 +164,15 @@ export default function ExportButton({
         variant={getButtonVariant()}
         onClick={() => setShowDropdown(!showDropdown)}
         disabled={exportStatus.status === 'loading'}
-        className=\"relative\"
+        className="relative"
       >
         {getStatusIcon()}
-        <span className=\"ml-2\">{getButtonText()}</span>
+        <span className="ml-2">{getButtonText()}</span>
       </Button>
 
       {/* Export Status Message */}
       {exportStatus.message && (
-        <div className=\"absolute top-full left-0 mt-2 z-50\">
+        <div className="absolute top-full left-0 mt-2 z-50">
           <div className={`px-3 py-2 rounded-md text-sm whitespace-nowrap ${
             exportStatus.status === 'success' 
               ? 'bg-green-100 text-green-800 border border-green-200'
@@ -185,33 +185,33 @@ export default function ExportButton({
 
       {/* Export Format Dropdown */}
       {showDropdown && exportStatus.status === 'idle' && (
-        <div className=\"absolute top-full right-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50\">
-          <div className=\"p-4\">
-            <h3 className=\"font-medium text-gray-900 mb-3\">Choose Export Format</h3>
-            <div className=\"space-y-2\">
+        <div className="absolute top-full right-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+          <div className="p-4">
+            <h3 className="font-medium text-gray-900 mb-3">Choose Export Format</h3>
+            <div className="space-y-2">
               {exportFormats.map(({ format, label, icon: Icon, description }) => (
                 <button
                   key={format}
                   onClick={() => handleExport(format)}
-                  className=\"w-full flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors text-left\"
+                  className="w-full flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors text-left"
                 >
-                  <Icon className=\"w-5 h-5 text-gray-500 mt-0.5\" />
-                  <div className=\"flex-1\">
-                    <div className=\"flex items-center justify-between mb-1\">
-                      <span className=\"font-medium text-gray-900\">{label}</span>
-                      <Badge variant=\"outline\" className=\"text-xs\">
+                  <Icon className="w-5 h-5 text-gray-500 mt-0.5" />
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-medium text-gray-900">{label}</span>
+                      <Badge variant="outline" className="text-xs">
                         {format.toUpperCase()}
                       </Badge>
                     </div>
-                    <p className=\"text-sm text-gray-600\">{description}</p>
+                    <p className="text-sm text-gray-600">{description}</p>
                   </div>
                 </button>
               ))}
             </div>
           </div>
           
-          <div className=\"border-t p-3 bg-gray-50 rounded-b-lg\">
-            <p className=\"text-xs text-gray-500\">
+          <div className="border-t p-3 bg-gray-50 rounded-b-lg">
+            <p className="text-xs text-gray-500">
               Reports include current filters and date range. Large datasets may take a few moments to generate.
             </p>
           </div>
@@ -221,7 +221,7 @@ export default function ExportButton({
       {/* Backdrop */}
       {showDropdown && (
         <div 
-          className=\"fixed inset-0 z-40\" 
+          className="fixed inset-0 z-40" 
           onClick={() => setShowDropdown(false)}
         />
       )}

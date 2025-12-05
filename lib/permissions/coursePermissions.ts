@@ -229,6 +229,21 @@ export async function canDeleteCourse(userId: string): Promise<PermissionCheckRe
   return canCreateCourses(userId);
 }
 
+/**
+ * Check if user can assign teachers to courses
+ * Requirement 2.1: Only admins can assign teachers
+ */
+export async function canAssignTeachers(userId: string): Promise<PermissionCheckResult> {
+  return canCreateCourses(userId);
+}
+
+/**
+ * Alias for canCreateCourses for backward compatibility
+ */
+export async function canCreateCourse(userId: string): Promise<PermissionCheckResult> {
+  return canCreateCourses(userId);
+}
+
 // ============================================================================
 // COURSE ASSIGNMENT MANAGEMENT FUNCTIONS (Task 4)
 // ============================================================================

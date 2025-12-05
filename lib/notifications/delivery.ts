@@ -276,3 +276,25 @@ export class NotificationDeliveryService {
 }
 
 export const notificationDeliveryService = new NotificationDeliveryService();
+
+
+/**
+ * Helper function to send a notification
+ * Convenience wrapper around NotificationDeliveryService
+ */
+export async function sendNotification(
+  userId: string,
+  notification: Omit<Notification, 'id' | 'user_id' | 'created_at' | 'updated_at'>
+): Promise<void> {
+  return notificationDeliveryService.deliverNotification(userId, notification);
+}
+
+/**
+ * Helper function to send bulk notifications
+ */
+export async function sendBulkNotifications(
+  userIds: string[],
+  notification: Omit<Notification, 'id' | 'user_id' | 'created_at' | 'updated_at'>
+): Promise<void> {
+  return notificationDeliveryService.bulkDeliverNotifications(userIds, notification);
+}

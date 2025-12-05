@@ -197,7 +197,7 @@ describe('BasicInfoForm', () => {
 
   describe('Age Groups and Student Types', () => {
     it('renders age group selector', () => {
-      render(<BasicInfoForm data={defaultData} onUpdate=={mockOnUpdate} onNext={mockOnNext} />)
+      render(<BasicInfoForm data={defaultData} onUpdate={mockOnUpdate} onNext={mockOnNext} />)
       
       expect(screen.getByTestId('age-group-selector')).toBeInTheDocument()
     })
