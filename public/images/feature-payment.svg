@@ -1,0 +1,15 @@
+<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="300" fill="#f0fdf4"/>
+  <!-- Credit Card -->
+  <rect x="80" y="100" width="240" height="140" rx="12" fill="#10b981"/>
+  <rect x="80" y="100" width="240" height="40" fill="#059669"/>
+  <!-- Chip -->
+  <rect x="110" y="160" width="40" height="30" rx="4" fill="#fbbf24"/>
+  <!-- Card Lines -->
+  <rect x="170" y="165" width="120" height="6" rx="3" fill="white" opacity="0.8"/>
+  <rect x="170" y="180" width="80" height="6" rx="3" fill="white" opacity="0.6"/>
+  <rect x="170" y="195" width="100" height="6" rx="3" fill="white" opacity="0.6"/>
+  <!-- Checkmark -->
+  <circle cx="320" cy="120" r="20" fill="#22c55e"/>
+  <path d="M 312 120 L 317 125 L 328 114" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/>
+</svg>

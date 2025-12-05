@@ -1,0 +1,11 @@
+<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="300" fill="#f0f9ff"/>
+  <!-- Video Screen -->
+  <rect x="50" y="50" width="300" height="200" rx="12" fill="#1e293b"/>
+  <!-- Camera Icon -->
+  <rect x="160" y="110" width="80" height="50" rx="8" fill="#3b82f6"/>
+  <circle cx="260" cy="135" r="25" fill="#2563eb"/>
+  <circle cx="260" cy="135" r="15" fill="#1e40af"/>
+  <!-- Recording Dot -->
+  <circle cx="320" cy="70" r="8" fill="#ef4444"/>
+</svg>

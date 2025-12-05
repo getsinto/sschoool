@@ -1,0 +1,20 @@
+<svg width="1200" height="600" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="learningBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fef3c7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#fce7f3;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="600" fill="url(#learningBg)"/>
+  <!-- Laptop -->
+  <rect x="400" y="250" width="400" height="250" rx="12" fill="#1f2937" opacity="0.8"/>
+  <rect x="420" y="270" width="360" height="200" fill="#3b82f6" opacity="0.6"/>
+  <rect x="350" y="500" width="500" height="20" rx="10" fill="#374151" opacity="0.8"/>
+  <!-- Play Button -->
+  <circle cx="600" cy="370" r="50" fill="white" opacity="0.9"/>
+  <polygon points="580,350 580,390 620,370" fill="#3b82f6"/>
+  <!-- Floating Icons -->
+  <circle cx="250" cy="200" r="35" fill="#ef4444" opacity="0.4"/>
+  <rect x="900" y="180" width="60" height="60" rx="8" fill="#8b5cf6" opacity="0.4"/>
+  <polygon points="950,400 980,450 920,450" fill="#10b981" opacity="0.4"/>
+</svg>

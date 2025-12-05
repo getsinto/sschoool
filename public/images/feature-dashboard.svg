@@ -1,0 +1,14 @@
+<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="300" fill="#f0f9ff"/>
+  <!-- Dashboard Grid -->
+  <rect x="60" y="60" width="120" height="80" rx="8" fill="#3b82f6" opacity="0.6"/>
+  <rect x="220" y="60" width="120" height="80" rx="8" fill="#2563eb" opacity="0.6"/>
+  <rect x="60" y="160" width="120" height="80" rx="8" fill="#1e40af" opacity="0.6"/>
+  <rect x="220" y="160" width="120" height="80" rx="8" fill="#1d4ed8" opacity="0.6"/>
+  <!-- Icons -->
+  <circle cx="120" cy="100" r="15" fill="white" opacity="0.8"/>
+  <rect x="240" y="85" width="80" height="6" rx="3" fill="white" opacity="0.8"/>
+  <rect x="240" y="100" width="60" height="6" rx="3" fill="white" opacity="0.6"/>
+  <polygon points="120,185 130,205 110,205" fill="white" opacity="0.8"/>
+  <rect x="240" y="185" width="80" height="6" rx="3" fill="white" opacity="0.8"/>
+</svg>

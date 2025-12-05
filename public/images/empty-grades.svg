@@ -1,0 +1,14 @@
+<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="300" fill="#f9fafb"/>
+  <!-- Report Card -->
+  <rect x="120" y="70" width="160" height="160" rx="8" fill="white" stroke="#e5e7eb" stroke-width="2"/>
+  <!-- Header -->
+  <rect x="140" y="90" width="120" height="8" rx="4" fill="#3b82f6"/>
+  <!-- Grade Lines -->
+  <rect x="140" y="120" width="80" height="6" rx="3" fill="#e5e7eb"/>
+  <rect x="140" y="145" width="80" height="6" rx="3" fill="#e5e7eb"/>
+  <rect x="140" y="170" width="80" height="6" rx="3" fill="#e5e7eb"/>
+  <!-- Stars (empty) -->
+  <polygon points="240,120 243,127 251,127 245,132 247,140 240,135 233,140 235,132 229,127 237,127" fill="none" stroke="#d1d5db" stroke-width="2"/>
+  <polygon points="240,150 243,157 251,157 245,162 247,170 240,165 233,170 235,162 229,157 237,157" fill="none" stroke="#d1d5db" stroke-width="2"/>
+</svg>

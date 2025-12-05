@@ -1,0 +1,16 @@
+<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="300" fill="#fefce8"/>
+  <!-- Document with Chart -->
+  <rect x="100" y="50" width="200" height="200" rx="8" fill="white" stroke="#e5e7eb" stroke-width="2"/>
+  <!-- Header -->
+  <rect x="120" y="70" width="160" height="8" rx="4" fill="#fbbf24"/>
+  <rect x="120" y="85" width="100" height="6" rx="3" fill="#fcd34d"/>
+  <!-- Mini Bar Chart -->
+  <rect x="130" y="140" width="20" height="40" rx="2" fill="#34d399"/>
+  <rect x="160" y="120" width="20" height="60" rx="2" fill="#10b981"/>
+  <rect x="190" y="100" width="20" height="80" rx="2" fill="#059669"/>
+  <rect x="220" y="110" width="20" height="70" rx="2" fill="#047857"/>
+  <!-- Footer Lines -->
+  <rect x="120" y="200" width="160" height="4" rx="2" fill="#e5e7eb"/>
+  <rect x="120" y="215" width="120" height="4" rx="2" fill="#e5e7eb"/>
+</svg>

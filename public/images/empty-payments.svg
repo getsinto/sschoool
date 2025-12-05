@@ -1,0 +1,10 @@
+<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="300" fill="#f9fafb"/>
+  <!-- Wallet -->
+  <rect x="120" y="110" width="160" height="100" rx="12" fill="#e5e7eb"/>
+  <rect x="120" y="110" width="160" height="30" fill="#d1d5db"/>
+  <!-- Card Slot -->
+  <rect x="140" y="155" width="120" height="40" rx="6" fill="white" stroke="#9ca3af" stroke-width="2"/>
+  <!-- Dollar Sign -->
+  <text x="200" y="185" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#9ca3af" text-anchor="middle">$</text>
+</svg>

@@ -1,0 +1,11 @@
+<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="300" fill="#f9fafb"/>
+  <!-- Bell -->
+  <path d="M 200 80 Q 180 80 180 100 L 180 140 Q 180 160 160 180 L 240 180 Q 220 160 220 140 L 220 100 Q 220 80 200 80" fill="#e5e7eb"/>
+  <ellipse cx="200" cy="70" rx="15" ry="10" fill="#e5e7eb"/>
+  <path d="M 185 190 Q 185 210 200 210 Q 215 210 215 190" fill="#d1d5db"/>
+  <!-- Zzz -->
+  <text x="250" y="120" font-family="Arial, sans-serif" font-size="24" fill="#9ca3af" opacity="0.5">Z</text>
+  <text x="265" y="105" font-family="Arial, sans-serif" font-size="20" fill="#9ca3af" opacity="0.4">z</text>
+  <text x="275" y="95" font-family="Arial, sans-serif" font-size="16" fill="#9ca3af" opacity="0.3">z</text>
+</svg>

@@ -1,0 +1,17 @@
+<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="300" fill="#f9fafb"/>
+  <!-- Calendar -->
+  <rect x="100" y="80" width="200" height="140" rx="8" fill="white" stroke="#e5e7eb" stroke-width="2"/>
+  <rect x="100" y="80" width="200" height="30" rx="8" fill="#e5e7eb"/>
+  <!-- Calendar Grid -->
+  <line x1="140" y1="130" x2="140" y2="220" stroke="#d1d5db" stroke-width="1"/>
+  <line x1="180" y1="130" x2="180" y2="220" stroke="#d1d5db" stroke-width="1"/>
+  <line x1="220" y1="130" x2="220" y2="220" stroke="#d1d5db" stroke-width="1"/>
+  <line x1="260" y1="130" x2="260" y2="220" stroke="#d1d5db" stroke-width="1"/>
+  <line x1="100" y1="150" x2="300" y2="150" stroke="#d1d5db" stroke-width="1"/>
+  <line x1="100" y1="180" x2="300" y2="180" stroke="#d1d5db" stroke-width="1"/>
+  <!-- Clock Icon -->
+  <circle cx="200" cy="165" r="15" fill="none" stroke="#9ca3af" stroke-width="2"/>
+  <line x1="200" y1="165" x2="200" y2="155" stroke="#9ca3af" stroke-width="2"/>
+  <line x1="200" y1="165" x2="207" y2="165" stroke="#9ca3af" stroke-width="2"/>
+</svg>

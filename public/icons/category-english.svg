@@ -1,0 +1,12 @@
+<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+  <rect width="100" height="100" rx="20" fill="#dbeafe"/>
+  <!-- Open Book -->
+  <rect x="25" y="35" width="22" height="35" rx="2" fill="#3b82f6" opacity="0.8"/>
+  <rect x="53" y="35" width="22" height="35" rx="2" fill="#2563eb" opacity="0.8"/>
+  <line x1="50" y1="35" x2="50" y2="70" stroke="#1e40af" stroke-width="2"/>
+  <!-- Text Lines -->
+  <line x1="30" y1="45" x2="42" y2="45" stroke="white" stroke-width="1.5"/>
+  <line x1="30" y1="52" x2="42" y2="52" stroke="white" stroke-width="1.5"/>
+  <line x1="58" y1="45" x2="70" y2="45" stroke="white" stroke-width="1.5"/>
+  <line x1="58" y1="52" x2="70" y2="52" stroke="white" stroke-width="1.5"/>
+</svg>
