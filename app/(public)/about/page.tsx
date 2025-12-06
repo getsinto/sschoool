@@ -12,11 +12,6 @@ import {
   GraduationCap
 } from 'lucide-react'
 
-export const metadata = {
-  title: 'About Us - St Haroon Online School',
-  description: 'Learn about our mission, vision, and commitment to providing world-class online education.',
-}
-
 const milestones = [
   {
     year: '2018',

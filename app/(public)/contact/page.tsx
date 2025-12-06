@@ -12,11 +12,6 @@ import {
   MessageCircle
 } from 'lucide-react'
 
-export const metadata = {
-  title: 'Contact Us - St Haroon Online School',
-  description: 'Get in touch with us for any questions or support. We\'re here to help!',
-}
-
 const contactInfo = [
   {
     icon: Mail,

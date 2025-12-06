@@ -2,11 +2,6 @@ import StaticLayout from '@/components/layout/StaticLayout'
 import Link from 'next/link'
 import { ChevronDown } from 'lucide-react'
 
-export const metadata = {
-  title: 'FAQ - St Haroon Online School',
-  description: 'Frequently asked questions about our courses, admissions, payments, and technical support.',
-}
-
 const faqData = {
   admissions: [
     {

@@ -2,18 +2,11 @@ import Link from 'next/link'
 import { 
   BookOpen, 
   Users, 
-  Award, 
-  Globe,
+  Award,
   CheckCircle,
-  Star,
   Clock,
   Video
 } from 'lucide-react'
-
-export const metadata = {
-  title: 'St Haroon Online School - World-Class Online Education',
-  description: 'Quality online education from Pre-Nursery to Grade 10. Expert teachers, interactive learning, and flexible schedules.',
-}
 
 export default function LandingPage() {
   return (
