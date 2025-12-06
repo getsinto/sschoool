@@ -1,21 +1,19 @@
-'use client'
-
-export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
-
-import SharedLayout from '@/components/layout/SharedLayout'
-import SchoolHeroSlider from '@/components/shared/SchoolHeroSlider'
-import VideoSection from '@/components/shared/VideoSection'
-import EnhancedTestimonialsSection from '@/components/shared/EnhancedTestimonialsSection'
-import EnhancedBrochureSection from '@/components/shared/EnhancedBrochureSection'
-import EnhancedWhyChooseSection from '@/components/shared/EnhancedWhyChooseSection'
-import FeaturesSection from '@/components/landing/FeaturesSection'
-import AchievementsAndTeachersSection from '@/components/landing/AchievementsAndTeachersSection'
-import CourseCard from '@/components/shared/CourseCard'
-import { Button } from '@/components/ui/button'
+import dynamic from 'next/dynamic'
 import { GraduationCap, MessageCircle, BookOpen, Star, Award, Globe, CheckCircle, ArrowRight, Users, Clock, Sparkles, TrendingUp, Target } from 'lucide-react'
 import Link from 'next/link'
 import './landing-animations.css'
+
+// Dynamically import interactive components with SSR disabled
+const SharedLayout = dynamic(() => import('@/components/layout/SharedLayout'), { ssr: false })
+const SchoolHeroSlider = dynamic(() => import('@/components/shared/SchoolHeroSlider'), { ssr: false })
+const VideoSection = dynamic(() => import('@/components/shared/VideoSection'), { ssr: false })
+const EnhancedTestimonialsSection = dynamic(() => import('@/components/shared/EnhancedTestimonialsSection'), { ssr: false })
+const EnhancedBrochureSection = dynamic(() => import('@/components/shared/EnhancedBrochureSection'), { ssr: false })
+const EnhancedWhyChooseSection = dynamic(() => import('@/components/shared/EnhancedWhyChooseSection'), { ssr: false })
+const FeaturesSection = dynamic(() => import('@/components/landing/FeaturesSection'), { ssr: false })
+const AchievementsAndTeachersSection = dynamic(() => import('@/components/landing/AchievementsAndTeachersSection'), { ssr: false })
+const CourseCard = dynamic(() => import('@/components/shared/CourseCard'), { ssr: false })
+const Button = dynamic(() => import('@/components/ui/button').then(mod => ({ default: mod.Button })), { ssr: false })
 
 export default function LandingPage() {
   return (

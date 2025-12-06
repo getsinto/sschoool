@@ -1,12 +1,4 @@
-'use client'
-
-export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
-
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import SharedLayout from '@/components/layout/SharedLayout'
+import dynamic from 'next/dynamic'
 import { 
   Award, 
   Users, 
@@ -19,6 +11,15 @@ import {
   Trophy,
   GraduationCap
 } from 'lucide-react'
+
+// Dynamically import components with SSR disabled
+const SharedLayout = dynamic(() => import('@/components/layout/SharedLayout'), { ssr: false })
+const Card = dynamic(() => import('@/components/ui/card').then(mod => ({ default: mod.Card })), { ssr: false })
+const CardContent = dynamic(() => import('@/components/ui/card').then(mod => ({ default: mod.CardContent })), { ssr: false })
+const Badge = dynamic(() => import('@/components/ui/badge').then(mod => ({ default: mod.Badge })), { ssr: false })
+const Avatar = dynamic(() => import('@/components/ui/avatar').then(mod => ({ default: mod.Avatar })), { ssr: false })
+const AvatarFallback = dynamic(() => import('@/components/ui/avatar').then(mod => ({ default: mod.AvatarFallback })), { ssr: false })
+const AvatarImage = dynamic(() => import('@/components/ui/avatar').then(mod => ({ default: mod.AvatarImage })), { ssr: false })
 
 const milestones = [
   {

@@ -1,11 +1,4 @@
-'use client'
-
-export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
-
-import ContactForm from '@/components/public/ContactForm'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import SharedLayout from '@/components/layout/SharedLayout'
+import dynamic from 'next/dynamic'
 import { 
   Mail, 
   Phone, 
@@ -17,7 +10,15 @@ import {
   Youtube,
   MessageCircle
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+
+// Dynamically import components with SSR disabled
+const ContactForm = dynamic(() => import('@/components/public/ContactForm'), { ssr: false })
+const SharedLayout = dynamic(() => import('@/components/layout/SharedLayout'), { ssr: false })
+const Card = dynamic(() => import('@/components/ui/card').then(mod => ({ default: mod.Card })), { ssr: false })
+const CardContent = dynamic(() => import('@/components/ui/card').then(mod => ({ default: mod.CardContent })), { ssr: false })
+const CardHeader = dynamic(() => import('@/components/ui/card').then(mod => ({ default: mod.CardHeader })), { ssr: false })
+const CardTitle = dynamic(() => import('@/components/ui/card').then(mod => ({ default: mod.CardTitle })), { ssr: false })
+const Button = dynamic(() => import('@/components/ui/button').then(mod => ({ default: mod.Button })), { ssr: false })
 
 const contactInfo = [
   {

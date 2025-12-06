@@ -1,10 +1,8 @@
-'use client'
+import dynamic from 'next/dynamic'
 
-export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
-
-import FAQContent from '@/components/public/FAQContent'
-import SharedLayout from '@/components/layout/SharedLayout'
+// Dynamically import components with SSR disabled
+const FAQContent = dynamic(() => import('@/components/public/FAQContent'), { ssr: false })
+const SharedLayout = dynamic(() => import('@/components/layout/SharedLayout'), { ssr: false })
 
 const faqData = {
   admissions: [
