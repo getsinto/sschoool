@@ -1,8 +1,11 @@
-import dynamic from 'next/dynamic'
+import StaticLayout from '@/components/layout/StaticLayout'
+import Link from 'next/link'
+import { ChevronDown } from 'lucide-react'
 
-// Dynamically import components with SSR disabled
-const FAQContent = dynamic(() => import('@/components/public/FAQContent'), { ssr: false })
-const SharedLayout = dynamic(() => import('@/components/layout/SharedLayout'), { ssr: false })
+export const metadata = {
+  title: 'FAQ - St Haroon Online School',
+  description: 'Frequently asked questions about our courses, admissions, payments, and technical support.',
+}
 
 const faqData = {
   admissions: [
@@ -121,8 +124,118 @@ const faqData = {
 
 export default function FAQPage() {
   return (
-    <SharedLayout>
-      <FAQContent />
-    </SharedLayout>
+    <StaticLayout>
+      <div className="bg-white">
+        {/* Hero Section */}
+        <section className="pt-24 pb-16 bg-gradient-to-br from-blue-50 to-purple-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
+                Frequently Asked{' '}
+                <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  Questions
+                </span>
+              </h1>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                Find answers to common questions about our courses, admissions, payments, and more.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ Categories */}
+        <section className="py-20">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Admissions */}
+            <div className="mb-12">
+              <h2 className="text-3xl font-bold text-gray-900 mb-6" id="admissions">Admissions</h2>
+              <div className="space-y-4">
+                {faqData.admissions.map((faq, index) => (
+                  <details key={index} className="bg-white rounded-lg shadow-md p-6 group">
+                    <summary className="font-semibold text-lg text-gray-900 cursor-pointer flex justify-between items-center">
+                      {faq.question}
+                      <ChevronDown className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" />
+                    </summary>
+                    <p className="mt-4 text-gray-600 leading-relaxed">{faq.answer}</p>
+                  </details>
+                ))}
+              </div>
+            </div>
+
+            {/* Courses */}
+            <div className="mb-12">
+              <h2 className="text-3xl font-bold text-gray-900 mb-6" id="courses">Courses</h2>
+              <div className="space-y-4">
+                {faqData.courses.map((faq, index) => (
+                  <details key={index} className="bg-white rounded-lg shadow-md p-6 group">
+                    <summary className="font-semibold text-lg text-gray-900 cursor-pointer flex justify-between items-center">
+                      {faq.question}
+                      <ChevronDown className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" />
+                    </summary>
+                    <p className="mt-4 text-gray-600 leading-relaxed">{faq.answer}</p>
+                  </details>
+                ))}
+              </div>
+            </div>
+
+            {/* Payments */}
+            <div className="mb-12">
+              <h2 className="text-3xl font-bold text-gray-900 mb-6" id="payments">Payments</h2>
+              <div className="space-y-4">
+                {faqData.payments.map((faq, index) => (
+                  <details key={index} className="bg-white rounded-lg shadow-md p-6 group">
+                    <summary className="font-semibold text-lg text-gray-900 cursor-pointer flex justify-between items-center">
+                      {faq.question}
+                      <ChevronDown className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" />
+                    </summary>
+                    <p className="mt-4 text-gray-600 leading-relaxed">{faq.answer}</p>
+                  </details>
+                ))}
+              </div>
+            </div>
+
+            {/* Technical */}
+            <div className="mb-12">
+              <h2 className="text-3xl font-bold text-gray-900 mb-6" id="technical">Technical Support</h2>
+              <div className="space-y-4">
+                {faqData.technical.map((faq, index) => (
+                  <details key={index} className="bg-white rounded-lg shadow-md p-6 group">
+                    <summary className="font-semibold text-lg text-gray-900 cursor-pointer flex justify-between items-center">
+                      {faq.question}
+                      <ChevronDown className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" />
+                    </summary>
+                    <p className="mt-4 text-gray-600 leading-relaxed">{faq.answer}</p>
+                  </details>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="bg-gray-900 text-white py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-3xl font-bold mb-4">Still Have Questions?</h2>
+            <p className="text-gray-400 mb-8 text-lg">
+              Our support team is ready to help you with any additional questions
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link 
+                href="/contact"
+                className="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 font-semibold"
+              >
+                Contact Support
+              </Link>
+              <a 
+                href="mailto:info@stharoonschool.com"
+                className="inline-block border border-gray-600 text-white px-8 py-3 rounded-lg hover:bg-gray-800 font-semibold"
+              >
+                Email Us
+              </a>
+            </div>
+          </div>
+        </section>
+      </div>
+    </StaticLayout>
   )
 }

@@ -1,4 +1,5 @@
-import dynamic from 'next/dynamic'
+import StaticLayout from '@/components/layout/StaticLayout'
+import Link from 'next/link'
 import { 
   Mail, 
   Phone, 
@@ -11,14 +12,10 @@ import {
   MessageCircle
 } from 'lucide-react'
 
-// Dynamically import components with SSR disabled
-const ContactForm = dynamic(() => import('@/components/public/ContactForm'), { ssr: false })
-const SharedLayout = dynamic(() => import('@/components/layout/SharedLayout'), { ssr: false })
-const Card = dynamic(() => import('@/components/ui/card').then(mod => ({ default: mod.Card })), { ssr: false })
-const CardContent = dynamic(() => import('@/components/ui/card').then(mod => ({ default: mod.CardContent })), { ssr: false })
-const CardHeader = dynamic(() => import('@/components/ui/card').then(mod => ({ default: mod.CardHeader })), { ssr: false })
-const CardTitle = dynamic(() => import('@/components/ui/card').then(mod => ({ default: mod.CardTitle })), { ssr: false })
-const Button = dynamic(() => import('@/components/ui/button').then(mod => ({ default: mod.Button })), { ssr: false })
+export const metadata = {
+  title: 'Contact Us - St Haroon Online School',
+  description: 'Get in touch with us for any questions or support. We\'re here to help!',
+}
 
 const contactInfo = [
   {
@@ -55,9 +52,8 @@ const socialLinks = [
 ]
 
 export default function ContactPage() {
-
   return (
-    <SharedLayout>
+    <StaticLayout>
       <div className="bg-white">
       
       {/* Hero Section */}
@@ -85,20 +81,18 @@ export default function ContactPage() {
             {contactInfo.map((info, index) => {
               const Icon = info.icon
               return (
-                <Card key={index} className="p-6 text-center hover:shadow-lg transition-shadow duration-300">
-                  <CardContent className="p-0">
-                    <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <Icon className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">{info.title}</h3>
-                    <div className="space-y-1 mb-2">
-                      {info.details.map((detail, idx) => (
-                        <p key={idx} className="text-gray-700 font-medium">{detail}</p>
-                      ))}
-                    </div>
-                    <p className="text-gray-500 text-sm">{info.description}</p>
-                  </CardContent>
-                </Card>
+                <div key={index} className="p-6 bg-white rounded-lg shadow-md text-center hover:shadow-lg transition-shadow duration-300">
+                  <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Icon className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{info.title}</h3>
+                  <div className="space-y-1 mb-2">
+                    {info.details.map((detail, idx) => (
+                      <p key={idx} className="text-gray-700 font-medium">{detail}</p>
+                    ))}
+                  </div>
+                  <p className="text-gray-500 text-sm">{info.description}</p>
+                </div>
               )
             })}
           </div>
@@ -110,14 +104,72 @@ export default function ContactPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
             {/* Contact Form */}
-            <div>
-              <ContactForm />
+            <div className="bg-white rounded-lg shadow-md p-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Send Us a Message</h2>
+              <form className="space-y-6">
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="John Doe"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="john@example.com"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
+                    Subject
+                  </label>
+                  <input
+                    type="text"
+                    id="subject"
+                    name="subject"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="How can we help?"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
+                    Message
+                  </label>
+                  <textarea
+                    id="message"
+                    name="message"
+                    rows={6}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Tell us more about your inquiry..."
+                  />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 mb-4">
+                    For immediate assistance, please email us at{' '}
+                    <a href="mailto:info@stharoonschool.com" className="text-blue-600 hover:underline">
+                      info@stharoonschool.com
+                    </a>
+                  </p>
+                </div>
+              </form>
             </div>
 
             {/* Map & Additional Info */}
             <div className="space-y-8">
               {/* Embedded Map */}
-              <Card className="p-0 overflow-hidden">
+              <div className="bg-white rounded-lg shadow-md overflow-hidden">
                 <div className="aspect-video bg-gray-200 relative">
                   <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
                     <div className="text-center text-gray-700">
@@ -127,17 +179,17 @@ export default function ContactPage() {
                     </div>
                   </div>
                 </div>
-              </Card>
+              </div>
 
               {/* Office Hours */}
-              <Card className="p-6">
-                <CardHeader className="p-0 mb-4">
-                  <CardTitle className="flex items-center">
+              <div className="p-6 bg-white rounded-lg shadow-md">
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold flex items-center">
                     <Clock className="mr-2 h-5 w-5 text-blue-600" />
                     Office Hours
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0 space-y-2">
+                  </h3>
+                </div>
+                <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Monday - Friday</span>
                     <span className="font-medium">8:00 AM - 8:00 PM</span>
@@ -155,59 +207,49 @@ export default function ContactPage() {
                       * All times are in Eastern Standard Time (EST)
                     </p>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
 
               {/* Social Media */}
-              <Card className="p-6">
-                <CardHeader className="p-0 mb-4">
-                  <CardTitle>Follow Us</CardTitle>
+              <div className="p-6 bg-white rounded-lg shadow-md">
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold">Follow Us</h3>
                   <p className="text-gray-600 text-sm">
                     Stay connected with us on social media for updates and educational content.
                   </p>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="flex space-x-4">
-                    {socialLinks.map((social, index) => {
-                      const Icon = social.icon
-                      return (
-                        <a
-                          key={index}
-                          href={social.href}
-                          className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center text-white hover:shadow-lg transform hover:scale-105 transition-all duration-300"
-                          aria-label={social.label}
-                        >
-                          <Icon className="w-5 h-5" />
-                        </a>
-                      )
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
+                </div>
+                <div className="flex space-x-4">
+                  {socialLinks.map((social, index) => {
+                    const Icon = social.icon
+                    return (
+                      <a
+                        key={index}
+                        href={social.href}
+                        className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center text-white hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+                        aria-label={social.label}
+                      >
+                        <Icon className="w-5 h-5" />
+                      </a>
+                    )
+                  })}
+                </div>
+              </div>
 
               {/* Quick Support */}
-              <Card className="p-6 bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
-                <CardHeader className="p-0 mb-4">
-                  <CardTitle className="flex items-center text-green-800">
+              <div className="p-6 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg shadow-md">
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold flex items-center text-green-800">
                     <MessageCircle className="mr-2 h-5 w-5" />
                     Need Immediate Help?
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <p className="text-green-700 text-sm mb-4">
-                    For urgent technical issues or immediate support, use our live chat feature 
-                    or call our support hotline.
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                      Start Live Chat
-                    </Button>
-                    <Button size="sm" variant="outline" className="border-green-600 text-green-600">
-                      Call Support
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                  </h3>
+                </div>
+                <p className="text-green-700 text-sm mb-4">
+                  For urgent technical issues or immediate support, contact us at{' '}
+                  <a href="tel:+15551234567" className="font-semibold hover:underline">
+                    +1 (555) 123-4567
+                  </a>
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -254,17 +296,23 @@ export default function ContactPage() {
               Our dedicated support team is ready to assist you with any questions or concerns.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                Start Live Chat
-              </Button>
-              <Button variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800">
+              <a 
+                href="mailto:info@stharoonschool.com"
+                className="inline-block bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-lg font-semibold text-center"
+              >
+                Email Us
+              </a>
+              <Link 
+                href="/faq"
+                className="inline-block border border-gray-600 text-gray-300 hover:bg-gray-800 px-8 py-3 rounded-lg font-semibold text-center"
+              >
                 Browse FAQ
-              </Button>
+              </Link>
             </div>
           </div>
         </div>
       </section>
       </div>
-    </SharedLayout>
+    </StaticLayout>
   )
 }

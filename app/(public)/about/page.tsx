@@ -1,4 +1,4 @@
-import dynamic from 'next/dynamic'
+import StaticLayout from '@/components/layout/StaticLayout'
 import { 
   Award, 
   Users, 
@@ -12,14 +12,10 @@ import {
   GraduationCap
 } from 'lucide-react'
 
-// Dynamically import components with SSR disabled
-const SharedLayout = dynamic(() => import('@/components/layout/SharedLayout'), { ssr: false })
-const Card = dynamic(() => import('@/components/ui/card').then(mod => ({ default: mod.Card })), { ssr: false })
-const CardContent = dynamic(() => import('@/components/ui/card').then(mod => ({ default: mod.CardContent })), { ssr: false })
-const Badge = dynamic(() => import('@/components/ui/badge').then(mod => ({ default: mod.Badge })), { ssr: false })
-const Avatar = dynamic(() => import('@/components/ui/avatar').then(mod => ({ default: mod.Avatar })), { ssr: false })
-const AvatarFallback = dynamic(() => import('@/components/ui/avatar').then(mod => ({ default: mod.AvatarFallback })), { ssr: false })
-const AvatarImage = dynamic(() => import('@/components/ui/avatar').then(mod => ({ default: mod.AvatarImage })), { ssr: false })
+export const metadata = {
+  title: 'About Us - St Haroon Online School',
+  description: 'Learn about our mission, vision, and commitment to providing world-class online education.',
+}
 
 const milestones = [
   {
@@ -142,7 +138,7 @@ const statistics = [
 
 export default function AboutPage() {
   return (
-    <SharedLayout>
+    <StaticLayout>
       <div className="bg-white">
         {/* Hero Section */}
       <section className="pt-24 pb-16 bg-gradient-to-br from-blue-50 to-purple-50">
@@ -166,7 +162,7 @@ export default function AboutPage() {
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-            <Card className="p-8 border-0 shadow-lg">
+            <div className="p-8 bg-white rounded-lg shadow-lg">
               <div className="flex items-center mb-6">
                 <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mr-4">
                   <Target className="w-6 h-6 text-blue-600" />
@@ -179,9 +175,9 @@ export default function AboutPage() {
                 achieve their academic and personal goals, regardless of their geographical 
                 location or economic background.
               </p>
-            </Card>
+            </div>
 
-            <Card className="p-8 border-0 shadow-lg">
+            <div className="p-8 bg-white rounded-lg shadow-lg">
               <div className="flex items-center mb-6">
                 <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mr-4">
                   <Heart className="w-6 h-6 text-purple-600" />
@@ -194,7 +190,7 @@ export default function AboutPage() {
                 every learner has access to world-class education that adapts to their 
                 unique needs and learning style.
               </p>
-            </Card>
+            </div>
           </div>
         </div>
       </section>
@@ -246,15 +242,13 @@ export default function AboutPage() {
             ].map((value, index) => {
               const Icon = value.icon
               return (
-                <Card key={index} className="p-6 text-center hover:shadow-lg transition-shadow duration-300">
-                  <CardContent className="p-0">
-                    <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <Icon className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-3">{value.title}</h3>
-                    <p className="text-gray-600">{value.description}</p>
-                  </CardContent>
-                </Card>
+                <div key={index} className="p-6 bg-white rounded-lg shadow-md text-center hover:shadow-lg transition-shadow duration-300">
+                  <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Icon className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">{value.title}</h3>
+                  <p className="text-gray-600">{value.description}</p>
+                </div>
               )
             })}
           </div>
@@ -312,17 +306,15 @@ export default function AboutPage() {
                   {/* Timeline dot */}
                   <div className="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full border-4 border-white shadow-lg"></div>
                   
-                  <Card className={`w-full max-w-md p-6 ${index % 2 === 0 ? 'mr-auto pr-8' : 'ml-auto pl-8'}`}>
-                    <CardContent className="p-0">
-                      <div className="flex items-center mb-3">
-                        <Badge className="bg-gradient-to-r from-blue-500 to-purple-500 text-white">
-                          {milestone.year}
-                        </Badge>
-                      </div>
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2">{milestone.title}</h3>
-                      <p className="text-gray-600">{milestone.description}</p>
-                    </CardContent>
-                  </Card>
+                  <div className={`w-full max-w-md p-6 bg-white rounded-lg shadow-md ${index % 2 === 0 ? 'mr-auto pr-8' : 'ml-auto pl-8'}`}>
+                    <div className="flex items-center mb-3">
+                      <span className="px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r from-blue-500 to-purple-500 text-white">
+                        {milestone.year}
+                      </span>
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">{milestone.title}</h3>
+                    <p className="text-gray-600">{milestone.description}</p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -345,22 +337,17 @@ export default function AboutPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {teamMembers.map((member, index) => (
-              <Card key={index} className="p-6 text-center hover:shadow-lg transition-shadow duration-300">
-                <CardContent className="p-0">
-                  <Avatar className="w-24 h-24 mx-auto mb-4">
-                    <AvatarImage src={member.image} alt={member.name} />
-                    <AvatarFallback className="text-xl">
-                      {member.name.split(' ').map(n => n[0]).join('')}
-                    </AvatarFallback>
-                  </Avatar>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-1">{member.name}</h3>
-                  <p className="text-blue-600 font-medium mb-3">{member.role}</p>
-                  <p className="text-gray-600 text-sm mb-3">{member.bio}</p>
-                  <Badge variant="secondary" className="text-xs">
-                    {member.credentials}
-                  </Badge>
-                </CardContent>
-              </Card>
+              <div key={index} className="p-6 bg-white rounded-lg shadow-md text-center hover:shadow-lg transition-shadow duration-300">
+                <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white text-xl font-bold">
+                  {member.name.split(' ').map(n => n[0]).join('')}
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-1">{member.name}</h3>
+                <p className="text-blue-600 font-medium mb-3">{member.role}</p>
+                <p className="text-gray-600 text-sm mb-3">{member.bio}</p>
+                <span className="inline-block px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">
+                  {member.credentials}
+                </span>
+              </div>
             ))}
           </div>
         </div>
@@ -382,16 +369,14 @@ export default function AboutPage() {
             {achievements.map((achievement, index) => {
               const Icon = achievement.icon
               return (
-                <Card key={index} className="p-6 text-center hover:shadow-lg transition-shadow duration-300">
-                  <CardContent className="p-0">
-                    <div className="w-16 h-16 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <Icon className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">{achievement.title}</h3>
-                    <p className="text-gray-600 text-sm mb-1">{achievement.organization}</p>
-                    <Badge variant="outline">{achievement.year}</Badge>
-                  </CardContent>
-                </Card>
+                <div key={index} className="p-6 bg-white rounded-lg shadow-md text-center hover:shadow-lg transition-shadow duration-300">
+                  <div className="w-16 h-16 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Icon className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{achievement.title}</h3>
+                  <p className="text-gray-600 text-sm mb-1">{achievement.organization}</p>
+                  <span className="inline-block px-3 py-1 border border-gray-300 rounded-full text-sm">{achievement.year}</span>
+                </div>
               )
             })}
           </div>
@@ -458,6 +443,6 @@ export default function AboutPage() {
         </div>
       </section>
       </div>
-    </SharedLayout>
+    </StaticLayout>
   )
 }
