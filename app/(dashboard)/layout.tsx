@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Toaster } from 'react-hot-toast'
+import ChatWidget from '@/components/chatbot/ChatWidget'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -348,6 +350,21 @@ export default function DashboardLayout({
           onClick={() => setSidebarOpen(false)}
         />
       )}
+      
+      {/* Chat Widget - Only for dashboard */}
+      <ChatWidget />
+      
+      {/* Toast Notifications */}
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#363636',
+            color: '#fff',
+          },
+        }}
+      />
     </div>
   )
 }
