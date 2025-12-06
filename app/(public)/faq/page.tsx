@@ -1,6 +1,6 @@
-import FAQContent from '@/components/public/FAQContent'
 'use client'
 
+import FAQContent from '@/components/public/FAQContent'
 import SharedLayout from '@/components/layout/SharedLayout'
 
 const faqData = {
