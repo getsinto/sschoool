@@ -1,14 +1,7 @@
 'use client'
 
-import { Metadata } from 'next'
 import Link from 'next/link'
 import { Cookie, Settings, Eye, Shield, Info, CheckCircle } from 'lucide-react'
-
-export const metadata: Metadata = {
-  title: 'Cookie Policy | EduPlatform',
-  description: 'Learn about how EduPlatform uses cookies and similar technologies. Understand what cookies we use and how to manage your preferences.',
-  keywords: 'cookie policy, cookies, tracking, privacy, data collection, education platform',
-}
 
 export default function CookiePolicyPage() {
   return (

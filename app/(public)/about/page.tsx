@@ -1,6 +1,5 @@
 'use client'
 
-import type { Metadata } from 'next'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -17,12 +16,6 @@ import {
   Trophy,
   GraduationCap
 } from 'lucide-react'
-
-export const metadata: Metadata = {
-  title: 'About Us - St Haroon English Medium Online School',
-  description: 'Learn about our mission, vision, and commitment to providing quality online education. Meet our team and discover our journey in transforming online learning.',
-  keywords: 'about us, online school, mission, vision, team, education, St Haroon',
-}
 
 const milestones = [
   {
