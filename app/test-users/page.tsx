@@ -4,6 +4,10 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
+// Prevent static generation for this test page
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default function TestUsersPage() {
   const [creating, setCreating] = useState(false)
   const [result, setResult] = useState<any>(null)
