@@ -1,3 +1,5 @@
+'use client'
+
 import SharedLayout from '@/components/layout/SharedLayout'
 import { FileText, Users, CreditCard, AlertCircle, Scale, BookOpen } from 'lucide-react'
 

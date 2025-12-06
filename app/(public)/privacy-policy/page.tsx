@@ -1,3 +1,5 @@
+'use client'
+
 import SharedLayout from '@/components/layout/SharedLayout'
 import { Shield, Lock, Eye, UserCheck, Database, Mail } from 'lucide-react'
 

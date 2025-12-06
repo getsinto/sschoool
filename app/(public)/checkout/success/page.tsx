@@ -1,3 +1,5 @@
+'use client'
+
 import { Suspense } from 'react'
 import { CheckoutSuccessContent } from '@/components/checkout/CheckoutSuccessContent'
 
