@@ -1,3 +1,5 @@
+'use client'
+
 import SharedLayout from '@/components/layout/SharedLayout'
 import SchoolHeroSlider from '@/components/shared/SchoolHeroSlider'
 import VideoSection from '@/components/shared/VideoSection'

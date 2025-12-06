@@ -1,6 +1,8 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+'use client'
+
 import SharedLayout from '@/components/layout/SharedLayout'
 import { 
   Award, 

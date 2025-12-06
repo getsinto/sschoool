@@ -1,5 +1,7 @@
 import ContactForm from '@/components/public/ContactForm'
 import { Card, CardContent } from '@/components/ui/card'
+'use client'
+
 import SharedLayout from '@/components/layout/SharedLayout'
 import { 
   Mail, 

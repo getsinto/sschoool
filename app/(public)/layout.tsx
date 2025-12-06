@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
 
+// Force dynamic rendering for all public pages to avoid serialization issues
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
+export const revalidate = 0
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://stharoonschool.com'),
