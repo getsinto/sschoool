@@ -1,6 +1,3 @@
-'use client'
-
-import { useEffect, useRef } from 'react'
 import SharedLayout from '@/components/layout/SharedLayout'
 import SchoolHeroSlider from '@/components/shared/SchoolHeroSlider'
 import VideoSection from '@/components/shared/VideoSection'
@@ -15,26 +12,6 @@ import { GraduationCap, MessageCircle, BookOpen, Star, Award, Globe, CheckCircle
 import Link from 'next/link'
 
 export default function LandingPage() {
-  const observerRef = useRef<IntersectionObserver | null>(null)
-
-  useEffect(() => {
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('animate-in')
-          }
-        })
-      },
-      { threshold: 0.1, rootMargin: '50px' }
-    )
-
-    const elements = document.querySelectorAll('.fade-in-section')
-    elements.forEach((el) => observerRef.current?.observe(el))
-
-    return () => observerRef.current?.disconnect()
-  }, [])
-
   return (
     <SharedLayout>
       <style jsx global>{`
