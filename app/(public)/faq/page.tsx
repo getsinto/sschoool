@@ -1,5 +1,8 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 import FAQContent from '@/components/public/FAQContent'
 import SharedLayout from '@/components/layout/SharedLayout'
 

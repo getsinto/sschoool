@@ -1,5 +1,8 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 import SharedLayout from '@/components/layout/SharedLayout'
 import SchoolHeroSlider from '@/components/shared/SchoolHeroSlider'
 import VideoSection from '@/components/shared/VideoSection'

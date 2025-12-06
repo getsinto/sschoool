@@ -1,5 +1,8 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 import ContactForm from '@/components/public/ContactForm'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import SharedLayout from '@/components/layout/SharedLayout'
