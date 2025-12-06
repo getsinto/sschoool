@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/hooks/useAuth'
-import SharedLayout from '@/components/layout/SharedLayout'
+import StaticLayout from '@/components/layout/StaticLayout'
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -88,7 +88,7 @@ export function LoginFormWrapper() {
   }
 
   return (
-    <SharedLayout>
+    <StaticLayout>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 relative overflow-hidden pt-20">
         <div className="absolute inset-0">
           <div className="absolute top-20 left-20 w-32 h-32 bg-blue-200/30 rounded-full blur-xl animate-pulse" />
@@ -203,6 +203,6 @@ export function LoginFormWrapper() {
           </div>
         </div>
       </div>
-    </SharedLayout>
+    </StaticLayout>
   )
 }

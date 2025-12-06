@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import SharedLayout from '@/components/layout/SharedLayout'
+import StaticLayout from '@/components/layout/StaticLayout'
 import { 
   Search, 
   Filter, 
@@ -213,7 +213,7 @@ export default function CoursesPage() {
   }
 
   return (
-    <SharedLayout>
+    <StaticLayout>
       <div className="bg-white">
       
       {/* Hero Section */}
@@ -505,6 +505,6 @@ export default function CoursesPage() {
         </div>
       </section>
       </div>
-    </SharedLayout>
+    </StaticLayout>
   )
 }

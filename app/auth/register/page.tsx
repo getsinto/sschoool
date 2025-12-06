@@ -15,7 +15,7 @@ import { requiresGdprConsent, requiresCoppaConsent } from '@/lib/registration/va
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle, Save } from 'lucide-react'
 import Link from 'next/link'
-import SharedLayout from '@/components/layout/SharedLayout'
+import StaticLayout from '@/components/layout/StaticLayout'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -158,7 +158,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <SharedLayout>
+    <StaticLayout>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 relative overflow-hidden pt-20">
         {/* Background Elements */}
         <div className="absolute inset-0">
@@ -270,6 +270,6 @@ export default function RegisterPage() {
           </div>
         </div>
       </div>
-    </SharedLayout>
+    </StaticLayout>
   )
 }

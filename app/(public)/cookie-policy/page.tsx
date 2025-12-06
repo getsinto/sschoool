@@ -1,11 +1,11 @@
-'use client'
-
 import Link from 'next/link'
+import StaticLayout from '@/components/layout/StaticLayout'
 import { Cookie, Settings, Eye, Shield, Info, CheckCircle } from 'lucide-react'
 
 export default function CookiePolicyPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <StaticLayout>
+      <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-gradient-to-r from-orange-600 to-red-600 text-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -443,6 +443,7 @@ export default function CookiePolicyPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </StaticLayout>
   )
 }

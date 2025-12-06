@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/hooks/useAuth'
-import SharedLayout from '@/components/layout/SharedLayout'
+import StaticLayout from '@/components/layout/StaticLayout'
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -49,7 +49,7 @@ export default function ForgotPasswordPage() {
 
   if (isSuccess) {
     return (
-      <SharedLayout>
+      <StaticLayout>
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4 py-20">
           <Card className="w-full max-w-md shadow-2xl border-0">
           <CardHeader className="text-center">
@@ -102,12 +102,12 @@ export default function ForgotPasswordPage() {
           </CardContent>
         </Card>
         </div>
-      </SharedLayout>
+      </StaticLayout>
     )
   }
 
   return (
-    <SharedLayout>
+    <StaticLayout>
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4 py-20">
         <Card className="w-full max-w-md shadow-2xl border-0">
         <CardHeader className="space-y-1">
@@ -171,6 +171,6 @@ export default function ForgotPasswordPage() {
         </CardContent>
       </Card>
       </div>
-    </SharedLayout>
+    </StaticLayout>
   )
 }

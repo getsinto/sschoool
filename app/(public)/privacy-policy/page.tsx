@@ -1,13 +1,9 @@
-'use client'
-
-import SharedLayout from '@/components/layout/SharedLayout'
+import StaticLayout from '@/components/layout/StaticLayout'
 import { Shield, Lock, Eye, UserCheck, Database, Mail } from 'lucide-react'
 
 export default function PrivacyPolicyPage() {
-  const currentYear = new Date().getFullYear()
-
   return (
-    <SharedLayout>
+    <StaticLayout>
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-20">
         <div className="container mx-auto px-4 max-w-4xl">
           {/* Header */}
@@ -182,6 +178,6 @@ export default function PrivacyPolicyPage() {
           </div>
         </div>
       </div>
-    </SharedLayout>
+    </StaticLayout>
   )
 }

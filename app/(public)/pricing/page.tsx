@@ -1,12 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import type { Metadata } from 'next'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import Header from '@/components/landing/Header'
+import StaticLayout from '@/components/layout/StaticLayout'
 import { 
   Check, 
   X, 
@@ -293,8 +292,8 @@ export default function PricingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <Header />
+    <StaticLayout>
+      <div className="min-h-screen bg-white">
       
       {/* Hero Section */}
       <section className="pt-24 pb-16 bg-gradient-to-br from-blue-50 to-purple-50">
@@ -574,6 +573,7 @@ export default function PricingPage() {
           </div>
         </div>
       </section>
-    </div>
+      </div>
+    </StaticLayout>
   )
 }

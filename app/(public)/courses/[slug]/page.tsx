@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import SharedLayout from '@/components/layout/SharedLayout'
+import StaticLayout from '@/components/layout/StaticLayout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -248,17 +248,17 @@ export default function CourseDetailPage() {
 
   if (loading) {
     return (
-      <SharedLayout>
+      <StaticLayout>
         <div className="min-h-screen flex items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
-      </SharedLayout>
+      </StaticLayout>
     )
   }
 
   if (!course) {
     return (
-      <SharedLayout>
+      <StaticLayout>
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Course not found</h2>
@@ -268,12 +268,12 @@ export default function CourseDetailPage() {
             </Button>
           </div>
         </div>
-      </SharedLayout>
+      </StaticLayout>
     )
   }
 
   return (
-    <SharedLayout>
+    <StaticLayout>
       <div className="bg-white">
         {/* Hero Section */}
         <section className="pt-24 pb-12 bg-gradient-to-br from-blue-50 to-purple-50">
@@ -588,6 +588,6 @@ export default function CourseDetailPage() {
           </div>
         </section>
       </div>
-    </SharedLayout>
+    </StaticLayout>
   )
 }
