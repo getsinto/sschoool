@@ -1,3 +1,5 @@
+'use client'
+
 import StaticLayout from '@/components/layout/StaticLayout'
 import { FileText, Users, CreditCard, AlertCircle, Scale, BookOpen } from 'lucide-react'
 

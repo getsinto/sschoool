@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 import StaticLayout from '@/components/layout/StaticLayout'
 import { Cookie, Settings, Eye, Shield, Info, CheckCircle } from 'lucide-react'
