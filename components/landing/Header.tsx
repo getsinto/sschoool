@@ -48,12 +48,13 @@ export default function Header() {
           ? 'bg-white/95 backdrop-blur-xl shadow-2xl border-b border-gray-200/50'
           : 'bg-gray-900/90 backdrop-blur-xl shadow-2xl border-b border-gray-700/30'
       )}
+      suppressHydrationWarning
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-18 lg:h-22">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" suppressHydrationWarning>
+        <div className="flex items-center justify-between h-18 lg:h-22" suppressHydrationWarning>
           {/* Logo matching Footer */}
-          <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-3 group">
+          <div className="flex items-center" suppressHydrationWarning>
+            <Link href="/" className="flex items-center space-x-3 group" suppressHydrationWarning>
               <div className="relative">
                 <div className={cn(
                   "w-12 h-12 bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg transition-all duration-300 group-hover:scale-105",
@@ -81,7 +82,7 @@ export default function Header() {
           </div>
 
           {/* Enhanced Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-1">
+          <nav className="hidden lg:flex items-center space-x-1" suppressHydrationWarning>
             {navigation.map((item) => (
               <Link
                 key={item.name}
@@ -92,6 +93,7 @@ export default function Header() {
                     ? "text-gray-700 hover:text-blue-600 hover:bg-blue-50" 
                     : "text-gray-100 hover:text-white hover:bg-white/10"
                 )}
+                suppressHydrationWarning
               >
                 {item.name}
                 <span className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 rounded-full"></span>
@@ -100,8 +102,8 @@ export default function Header() {
           </nav>
 
           {/* Enhanced Desktop Auth Buttons */}
-          <div className="hidden lg:flex items-center space-x-3">
-            <Link href="/auth/login">
+          <div className="hidden lg:flex items-center space-x-3" suppressHydrationWarning>
+            <Link href="/auth/login" suppressHydrationWarning>
               <Button 
                 variant="outline" 
                 className={cn(
@@ -114,7 +116,7 @@ export default function Header() {
                 Login
               </Button>
             </Link>
-            <Link href="/auth/register">
+            <Link href="/auth/register" suppressHydrationWarning>
               <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-medium text-white">
                 Register
               </Button>
