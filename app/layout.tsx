@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   description: 'Quality online education for students worldwide',
 }
 
-// CRITICAL Phase 28: Force ALL routes to render dynamically
+// CRITICAL Phase 32: Force ALL routes to render dynamically
 // This prevents static generation at build time which causes serialization errors
 export const dynamic = 'force-dynamic'
 export const dynamicParams = true
@@ -26,8 +26,6 @@ export const revalidate = 0
 export const fetchCache = 'force-no-store'
 export const runtime = 'nodejs'
 export const preferredRegion = 'auto'
-
-import ClientLayout from '@/components/ClientLayout'
 
 export default function RootLayout({
   children,
@@ -37,7 +35,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${poppins.variable} font-sans`}>
-        <ClientLayout>{children}</ClientLayout>
+        {children}
       </body>
     </html>
   )
