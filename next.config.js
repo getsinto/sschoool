@@ -8,8 +8,9 @@ const nextConfig = {
       allowedOrigins: ['localhost:3000', 'stharoonschool.com'],
     },
   },
-  // Increase static generation timeout
-  staticPageGenerationTimeout: 180,
+  // CRITICAL FIX: Disable static page generation to prevent serialization errors
+  // This forces all pages to be rendered dynamically at runtime
+  output: 'standalone',
   // Skip static generation for dashboard pages
   skipTrailingSlashRedirect: true,
   images: {
