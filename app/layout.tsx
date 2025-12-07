@@ -16,6 +16,13 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: 'St Haroon English Medium Online School',
   description: 'Quality online education for students worldwide',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+    apple: '/apple-touch-icon.png',
+  },
 }
 
 // CRITICAL Phase 32: Force ALL routes to render dynamically
