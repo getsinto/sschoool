@@ -1,3 +1,5 @@
+'use client'
+
 import StaticLayout from '@/components/layout/StaticLayout'
 import { 
   Award, 

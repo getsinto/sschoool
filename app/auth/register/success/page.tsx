@@ -1,3 +1,5 @@
+'use client'
+
 import { Suspense } from 'react'
 import { RegisterSuccessWrapper } from '@/components/auth/RegisterSuccessWrapper'
 import StaticLayout from '@/components/layout/StaticLayout'
