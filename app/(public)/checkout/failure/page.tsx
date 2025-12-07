@@ -1,4 +1,4 @@
-import { StaticLayout } from '@/components/layout/StaticLayout'
+import StaticLayout from '@/components/layout/StaticLayout'
 import { CheckoutFailureClient } from '@/components/checkout/CheckoutFailureClient'
 
 export const dynamic = 'force-dynamic'
