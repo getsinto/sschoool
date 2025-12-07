@@ -1,5 +1,4 @@
-'use client'
-
+import type { Metadata } from 'next'
 import { Inter, Poppins } from 'next/font/google'
 import './globals.css'
 
@@ -14,10 +13,19 @@ const poppins = Poppins({
   variable: '--font-poppins',
 })
 
-// CRITICAL: Root layout must be a Client Component to prevent
-// serialization errors when Server Component children contain event handlers
-// Force dynamic rendering to prevent build-time static generation
+export const metadata: Metadata = {
+  title: 'St Haroon English Medium Online School',
+  description: 'Quality online education for students worldwide',
+}
+
+// CRITICAL Phase 28: Force ALL routes to render dynamically
+// This prevents static generation at build time which causes serialization errors
 export const dynamic = 'force-dynamic'
+export const dynamicParams = true
+export const revalidate = 0
+export const fetchCache = 'force-no-store'
+export const runtime = 'nodejs'
+export const preferredRegion = 'auto'
 
 export default function RootLayout({
   children,

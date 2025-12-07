@@ -8,8 +8,7 @@ const nextConfig = {
       allowedOrigins: ['localhost:3000', 'stharoonschool.com'],
     },
   },
-  // CRITICAL FIX: Disable static page generation to prevent serialization errors
-  // This forces all pages to be rendered dynamically at runtime
+  // CRITICAL FIX Phase 28: Force standalone output for serverless deployment
   output: 'standalone',
   // Skip static generation for dashboard pages
   skipTrailingSlashRedirect: true,
