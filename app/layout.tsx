@@ -27,6 +27,8 @@ export const fetchCache = 'force-no-store'
 export const runtime = 'nodejs'
 export const preferredRegion = 'auto'
 
+import ClientLayout from '@/components/ClientLayout'
+
 export default function RootLayout({
   children,
 }: {
@@ -35,7 +37,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${poppins.variable} font-sans`}>
-        {children}
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   )
