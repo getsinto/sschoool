@@ -18,6 +18,11 @@ export const metadata: Metadata = {
   description: 'Quality online education for students worldwide',
 }
 
+// CRITICAL: Force all pages to render dynamically at runtime
+// This prevents Next.js from trying to statically generate pages at build time
+// which causes serialization errors with Client Components containing event handlers
+export const dynamic = 'force-dynamic'
+
 export default function RootLayout({
   children,
 }: {
