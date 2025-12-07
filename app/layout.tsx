@@ -1,4 +1,5 @@
-import type { Metadata } from 'next'
+'use client'
+
 import { Inter, Poppins } from 'next/font/google'
 import './globals.css'
 
@@ -13,14 +14,9 @@ const poppins = Poppins({
   variable: '--font-poppins',
 })
 
-export const metadata: Metadata = {
-  title: 'St Haroon English Medium Online School',
-  description: 'Quality online education for students worldwide',
-}
-
-// CRITICAL: Force all pages to render dynamically at runtime
-// This prevents Next.js from trying to statically generate pages at build time
-// which causes serialization errors with Client Components containing event handlers
+// CRITICAL: Root layout must be a Client Component to prevent
+// serialization errors when Server Component children contain event handlers
+// Force dynamic rendering to prevent build-time static generation
 export const dynamic = 'force-dynamic'
 
 export default function RootLayout({
