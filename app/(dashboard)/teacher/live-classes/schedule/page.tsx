@@ -1,6 +1,15 @@
+'use client'
+
 // Redirect to create page (schedule is an alias for create)
-import { redirect } from 'next/navigation'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function ScheduleLiveClassPage() {
-  redirect('/teacher/live-classes/create')
+  const router = useRouter()
+  
+  useEffect(() => {
+    router.push('/teacher/live-classes/create')
+  }, [router])
+  
+  return null
 }
