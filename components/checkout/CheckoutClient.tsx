@@ -1,23 +1,8 @@
-import { StaticLayout } from '@/components/layout/StaticLayout'
-import { CheckoutClient } from '@/components/checkout/CheckoutClient'
-
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
-
-export default function CheckoutPage({ params }: { params: { courseId: string } }) {
-  return (
-    <StaticLayout>
-      <CheckoutClient courseId={params.courseId} />
-    </StaticLayout>
-  )
-}
-
-/*
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import { CreditCard, Shield, Check, Tag } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Shield, Check } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -25,8 +10,11 @@ import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 
-function CheckoutPageOld() {
-  const params = useParams()
+interface CheckoutClientProps {
+  courseId: string
+}
+
+export function CheckoutClient({ courseId }: CheckoutClientProps) {
   const router = useRouter()
   const [course, setCourse] = useState<any>(null)
   const [couponCode, setCouponCode] = useState('')
@@ -36,14 +24,12 @@ function CheckoutPageOld() {
   const [isProcessing, setIsProcessing] = useState(false)
 
   useEffect(() => {
-    // Fetch course data
     fetchCourseData()
-  }, [params.courseId])
+  }, [courseId])
 
   const fetchCourseData = async () => {
-    // Mock data for now
     setCourse({
-      id: params.courseId,
+      id: courseId,
       title: 'Advanced React Development',
       price: 199,
       originalPrice: 299,
@@ -58,7 +44,7 @@ function CheckoutPageOld() {
       const response = await fetch('/api/payments/validate-coupon', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: couponCode, courseId: params.courseId })
+        body: JSON.stringify({ code: couponCode, courseId })
       })
       
       const data = await response.json()
@@ -88,7 +74,7 @@ function CheckoutPageOld() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          courseId: params.courseId,
+          courseId,
           paymentMethod,
           couponCode: appliedCoupon?.code,
           amount: calculateTotal()
@@ -112,14 +98,12 @@ function CheckoutPageOld() {
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Order Summary */}
           <div className="lg:col-span-2">
             <Card>
               <CardHeader>
                 <CardTitle>Checkout</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Payment Method */}
                 <div>
                   <Label>Payment Method</Label>
                   <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
@@ -138,7 +122,6 @@ function CheckoutPageOld() {
                   </RadioGroup>
                 </div>
 
-                {/* Coupon Code */}
                 <div>
                   <Label>Coupon Code</Label>
                   <div className="flex gap-2">
@@ -158,7 +141,6 @@ function CheckoutPageOld() {
                   )}
                 </div>
 
-                {/* Terms */}
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="terms"
@@ -181,7 +163,6 @@ function CheckoutPageOld() {
             </Card>
           </div>
 
-          {/* Price Summary */}
           <div>
             <Card>
               <CardHeader>
@@ -219,4 +200,3 @@ function CheckoutPageOld() {
     </div>
   )
 }
-*/
