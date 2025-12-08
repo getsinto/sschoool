@@ -23,7 +23,7 @@ export async function GET() {
       .from('users')
       .select('role')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
 
     if (dbError) {
       console.error('Error fetching user role:', dbError)
@@ -33,8 +33,16 @@ export async function GET() {
       )
     }
 
+    if (!userData) {
+      console.error('User profile not found for user:', user.id)
+      return NextResponse.json(
+        { error: 'User profile not found' },
+        { status: 404 }
+      )
+    }
+
     return NextResponse.json({
-      role: userData?.role || null,
+      role: userData.role || null,
       userId: user.id
     })
   } catch (error) {

@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 // GET - Get teacher's custom subject requests
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
 // POST - Request custom subject
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {

@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
  */
 async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     const metadata = paymentIntent.metadata
 
     // Check if this is an installment payment
@@ -167,7 +167,7 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
  */
 async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     const metadata = paymentIntent.metadata
 
     // Check if this is an installment payment
@@ -211,7 +211,7 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
  */
 async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     const metadata = subscription.metadata
 
     // Update enrollment with subscription info
@@ -238,7 +238,7 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
  */
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     // Find enrollment by subscription ID
     const { data: enrollment } = await supabase
@@ -282,7 +282,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
  */
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     // Find enrollment by subscription ID
     const { data: enrollment } = await supabase
@@ -318,7 +318,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
  */
 async function handleTrialWillEnd(subscription: Stripe.Subscription) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     // Find enrollment by subscription ID
     const { data: enrollment } = await supabase
@@ -360,7 +360,7 @@ async function handleTrialWillEnd(subscription: Stripe.Subscription) {
  */
 async function handleInvoicePaid(invoice: Stripe.Invoice) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     // Get subscription from invoice
     if (invoice.subscription) {
@@ -403,7 +403,7 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
  */
 async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     // Get subscription from invoice
     if (invoice.subscription) {

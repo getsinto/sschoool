@@ -5,9 +5,9 @@ import { geminiChatbot } from '@/lib/chatbot/gemini'
 
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = cookies()
-    const supabase = createClient()
+    const supabase = await createClient()
     
+    // Allow both authenticated and guest users for chatbot
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     const { message, conversationId, context } = await request.json()

@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     }
     
     const event = JSON.parse(body);
-    const supabase = createClient();
+    const supabase = await createClient();
     
     // Handle different event types
     switch (event.event) {

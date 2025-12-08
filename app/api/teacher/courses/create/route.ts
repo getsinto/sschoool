@@ -53,7 +53,7 @@ function createForbiddenResponse(method: string = 'POST') {
  */
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     
     // Get current user for logging purposes
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     
     const { data: { user } } = await supabase.auth.getUser();
     
