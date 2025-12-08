@@ -11,23 +11,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import UserTable from '@/components/admin/users/UserTable'
 import UserFilters from '@/components/admin/users/UserFilters'
 import BulkActionModal from '@/components/admin/users/BulkActionModal'
+import CreateUserModal from '@/components/admin/users/CreateUserModal'
 import { 
   Users, 
   UserPlus, 
   Download, 
-  Filter,
   Search,
   RefreshCw,
-  ChevronDown
 } from 'lucide-react'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 
 interface User {
   id: string
@@ -104,6 +95,7 @@ export default function UsersPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [showBulkModal, setShowBulkModal] = useState(false)
+  const [showCreateModal, setShowCreateModal] = useState(false)
   const [bulkAction, setBulkAction] = useState<'suspend' | 'delete' | 'export'>('suspend')
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
@@ -193,40 +185,10 @@ export default function UsersPage() {
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button>
-                <UserPlus className="w-4 h-4 mr-2" />
-                Add User
-                <ChevronDown className="w-4 h-4 ml-2" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Select User Type</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => router.push('/register?role=student')}>
-                <Users className="w-4 h-4 mr-2" />
-                Add Student
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push('/register?role=teacher')}>
-                <Users className="w-4 h-4 mr-2" />
-                Add Teacher
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push('/register?role=parent')}>
-                <Users className="w-4 h-4 mr-2" />
-                Add Parent
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push('/register?role=spoken_english')}>
-                <Users className="w-4 h-4 mr-2" />
-                Add Spoken English Student
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => router.push('/register?role=admin')}>
-                <UserPlus className="w-4 h-4 mr-2" />
-                Add Admin
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Button onClick={() => setShowCreateModal(true)}>
+            <UserPlus className="w-4 h-4 mr-2" />
+            Add User
+          </Button>
         </div>
       </div>
 
@@ -434,6 +396,15 @@ export default function UsersPage() {
           console.log(`Bulk ${bulkAction}:`, selectedUsers)
           setShowBulkModal(false)
           setSelectedUsers([])
+        }}
+      />
+
+      {/* Create User Modal */}
+      <CreateUserModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={() => {
+          handleRefresh()
         }}
       />
     </div>
