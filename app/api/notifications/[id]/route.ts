@@ -6,11 +6,12 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
+      console.error('Auth error in GET /api/notifications/[id]:', authError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -20,10 +21,11 @@ export async function GET(
       .select('*')
       .eq('id', params.id)
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error('Database error in GET /api/notifications/[id]:', error);
+      return NextResponse.json({ error: 'Failed to fetch notification' }, { status: 500 });
     }
 
     if (!notification) {
@@ -41,11 +43,12 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
+      console.error('Auth error in PATCH /api/notifications/[id]:', authError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -61,10 +64,15 @@ export async function PATCH(
       .eq('id', params.id)
       .eq('user_id', user.id)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error('Database error in PATCH /api/notifications/[id]:', error);
+      return NextResponse.json({ error: 'Failed to update notification' }, { status: 500 });
+    }
+
+    if (!notification) {
+      return NextResponse.json({ error: 'Notification not found' }, { status: 404 });
     }
 
     return NextResponse.json(notification);
@@ -78,11 +86,12 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
+      console.error('Auth error in DELETE /api/notifications/[id]:', authError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -94,7 +103,8 @@ export async function DELETE(
       .eq('user_id', user.id);
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error('Database error in DELETE /api/notifications/[id]:', error);
+      return NextResponse.json({ error: 'Failed to delete notification' }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });

@@ -5,11 +5,12 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     
     if (userError || !user) {
+      console.error('Auth error in GET /api/notifications/stats:', userError)
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

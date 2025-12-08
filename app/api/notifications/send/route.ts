@@ -5,10 +5,11 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
+      console.error('Auth error in POST /api/notifications/send:', authError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -49,10 +50,17 @@ export async function POST(request: NextRequest) {
         read: false
       })
       .select()
-      .single();
+      .maybeSingle();
 
-    if (insertError || !notification) {
+    if (insertError) {
       console.error('Error creating notification:', insertError);
+      return NextResponse.json({ 
+        error: 'Failed to create notification' 
+      }, { status: 500 });
+    }
+
+    if (!notification) {
+      console.error('Notification was not created (no data returned)');
       return NextResponse.json({ 
         error: 'Failed to create notification' 
       }, { status: 500 });
