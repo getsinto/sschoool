@@ -122,8 +122,23 @@ export default function ChatInterface({ onClose, onMinimize, onNewMessage }: Cha
   }
 
   const handleEscalate = () => {
-    // Navigate to support ticket creation
-    window.location.href = '/support/create'
+    // Check if user is authenticated by checking for auth session
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/user/profile')
+        if (response.ok) {
+          // User is authenticated, navigate to support
+          window.location.href = '/support/create'
+        } else {
+          // User is not authenticated, navigate to contact page
+          window.location.href = '/contact'
+        }
+      } catch (error) {
+        // On error, navigate to contact page
+        window.location.href = '/contact'
+      }
+    }
+    checkAuth()
   }
 
   return (

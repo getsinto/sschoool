@@ -2,6 +2,7 @@
 
 import Header from '@/components/landing/Header'
 import Footer from '@/components/shared/Footer'
+import ChatWidget from '@/components/chatbot/ChatWidget'
 
 interface SharedLayoutProps {
   children: React.ReactNode
@@ -15,6 +16,9 @@ export default function SharedLayout({ children }: SharedLayoutProps) {
         {children}
       </main>
       <Footer />
+      
+      {/* Chat Widget for public pages */}
+      <ChatWidget />
     </div>
   )
 }
