@@ -204,24 +204,24 @@ export default function UsersPage() {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>Select User Type</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => router.push('/admin/users/create?type=student')}>
+              <DropdownMenuItem onClick={() => router.push('/register?role=student')}>
                 <Users className="w-4 h-4 mr-2" />
                 Add Student
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push('/admin/users/create?type=teacher')}>
+              <DropdownMenuItem onClick={() => router.push('/register?role=teacher')}>
                 <Users className="w-4 h-4 mr-2" />
                 Add Teacher
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push('/admin/users/create?type=parent')}>
+              <DropdownMenuItem onClick={() => router.push('/register?role=parent')}>
                 <Users className="w-4 h-4 mr-2" />
                 Add Parent
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push('/admin/users/create?type=spoken_english')}>
+              <DropdownMenuItem onClick={() => router.push('/register?role=spoken_english')}>
                 <Users className="w-4 h-4 mr-2" />
                 Add Spoken English Student
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => router.push('/admin/users/create?type=admin')}>
+              <DropdownMenuItem onClick={() => router.push('/register?role=admin')}>
                 <UserPlus className="w-4 h-4 mr-2" />
                 Add Admin
               </DropdownMenuItem>

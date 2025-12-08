@@ -77,6 +77,10 @@ export function EscalationFlow({
           title: 'Support ticket created',
           description: `Your ticket #${data.ticket.ticket_number} has been created. Our team will respond soon.`
         })
+        
+        // Redirect to the support page to view the ticket
+        window.location.href = '/support'
+        
         onComplete?.(data.ticket.id)
       } else {
         throw new Error('Failed to create ticket')
