@@ -19,7 +19,9 @@ export class GeminiChatbot {
 
   constructor() {
     if (genAI) {
-      this.model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+      // Use gemini-1.5-flash for better availability and performance
+      // gemini-pro is deprecated, use gemini-1.5-pro or gemini-1.5-flash
+      this.model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     }
   }
 
