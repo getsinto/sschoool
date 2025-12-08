@@ -6,10 +6,11 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    if (!user) {
+    if (authError || !user) {
+      console.error('Auth error:', authError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -20,7 +21,7 @@ export async function GET(
       .from('courses')
       .select('instructor_id')
       .eq('id', id)
-      .single()
+      .maybeSingle()
 
     if (!course || (course.instructor_id !== user.id && user.role !== 'admin')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
@@ -53,10 +54,11 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    if (!user) {
+    if (authError || !user) {
+      console.error('Auth error:', authError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -68,7 +70,7 @@ export async function POST(
       .from('courses')
       .select('instructor_id')
       .eq('id', id)
-      .single()
+      .maybeSingle()
 
     if (!course || (course.instructor_id !== user.id && user.role !== 'admin')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })

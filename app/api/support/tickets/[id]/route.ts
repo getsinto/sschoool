@@ -27,9 +27,14 @@ export async function GET(
       `)
       .eq('id', ticketId)
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
-    if (ticketError || !ticket) {
+    if (ticketError) {
+      console.error('Database error fetching ticket:', ticketError);
+      return NextResponse.json({ error: 'Database error' }, { status: 500 });
+    }
+    
+    if (!ticket) {
       return NextResponse.json({ error: 'Ticket not found' }, { status: 404 });
     }
 
@@ -114,11 +119,16 @@ export async function PATCH(
     const { status } = body;
 
     // Verify ticket ownership
-    const { data: ticket } = await supabase
+    const { data: ticket, error: verifyError } = await supabase
       .from('support_tickets')
       .select('user_id')
       .eq('id', ticketId)
-      .single();
+      .maybeSingle();
+
+    if (verifyError) {
+      console.error('Database error verifying ticket:', verifyError);
+      return NextResponse.json({ error: 'Database error' }, { status: 500 });
+    }
 
     if (!ticket || ticket.user_id !== user.id) {
       return NextResponse.json({ error: 'Ticket not found' }, { status: 404 });
@@ -130,11 +140,15 @@ export async function PATCH(
       .update({ status, updated_at: new Date().toISOString() })
       .eq('id', ticketId)
       .select()
-      .single();
+      .maybeSingle();
 
     if (updateError) {
       console.error('Error updating ticket:', updateError);
       return NextResponse.json({ error: 'Failed to update ticket' }, { status: 500 });
+    }
+    
+    if (!updatedTicket) {
+      return NextResponse.json({ error: 'Ticket not found' }, { status: 404 });
     }
 
     return NextResponse.json({ ticket: updatedTicket });

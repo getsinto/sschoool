@@ -1,18 +1,18 @@
 # Implementation Plan
 
-- [ ] 1. Fix critical /api/notifications routes
+- [x] 1. Fix critical /api/notifications routes
   - Fix missing await on createClient() calls
   - Add proper auth guards
   - Replace single() with maybeSingle() where appropriate
   - _Requirements: 1.1, 2.1, 3.1_
 
-- [ ] 2. Create reusable auth guard utility
+- [x] 2. Create reusable auth guard utility
   - Create lib/api/auth-guard.ts with requireAuth function
   - Add proper error handling and logging
   - Export TypeScript types for auth results
   - _Requirements: 2.1, 2.2, 2.3_
 
-- [ ] 3. Create safe query utilities
+- [x] 3. Create safe query utilities
   - Create lib/api/safe-queries.ts with findOne and requireOne functions
   - Add proper error handling for PGRST116
   - Add TypeScript generics for type safety

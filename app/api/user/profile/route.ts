@@ -22,13 +22,20 @@ export async function GET(request: NextRequest) {
       .from('users')
       .select('*')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
     
     if (profileError) {
       console.error('Profile fetch error:', profileError)
       return NextResponse.json(
-        { error: profileError.message },
+        { error: 'Database error' },
         { status: 500 }
+      )
+    }
+    
+    if (!profile) {
+      return NextResponse.json(
+        { error: 'Profile not found' },
+        { status: 404 }
       )
     }
     
@@ -41,21 +48,21 @@ export async function GET(request: NextRequest) {
         .from('teachers')
         .select('*')
         .eq('user_id', user.id)
-        .single()
+        .maybeSingle()
       roleProfile = data
     } else if (userType === 'student') {
       const { data } = await supabase
         .from('students')
         .select('*')
         .eq('user_id', user.id)
-        .single()
+        .maybeSingle()
       roleProfile = data
     } else if (userType === 'parent') {
       const { data } = await supabase
         .from('parents')
         .select('*')
         .eq('user_id', user.id)
-        .single()
+        .maybeSingle()
       roleProfile = data
     }
     

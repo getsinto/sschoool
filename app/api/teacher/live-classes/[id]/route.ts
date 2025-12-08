@@ -7,13 +7,14 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     const classId = params.id
 
     // Get the current user
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     
     if (userError || !user) {
+      console.error('Auth error:', userError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -26,9 +27,14 @@ export async function GET(
         teachers(id, user_id, users(full_name, email))
       `)
       .eq('id', classId)
-      .single()
+      .maybeSingle()
 
-    if (classError || !liveClass) {
+    if (classError) {
+      console.error('Database error fetching class:', classError);
+      return NextResponse.json({ error: 'Database error' }, { status: 500 })
+    }
+    
+    if (!liveClass) {
       return NextResponse.json({ error: 'Class not found' }, { status: 404 })
     }
 
@@ -44,7 +50,7 @@ export async function GET(
         .select('id')
         .eq('course_id', liveClass.course_id)
         .eq('user_id', user.id)
-        .single()
+        .maybeSingle()
       
       isEnrolled = !!enrollment
     }
@@ -96,7 +102,7 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     const classId = params.id
     const body = await request.json()
 
@@ -104,6 +110,7 @@ export async function PATCH(
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     
     if (userError || !user) {
+      console.error('Auth error:', userError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -112,9 +119,14 @@ export async function PATCH(
       .from('live_classes')
       .select('*, teachers(user_id)')
       .eq('id', classId)
-      .single()
+      .maybeSingle()
 
-    if (fetchError || !existingClass) {
+    if (fetchError) {
+      console.error('Database error fetching class:', fetchError);
+      return NextResponse.json({ error: 'Database error' }, { status: 500 })
+    }
+    
+    if (!existingClass) {
       return NextResponse.json({ error: 'Class not found' }, { status: 404 })
     }
 
@@ -175,10 +187,15 @@ export async function PATCH(
       .update(updateData)
       .eq('id', classId)
       .select()
-      .single()
+      .maybeSingle()
 
     if (updateError) {
-      throw updateError
+      console.error('Database error updating class:', updateError);
+      return NextResponse.json({ error: 'Failed to update class' }, { status: 500 })
+    }
+    
+    if (!updatedClass) {
+      return NextResponse.json({ error: 'Class not found' }, { status: 404 })
     }
 
     // Notify students if rescheduled
@@ -225,13 +242,14 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     const classId = params.id
 
     // Get the current user
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     
     if (userError || !user) {
+      console.error('Auth error:', userError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -240,9 +258,14 @@ export async function DELETE(
       .from('live_classes')
       .select('*, teachers(user_id)')
       .eq('id', classId)
-      .single()
+      .maybeSingle()
 
-    if (fetchError || !existingClass) {
+    if (fetchError) {
+      console.error('Database error fetching class:', fetchError);
+      return NextResponse.json({ error: 'Database error' }, { status: 500 })
+    }
+    
+    if (!existingClass) {
       return NextResponse.json({ error: 'Class not found' }, { status: 404 })
     }
 

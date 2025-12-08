@@ -6,10 +6,11 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
+      console.error('Auth error:', authError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -18,7 +19,7 @@ export async function GET(
       .from('users')
       .select('role')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
 
     if (!profile || profile.role !== 'student') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -39,9 +40,14 @@ export async function GET(
         )
       `)
       .eq('id', classId)
-      .single();
+      .maybeSingle();
 
-    if (error || !liveClass) {
+    if (error) {
+      console.error('Database error fetching class:', error);
+      return NextResponse.json({ error: 'Database error' }, { status: 500 });
+    }
+    
+    if (!liveClass) {
       return NextResponse.json({ error: 'Class not found' }, { status: 404 });
     }
 
@@ -52,7 +58,7 @@ export async function GET(
       .eq('user_id', user.id)
       .eq('course_id', liveClass.course_id)
       .eq('status', 'active')
-      .single();
+      .maybeSingle();
 
     if (!enrollment) {
       return NextResponse.json({ error: 'Not enrolled in this course' }, { status: 403 });

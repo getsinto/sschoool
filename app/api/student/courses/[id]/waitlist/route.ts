@@ -6,10 +6,11 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    if (!user) {
+    if (authError || !user) {
+      console.error('Auth error:', authError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -21,9 +22,14 @@ export async function POST(
       .from('courses')
       .select('*')
       .eq('id', id)
-      .single()
+      .maybeSingle()
 
-    if (courseError || !course) {
+    if (courseError) {
+      console.error('Database error fetching course:', courseError);
+      return NextResponse.json({ error: 'Database error' }, { status: 500 })
+    }
+    
+    if (!course) {
       return NextResponse.json({ error: 'Course not found' }, { status: 404 })
     }
 
@@ -89,10 +95,15 @@ export async function POST(
         status: 'waiting'
       })
       .select()
-      .single()
+      .maybeSingle()
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 })
+      console.error('Database error adding to waitlist:', error);
+      return NextResponse.json({ error: 'Failed to join waitlist' }, { status: 500 })
+    }
+    
+    if (!waitlistEntry) {
+      return NextResponse.json({ error: 'Failed to create waitlist entry' }, { status: 500 })
     }
 
     // TODO: Send notification email
@@ -113,10 +124,11 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    if (!user) {
+    if (authError || !user) {
+      console.error('Auth error:', authError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -150,10 +162,11 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    if (!user) {
+    if (authError || !user) {
+      console.error('Auth error:', authError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

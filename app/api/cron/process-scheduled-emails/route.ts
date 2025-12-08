@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = createClient();
+    const supabase = await createClient();
     const now = new Date().toISOString();
 
     // Find scheduled emails that are ready to send

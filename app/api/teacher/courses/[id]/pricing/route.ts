@@ -6,10 +6,11 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    if (!user) {
+    if (authError || !user) {
+      console.error('Auth error:', authError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -20,9 +21,14 @@ export async function GET(
       .from('courses')
       .select('*')
       .eq('id', id)
-      .single()
+      .maybeSingle()
 
-    if (error || !course) {
+    if (error) {
+      console.error('Database error fetching course:', error);
+      return NextResponse.json({ error: 'Database error' }, { status: 500 })
+    }
+    
+    if (!course) {
       return NextResponse.json({ error: 'Course not found' }, { status: 404 })
     }
 
@@ -73,10 +79,11 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    if (!user) {
+    if (authError || !user) {
+      console.error('Auth error:', authError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -88,9 +95,14 @@ export async function PATCH(
       .from('courses')
       .select('*')
       .eq('id', id)
-      .single()
+      .maybeSingle()
 
-    if (fetchError || !course) {
+    if (fetchError) {
+      console.error('Database error fetching course:', fetchError);
+      return NextResponse.json({ error: 'Database error' }, { status: 500 })
+    }
+    
+    if (!course) {
       return NextResponse.json({ error: 'Course not found' }, { status: 404 })
     }
 

@@ -6,10 +6,11 @@ export async function GET(
   { params }: { params: { id: string; batchId: string } }
 ) {
   try {
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    if (!user) {
+    if (authError || !user) {
+      console.error('Auth error:', authError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -21,9 +22,14 @@ export async function GET(
       .select('*')
       .eq('id', batchId)
       .eq('course_id', id)
-      .single()
+      .maybeSingle()
 
-    if (error || !batch) {
+    if (error) {
+      console.error('Database error fetching batch:', error);
+      return NextResponse.json({ error: 'Database error' }, { status: 500 })
+    }
+    
+    if (!batch) {
       return NextResponse.json({ error: 'Batch not found' }, { status: 404 })
     }
 
@@ -43,10 +49,11 @@ export async function PATCH(
   { params }: { params: { id: string; batchId: string } }
 ) {
   try {
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    if (!user) {
+    if (authError || !user) {
+      console.error('Auth error:', authError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -58,7 +65,7 @@ export async function PATCH(
       .from('courses')
       .select('instructor_id')
       .eq('id', id)
-      .single()
+      .maybeSingle()
 
     if (!course || (course.instructor_id !== user.id && user.role !== 'admin')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
@@ -108,10 +115,11 @@ export async function DELETE(
   { params }: { params: { id: string; batchId: string } }
 ) {
   try {
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    if (!user) {
+    if (authError || !user) {
+      console.error('Auth error:', authError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -122,7 +130,7 @@ export async function DELETE(
       .from('courses')
       .select('instructor_id')
       .eq('id', id)
-      .single()
+      .maybeSingle()
 
     if (!course || (course.instructor_id !== user.id && user.role !== 'admin')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
