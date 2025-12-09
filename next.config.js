@@ -1,3 +1,5 @@
+const { withSentryConfig } = require('@sentry/nextjs');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
@@ -7,6 +9,8 @@ const nextConfig = {
     serverActions: {
       allowedOrigins: ['localhost:3000', 'stharoonschool.com'],
     },
+    // Enable instrumentation for Sentry
+    instrumentationHook: true,
   },
   // CRITICAL FIX Phase 28: Force standalone output for serverless deployment
   output: 'standalone',
@@ -127,4 +131,16 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig
+// Sentry configuration options
+const sentryWebpackPluginOptions = {
+  // Suppresses source map uploading logs during build
+  silent: true,
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+};
+
+// Make sure adding Sentry options is the last code to run before exporting
+module.exports = process.env.SENTRY_DSN
+  ? withSentryConfig(nextConfig, sentryWebpackPluginOptions)
+  : nextConfig;

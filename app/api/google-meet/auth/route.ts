@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { initiateGoogleAuth } from '@/lib/google-meet/auth'
+import { initiateGoogleOAuth } from '@/lib/google-meet/oauth'
 
 export const dynamic = 'force-dynamic'
 
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     
@@ -14,8 +14,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Generate OAuth URL
-    const authUrl = initiateGoogleAuth()
+    // Generate OAuth URL with user ID in state
+    const authUrl = await initiateGoogleOAuth(user.id)
 
     return NextResponse.json({ authUrl })
   } catch (error) {

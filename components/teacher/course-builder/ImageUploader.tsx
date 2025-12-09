@@ -46,28 +46,37 @@ export function ImageUploader({
     setUploading(true)
 
     try {
-      // Create preview
+      // Create preview immediately for better UX
       const reader = new FileReader()
       reader.onloadend = () => {
         setPreview(reader.result as string)
       }
       reader.readAsDataURL(file)
 
-      // TODO: Upload to server
-      // const formData = new FormData()
-      // formData.append('file', file)
-      // const response = await fetch('/api/teacher/courses/upload-image', {
-      //   method: 'POST',
-      //   body: formData
-      // })
-      // const data = await response.json()
-      // onChange(data.url)
+      // Upload to server
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('type', 'image')
+      
+      const response = await fetch('/api/upload/file', {
+        method: 'POST',
+        body: formData
+      })
 
-      // For now, use preview as value
-      onChange(reader.result as string)
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Upload failed')
+      }
+
+      const data = await response.json()
+      
+      // Update with server URL
+      onChange(data.url)
     } catch (err) {
-      setError('Failed to upload image')
-      console.error(err)
+      setError(err instanceof Error ? err.message : 'Failed to upload image')
+      console.error('Image upload error:', err)
+      // Clear preview on error
+      setPreview(null)
     } finally {
       setUploading(false)
     }

@@ -63,40 +63,71 @@ export function VideoUploader({ value, onChange }: VideoUploaderProps) {
     setUploadProgress(0)
 
     try {
-      // Simulate upload progress
-      const interval = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev >= 100) {
-            clearInterval(interval)
-            return 100
+      // Upload to server
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('type', 'video')
+      
+      // Create XMLHttpRequest for progress tracking
+      const xhr = new XMLHttpRequest()
+      
+      // Track upload progress
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const percentComplete = Math.round((e.loaded / e.total) * 100)
+          setUploadProgress(percentComplete)
+        }
+      })
+
+      // Handle completion
+      const uploadPromise = new Promise<any>((resolve, reject) => {
+        xhr.addEventListener('load', () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              const data = JSON.parse(xhr.responseText)
+              resolve(data)
+            } catch (err) {
+              reject(new Error('Invalid response from server'))
+            }
+          } else {
+            try {
+              const errorData = JSON.parse(xhr.responseText)
+              reject(new Error(errorData.error || 'Upload failed'))
+            } catch {
+              reject(new Error(`Upload failed with status ${xhr.status}`))
+            }
           }
-          return prev + 10
         })
-      }, 500)
 
-      // TODO: Actual upload to server
-      // const formData = new FormData()
-      // formData.append('video', file)
-      // const response = await fetch('/api/teacher/courses/upload-video', {
-      //   method: 'POST',
-      //   body: formData
-      // })
+        xhr.addEventListener('error', () => {
+          reject(new Error('Network error during upload'))
+        })
 
-      // For now, create local URL
-      const localUrl = URL.createObjectURL(file)
+        xhr.addEventListener('abort', () => {
+          reject(new Error('Upload cancelled'))
+        })
+      })
+
+      xhr.open('POST', '/api/upload/file')
+      xhr.send(formData)
+
+      const data = await uploadPromise
       
       const updated = {
         ...videoData,
         type: 'upload',
-        url: localUrl,
-        filename: file.name
+        url: data.url,
+        filename: file.name,
+        duration: data.metadata?.duration || '',
+        thumbnail: data.metadata?.thumbnail || ''
       }
       
       setVideoData(updated)
       onChange(updated)
     } catch (error) {
       console.error('Upload failed:', error)
-      alert('Upload failed. Please try again.')
+      alert(error instanceof Error ? error.message : 'Upload failed. Please try again.')
+      setUploadProgress(0)
     } finally {
       setIsUploading(false)
     }

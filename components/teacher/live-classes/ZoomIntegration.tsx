@@ -52,19 +52,20 @@ export class ZoomIntegration {
   // Create a new Zoom meeting
   async createMeeting(userId: string, settings: ZoomMeetingSettings): Promise<ZoomMeeting> {
     try {
-      // TODO: Implement actual Zoom API call
-      // This requires OAuth 2.0 authentication
+      const accessToken = await this.getAccessToken()
       
       const response = await fetch(`${this.baseUrl}/users/${userId}/meetings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.getAccessToken()}`
+          'Authorization': `Bearer ${accessToken}`
         },
         body: JSON.stringify(settings)
       })
 
       if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Zoom API error:', errorData)
         throw new Error('Failed to create Zoom meeting')
       }
 
@@ -190,10 +191,14 @@ export class ZoomIntegration {
   }
 
   // Private method to get access token
-  private getAccessToken(): string {
-    // TODO: Implement OAuth 2.0 token generation
-    // This should use JWT or OAuth 2.0 to get an access token
-    return 'YOUR_ACCESS_TOKEN'
+  private async getAccessToken(): Promise<string> {
+    // Get token from API endpoint
+    const response = await fetch('/api/zoom/token')
+    if (!response.ok) {
+      throw new Error('Failed to get Zoom access token')
+    }
+    const data = await response.json()
+    return data.access_token
   }
 
   // Generate meeting password

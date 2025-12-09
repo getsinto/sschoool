@@ -1,105 +1,95 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { sendMessage } from '@/lib/teacher/data-service'
 
 export const dynamic = 'force-dynamic'
 
-// POST /api/teacher/messages/send-bulk - Send bulk message
+// POST /api/teacher/messages/send-bulk - Send bulk messages
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const {
-      recipientType,
-      recipientIds,
-      courseId,
-      criteria,
-      subject,
-      message,
-      attachments,
-      sendToParents,
-      scheduleDate,
-      sendEmail
-    } = body
-
-    // TODO: Get teacher ID from session
-    const teacherId = 'teacher_123'
-
-    // Determine recipients based on type
-    let recipients: string[] = []
-
-    switch (recipientType) {
-      case 'individual':
-        recipients = recipientIds || []
-        break
-
-      case 'course':
-        // TODO: Fetch all students in the course
-        recipients = [] // Placeholder
-        break
-
-      case 'criteria':
-        // TODO: Fetch students matching criteria
-        // e.g., progress < X%, grade < Y%
-        recipients = [] // Placeholder
-        break
-
-      default:
-        return NextResponse.json(
-          { success: false, error: 'Invalid recipient type' },
-          { status: 400 }
-        )
+    const supabase = createClient()
+    
+    // Get authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      )
     }
 
-    if (recipients.length === 0) {
+    const body = await request.json()
+    const { recipientIds, subject, content } = body
+
+    // Validate input
+    if (!recipientIds || !Array.isArray(recipientIds) || recipientIds.length === 0) {
       return NextResponse.json(
-        { success: false, error: 'No recipients selected' },
+        { success: false, error: 'Recipient IDs must be a non-empty array' },
         { status: 400 }
       )
     }
 
-    // Process message with personalization
-    const processedMessages = recipients.map(recipientId => {
-      // TODO: Replace template variables
-      // {{student_name}}, {{course_name}}, {{teacher_name}}, etc.
-      let personalizedMessage = message
-      let personalizedSubject = subject
-
-      // TODO: Get student data for personalization
-      // personalizedMessage = personalizedMessage.replace('{{student_name}}', studentName)
-      // personalizedSubject = personalizedSubject.replace('{{student_name}}', studentName)
-
-      return {
-        recipientId,
-        subject: personalizedSubject,
-        message: personalizedMessage,
-        attachments
-      }
-    })
-
-    // Schedule or send immediately
-    if (scheduleDate) {
-      // TODO: Schedule messages for later
-      return NextResponse.json({
-        success: true,
-        message: `${recipients.length} messages scheduled for ${new Date(scheduleDate).toLocaleString()}`,
-        data: {
-          scheduledCount: recipients.length,
-          scheduleDate
-        }
-      })
-    } else {
-      // TODO: Send messages immediately
-      // TODO: Create conversations
-      // TODO: Send email notifications if enabled
-      // TODO: Send to parents if requested
-
-      return NextResponse.json({
-        success: true,
-        message: `${recipients.length} messages sent successfully`,
-        data: {
-          sentCount: recipients.length,
-          sentAt: new Date().toISOString()
-        }
-      })
+    if (!subject || !content) {
+      return NextResponse.json(
+        { success: false, error: 'Missing required fields' },
+        { status: 400 }
+      )
     }
+
+    if (subject.length > 200) {
+      return NextResponse.json(
+        { success: false, error: 'Subject too long (max 200 characters)' },
+        { status: 400 }
+      )
+    }
+
+    if (content.length > 5000) {
+      return NextResponse.json(
+        { success: false, error: 'Content too long (max 5000 characters)' },
+        { status: 400 }
+      )
+    }
+
+    if (recipientIds.length > 100) {
+      return NextResponse.json(
+        { success: false, error: 'Cannot send to more than 100 recipients at once' },
+        { status: 400 }
+      )
+    }
+
+    // Send messages to all recipients
+    const results = await Promise.allSettled(
+      recipientIds.map(recipientId =>
+        sendMessage({
+          senderId: user.id,
+          recipientId,
+          subject,
+          content,
+        })
+      )
+    )
+
+    // Count successes and failures
+    const successful = results.filter(r => r.status === 'fulfilled').length
+    const failed = results.filter(r => r.status === 'rejected').length
+
+    // Get successful messages
+    const messages = results
+      .filter((r): r is PromiseFulfilledResult<any> => r.status === 'fulfilled')
+      .map(r => r.value)
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        messages,
+        stats: {
+          total: recipientIds.length,
+          successful,
+          failed,
+        }
+      }
+    }, { status: 201 })
   } catch (error) {
     console.error('Error sending bulk messages:', error)
     return NextResponse.json(

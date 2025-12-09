@@ -1,88 +1,89 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { getTeacherStudents } from '@/lib/teacher/data-service'
 
 export const dynamic = 'force-dynamic'
 
 // GET /api/teacher/students/export - Export student data
 export async function GET(request: NextRequest) {
   try {
+    const supabase = createClient()
+    
+    // Get authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
     const searchParams = request.nextUrl.searchParams
-    const format = searchParams.get('format') || 'csv' // csv, xlsx, pdf
-    const courseId = searchParams.get('courseId')
-    const status = searchParams.get('status')
+    const courseId = searchParams.get('courseId') || undefined
+    const format = searchParams.get('format') || 'csv' // 'csv' or 'json'
 
-    // TODO: Get teacher ID from session
-    const teacherId = 'teacher_123'
+    // Fetch all students
+    const students = await getTeacherStudents(user.id, { courseId })
 
-    // TODO: Fetch students from database based on filters
-    const students = [
-      {
-        name: 'Sarah Johnson',
-        email: 'sarah.johnson@email.com',
-        enrollmentDate: '2024-01-10',
-        status: 'active',
-        enrolledCourses: 3,
-        overallProgress: 85,
-        averageGrade: 92,
-        lastActive: '2024-01-20T14:30:00',
-        attendanceRate: 95
-      },
-      {
-        name: 'Michael Chen',
-        email: 'michael.chen@email.com',
-        enrollmentDate: '2024-01-08',
-        status: 'active',
-        enrolledCourses: 2,
-        overallProgress: 72,
-        averageGrade: 78,
-        lastActive: '2024-01-19T16:45:00',
-        attendanceRate: 88
-      }
-    ]
-
-    if (format === 'csv') {
+    if (format === 'json') {
+      // Return JSON format
+      return NextResponse.json({
+        success: true,
+        data: students,
+        meta: {
+          exportedAt: new Date().toISOString(),
+          totalStudents: students.length,
+          courseId: courseId || 'all'
+        }
+      })
+    } else {
+      // Return CSV format
       const headers = [
-        'Name',
+        'ID',
+        'First Name',
+        'Last Name',
         'Email',
-        'Enrollment Date',
+        'Phone',
+        'Grade Level',
         'Status',
-        'Enrolled Courses',
-        'Overall Progress (%)',
-        'Average Grade (%)',
+        'Overall Progress',
+        'Average Grade',
+        'Attendance Rate',
         'Last Active',
-        'Attendance Rate (%)'
+        'Enrolled Courses',
+        'Completed Courses'
       ]
 
-      const rows = students.map(s => [
-        s.name,
-        s.email,
-        new Date(s.enrollmentDate).toLocaleDateString(),
-        s.status,
-        s.enrolledCourses.toString(),
-        s.overallProgress.toString(),
-        s.averageGrade.toString(),
-        new Date(s.lastActive).toLocaleDateString(),
-        s.attendanceRate.toString()
+      const rows = students.map(student => [
+        student.id,
+        student.firstName,
+        student.lastName,
+        student.email,
+        student.phone || '',
+        student.gradeLevel || '',
+        student.status,
+        student.overallProgress,
+        student.averageGrade,
+        student.attendanceRate,
+        student.lastActive,
+        student.enrolledCourses,
+        student.completedCourses
       ])
 
       const csv = [
         headers.join(','),
-        ...rows.map(row => row.join(','))
+        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
       ].join('\n')
 
       return new NextResponse(csv, {
+        status: 200,
         headers: {
           'Content-Type': 'text/csv',
-          'Content-Disposition': `attachment; filename="students_${Date.now()}.csv"`
+          'Content-Disposition': `attachment; filename="students-export-${new Date().toISOString().split('T')[0]}.csv"`
         }
       })
     }
-
-    // For other formats, return JSON for now
-    return NextResponse.json({
-      success: true,
-      data: students,
-      message: `Export format ${format} not yet implemented`
-    })
   } catch (error) {
     console.error('Error exporting students:', error)
     return NextResponse.json(

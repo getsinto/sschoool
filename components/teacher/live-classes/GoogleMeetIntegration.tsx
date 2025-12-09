@@ -1,5 +1,7 @@
 'use client'
 
+import { useState, useEffect } from 'react'
+
 // Google Meet API Integration Wrapper
 // This component provides functions to interact with Google Calendar API to create Meet links
 
@@ -236,20 +238,113 @@ export class GoogleMeetIntegration {
 
 // Hook for using Google Meet integration
 export function useGoogleMeetIntegration() {
-  // TODO: Get access token from OAuth flow or session
-  const accessToken = '' // This should come from authentication
+  const [accessToken, setAccessToken] = useState<string>('')
+  const [isReady, setIsReady] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const googleMeet = new GoogleMeetIntegration(accessToken)
+  // Fetch access token on mount
+  useEffect(() => {
+    const fetchToken = async () => {
+      try {
+        const response = await fetch('/api/google-meet/token')
+        const data = await response.json()
+
+        if (!response.ok || !data.connected) {
+          throw new Error('Google Meet not connected')
+        }
+
+        // Token is validated on the server, we just need to know it exists
+        setIsReady(true)
+      } catch (err) {
+        console.error('Error fetching Google Meet token:', err)
+        setError(err instanceof Error ? err.message : 'Failed to get access token')
+        setIsReady(false)
+      }
+    }
+
+    fetchToken()
+  }, [])
+
+  // Create meeting through API endpoint instead of direct client call
+  const createMeeting = async (calendarId: string, settings: GoogleMeetSettings) => {
+    const response = await fetch('/api/google-meet/meetings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ calendarId, settings })
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to create meeting')
+    }
+
+    return response.json()
+  }
+
+  const getMeeting = async (calendarId: string, eventId: string) => {
+    const response = await fetch(`/api/google-meet/meetings/${eventId}?calendarId=${calendarId}`)
+    
+    if (!response.ok) {
+      throw new Error('Failed to get meeting')
+    }
+
+    return response.json()
+  }
+
+  const updateMeeting = async (calendarId: string, eventId: string, settings: Partial<GoogleMeetSettings>) => {
+    const response = await fetch(`/api/google-meet/meetings/${eventId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ calendarId, settings })
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to update meeting')
+    }
+
+    return response.json()
+  }
+
+  const deleteMeeting = async (calendarId: string, eventId: string) => {
+    const response = await fetch(`/api/google-meet/meetings/${eventId}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ calendarId })
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to delete meeting')
+    }
+  }
+
+  const listMeetings = async (calendarId: string, timeMin?: string, timeMax?: string) => {
+    const params = new URLSearchParams({
+      calendarId,
+      ...(timeMin && { timeMin }),
+      ...(timeMax && { timeMax })
+    })
+
+    const response = await fetch(`/api/google-meet/meetings?${params}`)
+    
+    if (!response.ok) {
+      throw new Error('Failed to list meetings')
+    }
+
+    const data = await response.json()
+    return data.items || []
+  }
 
   return {
-    createMeeting: googleMeet.createMeeting.bind(googleMeet),
-    getMeeting: googleMeet.getMeeting.bind(googleMeet),
-    updateMeeting: googleMeet.updateMeeting.bind(googleMeet),
-    deleteMeeting: googleMeet.deleteMeeting.bind(googleMeet),
-    getMeetingLink: googleMeet.getMeetingLink.bind(googleMeet),
-    getMeetingId: googleMeet.getMeetingId.bind(googleMeet),
-    listMeetings: googleMeet.listMeetings.bind(googleMeet),
-    getRecordings: googleMeet.getRecordings.bind(googleMeet)
+    isReady,
+    error,
+    createMeeting,
+    getMeeting,
+    updateMeeting,
+    deleteMeeting,
+    listMeetings,
+    getMeetingLink: (event: GoogleMeetEvent) => 
+      event.hangoutLink || event.conferenceData?.entryPoints?.[0]?.uri || null,
+    getMeetingId: (event: GoogleMeetEvent) => 
+      event.conferenceData?.conferenceId || null
   }
 }
 

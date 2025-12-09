@@ -1,67 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { getTeacherStudents } from '@/lib/teacher/data-service'
 
 export const dynamic = 'force-dynamic'
 
 // GET /api/teacher/students - Get students list
 export async function GET(request: NextRequest) {
   try {
+    const supabase = await createClient()
+    
+    // Get authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
     const searchParams = request.nextUrl.searchParams
-    const courseId = searchParams.get('courseId')
+    const courseId = searchParams.get('courseId') || undefined
     const status = searchParams.get('status')
     const progressMin = searchParams.get('progressMin')
     const progressMax = searchParams.get('progressMax')
-    const lastActivity = searchParams.get('lastActivity')
-    const search = searchParams.get('search')
+    const search = searchParams.get('search') || undefined
+    const gradeLevel = searchParams.get('gradeLevel') || undefined
     const sortBy = searchParams.get('sortBy') || 'name'
 
-    // TODO: Get teacher ID from session
-    const teacherId = 'teacher_123'
+    // Fetch students using data service
+    const students = await getTeacherStudents(user.id, {
+      courseId,
+      search,
+      gradeLevel,
+    })
 
-    // TODO: Fetch from database
-    const mockStudents = [
-      {
-        id: '1',
-        name: 'Sarah Johnson',
-        email: 'sarah.johnson@email.com',
-        phone: '+1 (555) 123-4567',
-        avatar: '/avatars/sarah.jpg',
-        enrollmentDate: '2024-01-10',
-        status: 'active',
-        enrolledCourses: 3,
-        completedCourses: 1,
-        overallProgress: 85,
-        averageGrade: 92,
-        lastActive: '2024-01-20T14:30:00',
-        attendanceRate: 95,
-        assignmentsCompleted: 12,
-        totalAssignments: 15
-      },
-      {
-        id: '2',
-        name: 'Michael Chen',
-        email: 'michael.chen@email.com',
-        phone: '+1 (555) 123-4568',
-        avatar: '/avatars/michael.jpg',
-        enrollmentDate: '2024-01-08',
-        status: 'active',
-        enrolledCourses: 2,
-        completedCourses: 0,
-        overallProgress: 72,
-        averageGrade: 78,
-        lastActive: '2024-01-19T16:45:00',
-        attendanceRate: 88,
-        assignmentsCompleted: 10,
-        totalAssignments: 14
-      }
-    ]
-
-    // Filter by search
-    let filtered = search
-      ? mockStudents.filter(s =>
-          s.name.toLowerCase().includes(search.toLowerCase()) ||
-          s.email.toLowerCase().includes(search.toLowerCase())
-        )
-      : mockStudents
+    // Apply additional filters
+    let filtered = students
 
     // Filter by status
     if (status && status !== 'all') {
@@ -80,7 +55,9 @@ export async function GET(request: NextRequest) {
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'name':
-          return a.name.localeCompare(b.name)
+          const nameA = `${a.firstName} ${a.lastName}`
+          const nameB = `${b.firstName} ${b.lastName}`
+          return nameA.localeCompare(nameB)
         case 'progress':
           return b.overallProgress - a.overallProgress
         case 'grade':

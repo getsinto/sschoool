@@ -1,199 +1,235 @@
-# Monitoring and Alerting System
+# Monitoring Library
 
-This directory contains the monitoring and metrics tracking system for the Course Assignment Permissions feature.
+This library provides comprehensive monitoring and error tracking using Sentry.
 
-## Overview
+## Setup
 
-The monitoring system tracks key metrics and provides alerting for:
-- Course creation rate
-- Teacher assignment rate
-- Permission check failures
-- RLS policy violations
-- Error rates
-- Rate limiting hits
+### 1. Environment Variables
 
-## Components
+Add the following to your `.env.local`:
 
-### `metrics.ts`
-Core metrics collection and storage. Provides:
-- `recordMetric()` - Record a metric event
-- `getMetrics()` - Retrieve metrics
-- `getMetricCount()` - Get count of metric events
-- `getMetricRate()` - Get rate per minute
-- `checkAlerts()` - Check if any alert thresholds are exceeded
+```env
+SENTRY_DSN=your_sentry_dsn
+NEXT_PUBLIC_SENTRY_DSN=your_sentry_dsn
+SENTRY_AUTH_TOKEN=your_sentry_auth_token
+SENTRY_ORG=your_sentry_organization
+SENTRY_PROJECT=your_sentry_project
+```
 
-### `helpers.ts`
-Helper functions to integrate metrics into application code:
-- `trackCourseCreation()` - Track course creation events
-- `trackTeacherAssignment()` - Track teacher assignments
-- `trackPermissionCheck()` - Track permission checks
-- `trackRLSViolation()` - Track RLS policy violations
-- `trackRateLimitHit()` - Track rate limiting events
-- `trackError()` - Track errors
+### 2. Sentry Project Setup
 
-### API Endpoint
-`/api/admin/monitoring/metrics` - GET endpoint for retrieving metrics summary
-
-### Dashboard
-`/admin/monitoring` - Admin dashboard for viewing metrics and alerts
+1. Create a Sentry account at https://sentry.io
+2. Create a new project for your application
+3. Copy the DSN from the project settings
+4. Generate an auth token for source map uploads
 
 ## Usage
 
-### Basic Metric Tracking
+### Error Tracking
 
 ```typescript
-import { recordMetric, METRICS } from '@/lib/monitoring/metrics';
+import { captureError, captureMessage } from '@/lib/monitoring/sentry';
 
-// Record a course creation
-recordMetric(METRICS.COURSE_CREATED, 1, { courseId: '123' });
-
-// Record an error
-recordMetric(METRICS.ERROR_OCCURRED, 1, { error: 'Something went wrong' });
-```
-
-### Using Helper Functions
-
-```typescript
-import { trackCourseCreation, trackPermissionCheck } from '@/lib/monitoring/helpers';
-
-// Track course creation
+// Capture an error
 try {
-  const course = await createCourse(data);
-  trackCourseCreation(true, { courseId: course.id });
+  // Your code
 } catch (error) {
-  trackCourseCreation(false, { error: error.message });
+  captureError(error, {
+    userId: user.id,
+    action: 'create_course',
+  });
 }
 
-// Track permission check
-const allowed = canCreateCourse(user);
-trackPermissionCheck(allowed, 'course.create', { userId: user.id });
-```
-
-### Integration Example
-
-```typescript
-import { trackTeacherAssignment } from '@/lib/monitoring/helpers';
-
-export async function assignTeacher(courseId: string, teacherId: string) {
-  try {
-    const assignment = await db.courseAssignments.create({
-      courseId,
-      teacherId
-    });
-    
-    // Track successful assignment
-    trackTeacherAssignment(true, {
-      courseId,
-      teacherId,
-      assignmentId: assignment.id
-    });
-    
-    return { success: true, assignment };
-  } catch (error) {
-    // Track failed assignment
-    trackTeacherAssignment(false, {
-      courseId,
-      teacherId,
-      error: error.message
-    });
-    
-    return { success: false, error };
-  }
-}
-```
-
-## Alert Thresholds
-
-Current alert thresholds (per hour):
-- **Errors**: Warning at 10/hr, Critical at 50/hr
-- **RLS Violations**: Warning at 5/hr, Critical at 20/hr
-- **Permission Denials**: Warning at 20/hr, Critical at 100/hr
-- **Rate Limit Hits**: Warning at 10/hr
-
-## Metrics Storage
-
-Currently uses in-memory storage (Map). For production:
-- Replace with Redis for distributed systems
-- Use proper metrics service (Prometheus, DataDog, CloudWatch)
-- Implement persistent storage for historical data
-
-## Accessing Metrics
-
-### Via API
-```bash
-curl -H "Authorization: Bearer <token>" \
-  https://your-domain.com/api/admin/monitoring/metrics
-```
-
-### Via Dashboard
-Navigate to `/admin/monitoring` in the admin panel
-
-### Programmatically
-```typescript
-import { getMetricsSummary, checkAlerts } from '@/lib/monitoring/metrics';
-
-const summary = getMetricsSummary();
-const { alerts } = checkAlerts();
-```
-
-## Future Enhancements
-
-1. **Persistent Storage**: Store metrics in database or time-series DB
-2. **Historical Data**: Track metrics over time for trend analysis
-3. **Custom Dashboards**: Create role-specific monitoring views
-4. **Email Alerts**: Send notifications when thresholds are exceeded
-5. **Slack Integration**: Post alerts to Slack channels
-6. **Grafana Integration**: Export metrics to Grafana for visualization
-7. **Performance Metrics**: Track API response times and database query performance
-8. **User Activity Metrics**: Track user engagement and feature usage
-
-## Production Considerations
-
-### Scaling
-- Current in-memory storage works for single-server deployments
-- For multi-server: Use Redis or dedicated metrics service
-- Consider sampling for high-volume metrics
-
-### Performance
-- Metrics recording is synchronous but fast
-- No database calls during metric recording
-- Automatic cleanup prevents memory leaks
-
-### Security
-- Metrics API requires admin authentication
-- No sensitive data in metric metadata
-- Rate limiting on metrics endpoint
-
-## Testing
-
-```typescript
-import { recordMetric, getMetricCount, clearMetrics } from '@/lib/monitoring/metrics';
-
-describe('Metrics', () => {
-  beforeEach(() => {
-    clearMetrics();
-  });
-
-  it('should record and retrieve metrics', () => {
-    recordMetric('test.metric', 1);
-    expect(getMetricCount('test.metric')).toBe(1);
-  });
+// Capture a message
+captureMessage('User completed onboarding', 'info', {
+  userId: user.id,
 });
 ```
 
+### Performance Tracking
+
+```typescript
+import { trackPerformance } from '@/lib/monitoring/sentry';
+
+// Track an operation
+const result = await trackPerformance(
+  'process_payment',
+  async () => {
+    return await processPayment(data);
+  },
+  {
+    amount: data.amount,
+    currency: data.currency,
+  }
+);
+```
+
+### API Route Monitoring
+
+```typescript
+import { withPerformanceTracking } from '@/lib/monitoring/api-middleware';
+import { NextRequest, NextResponse } from 'next/server';
+
+async function handler(req: NextRequest) {
+  // Your API logic
+  return NextResponse.json({ success: true });
+}
+
+// Wrap with performance tracking
+export const GET = withPerformanceTracking(handler, 'get-users');
+```
+
+### Database Query Tracking
+
+```typescript
+import { trackDatabaseQuery } from '@/lib/monitoring/api-middleware';
+
+const users = await trackDatabaseQuery(
+  async () => {
+    return await supabase
+      .from('users')
+      .select('*')
+      .eq('role', 'teacher');
+  },
+  'get-teachers'
+);
+```
+
+### External API Tracking
+
+```typescript
+import { trackExternalApi } from '@/lib/monitoring/api-middleware';
+
+const response = await trackExternalApi(
+  async () => {
+    return await fetch('https://api.example.com/data');
+  },
+  'example-api'
+);
+```
+
+### User Context
+
+```typescript
+import { setUserContext, clearUserContext } from '@/lib/monitoring/sentry';
+
+// Set user context (on login)
+setUserContext({
+  id: user.id,
+  email: user.email,
+  username: user.username,
+  role: user.role,
+});
+
+// Clear user context (on logout)
+clearUserContext();
+```
+
+### Breadcrumbs
+
+```typescript
+import { addBreadcrumb } from '@/lib/monitoring/sentry';
+
+addBreadcrumb({
+  message: 'User clicked submit button',
+  category: 'ui',
+  level: 'info',
+  data: {
+    formId: 'registration-form',
+  },
+});
+```
+
+### Tags
+
+```typescript
+import { setTags } from '@/lib/monitoring/sentry';
+
+setTags({
+  feature: 'course-creation',
+  version: '2.0',
+  environment: 'production',
+});
+```
+
+## Error Boundaries
+
+### React Error Boundary
+
+```typescript
+import { ErrorBoundary } from '@/components/error/ErrorBoundary';
+
+function MyComponent() {
+  return (
+    <ErrorBoundary>
+      <YourComponent />
+    </ErrorBoundary>
+  );
+}
+```
+
+### Higher-Order Component
+
+```typescript
+import { withErrorBoundary } from '@/components/error/ErrorBoundary';
+
+const SafeComponent = withErrorBoundary(MyComponent);
+```
+
+## Performance Thresholds
+
+The monitoring system automatically flags:
+
+- **Slow API Requests**: > 1000ms
+- **Slow Database Queries**: > 500ms
+- **Slow External API Calls**: > 2000ms
+
+These thresholds can be adjusted in `lib/monitoring/api-middleware.ts`.
+
+## Best Practices
+
+1. **Always add context**: Include relevant data when capturing errors
+2. **Use breadcrumbs**: Add breadcrumbs for important user actions
+3. **Set user context**: Always set user context after authentication
+4. **Track performance**: Wrap expensive operations with performance tracking
+5. **Use error boundaries**: Wrap major sections of your app with error boundaries
+6. **Monitor slow queries**: Pay attention to slow query warnings
+7. **Clean up**: Clear user context on logout
+
+## Alerts
+
+Configure alerts in Sentry dashboard:
+
+1. Go to your project settings
+2. Navigate to Alerts
+3. Create alert rules for:
+   - Error rate spikes
+   - Slow transaction alerts
+   - New error types
+   - Performance degradation
+
 ## Troubleshooting
 
-### Metrics not appearing
-- Check that metrics are being recorded with `recordMetric()`
-- Verify admin authentication for API access
-- Check browser console for errors
+### Sentry not capturing errors
 
-### High memory usage
-- Metrics are capped at 1000 entries per type
-- Old metrics are automatically cleaned up
-- Consider reducing retention or using external storage
+1. Check that `SENTRY_DSN` is set correctly
+2. Verify that you're in production mode or have `ENABLE_MONITORING=true`
+3. Check browser console for Sentry initialization errors
 
-### Alerts not triggering
-- Verify alert thresholds in `checkAlerts()`
-- Check that metrics are being recorded correctly
-- Ensure sufficient time window for rate calculation
+### Source maps not uploading
+
+1. Verify `SENTRY_AUTH_TOKEN` is set
+2. Check that `SENTRY_ORG` and `SENTRY_PROJECT` match your Sentry project
+3. Run build with `--debug` flag to see upload logs
+
+### Performance data not showing
+
+1. Check `tracesSampleRate` in Sentry config
+2. Verify transactions are being created
+3. Check Sentry dashboard for transaction data
+
+## Resources
+
+- [Sentry Documentation](https://docs.sentry.io/)
+- [Next.js Integration](https://docs.sentry.io/platforms/javascript/guides/nextjs/)
+- [Performance Monitoring](https://docs.sentry.io/product/performance/)

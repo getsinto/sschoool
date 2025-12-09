@@ -55,25 +55,37 @@ export function DocumentUploader({ value = [], onChange }: DocumentUploaderProps
         continue
       }
 
-      // TODO: Upload to server
-      // const formData = new FormData()
-      // formData.append('document', file)
-      // const response = await fetch('/api/teacher/courses/upload-document', {
-      //   method: 'POST',
-      //   body: formData
-      // })
+      try {
+        // Upload to server
+        const formData = new FormData()
+        formData.append('file', file)
+        formData.append('type', 'document')
+        
+        const response = await fetch('/api/upload/file', {
+          method: 'POST',
+          body: formData
+        })
 
-      // For now, create local URL
-      const localUrl = URL.createObjectURL(file)
+        if (!response.ok) {
+          const errorData = await response.json()
+          alert(`Failed to upload ${file.name}: ${errorData.error || 'Unknown error'}`)
+          continue
+        }
 
-      newFiles.push({
-        id: `doc-${Date.now()}-${i}`,
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        url: localUrl,
-        isPrimary: files.length === 0 && i === 0 // First file is primary
-      })
+        const data = await response.json()
+
+        newFiles.push({
+          id: data.id || `doc-${Date.now()}-${i}`,
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          url: data.url,
+          isPrimary: files.length === 0 && i === 0 // First file is primary
+        })
+      } catch (error) {
+        console.error(`Error uploading ${file.name}:`, error)
+        alert(`Failed to upload ${file.name}. Please try again.`)
+      }
     }
 
     const updated = [...files, ...newFiles]
