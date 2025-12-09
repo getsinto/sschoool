@@ -775,7 +775,7 @@ export async function getGradingStatistics(
 /**
  * Verify teacher has access to student data
  */
-async function verifyTeacherStudentAccess(
+export async function verifyTeacherStudentAccess(
   teacherId: string,
   studentId: string,
   courseId?: string
